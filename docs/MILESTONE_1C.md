@@ -32,6 +32,7 @@ Rapid inputs enter a bounded queue. A failure clears pending inputs and retains 
 | Backend lint/format/build | Ruff check/format and offline wheel/source build pass. |
 | Dependency install | npm lockfile updated; installer audit reports zero vulnerabilities. No Python dependency was added. |
 | Actual WebGL browser | Cube renders; rapid R/U/F lands at 3 HTM. Algorithm playback, undo/redo, and replay restore identical facelets. x rotation remains solved at 0 HTM. Camera orbit/zoom preserve state. A paused real random scramble resumes to exactly 20 HTM. |
+| Built application preview | Split Three/Fiber chunks load, the real WebGL renderer animates R to exactly 1 HTM, and the fresh production tab records no console errors or warnings. |
 | Responsive inspection | 1440 px desktop and 390 px mobile layouts fit without horizontal document overflow. |
 
 Run from the repository root:
@@ -61,4 +62,4 @@ Frontend test snapshots/plans are captured from the actual Python engine, not a 
 - Controller, viewport and Explorer tests; engine-generated frontend fixtures; Three/Fiber dependency lockfile and Vite chunk configuration.
 - README, architecture/roadmap/acceptance/conventions notes updated. Earlier milestone reports remain historical.
 
-The local application remains runnable using the unchanged README start commands. Existing hosting metadata is preserved; nothing was published.
+The local development application remains running using the README ports. The temporary production preview used for verification was stopped. Existing hosting metadata is preserved; nothing was published.
