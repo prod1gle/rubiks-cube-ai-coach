@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from coach.api.cube import router as cube_router
 from coach.cube import CubeError
-from coach.solvers.two_phase import SolverError
+from coach.solvers.runtime import SolverError
 
 LOCAL_ORIGINS = [
     "http://localhost:5173",
@@ -21,7 +21,7 @@ class HealthResponse(BaseModel):
     status: str = "ok"
     service: str = "cubiq-api"
     version: str = "0.1.0"
-    milestone: str = "2A"
+    milestone: str = "2B"
 
 
 def create_app() -> FastAPI:
@@ -29,7 +29,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Cubiq Local API",
         version="0.1.0",
-        description="Milestone 2A: canonical cube engine and verified two-phase full-cube solving.",
+        description="Milestone 2B: cube engine, two-phase solving and genuine staged CFOP.",
     )
     app.add_middleware(
         CORSMiddleware,

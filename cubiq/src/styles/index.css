@@ -208,3 +208,31 @@ button, input { font: inherit; }
   .solution-loading { align-items: flex-start; flex-direction: column; }
 }
 @media (prefers-reduced-motion: reduce) { .solver-spinner { animation: none; } }
+.solution-approach { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin-top: 20px; }
+.solution-approach button { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border: 1px solid #343b30; border-radius: 6px; font-size: 11px; color: #aeb7a5; background: #151913; }
+.solution-approach button[aria-pressed=true] { background: #303b26; border-color: #6d8059; color: #d4e8ba; }
+.solution-approach > span { font-size: 10px; color: #929e86; margin-left: 9px; }
+.cfop-reference { font-size: 11px; color: #acb69e; margin-top: 20px; }
+.cfop-stages { margin: 16px 0 0; list-style: none; padding: 0; border: 1px solid #343b30; border-radius: 8px; overflow: hidden; }
+.cfop-stages > li { padding: 14px 17px; border-bottom: 1px solid #30362b; background: #181c16; }
+.cfop-stages > li:last-child { border-bottom: 0; }
+.cfop-stages > li[aria-current=step] { background: #232c1c; box-shadow: inset 3px 0 #bad98f; }
+.cfop-stage-heading { display: flex; align-items: center; gap: 10px; }
+.cfop-stage-heading h3 { margin: 0; font-size: 12px; font-weight: 550; min-width: 52px; }
+.cfop-stage-dot { display: grid; place-items: center; width: 20px; height: 20px; border: 1px solid #464e3d; border-radius: 50%; color: #aab99a; font-size: 10px; flex-shrink: 0; }
+.completed .cfop-stage-dot { color: #d2eab4; background: #334328; }
+.cfop-case { font: 10px monospace; color: #a0ac94; }
+.cfop-stage-count { margin-left: auto; font-size: 10px; color: #c4d0b7; white-space: nowrap; }
+.cfop-stage-play { display: grid; place-items: center; width: 29px; height: 29px; border: 1px solid #424e37; border-radius: 5px; color: #c4dfa5; background: #27301f; }
+.cfop-stage-notation { font: 11px/1.8 monospace; color: #bdc7b3; margin: 7px 0 0 30px; overflow-wrap: anywhere; }
+.cfop-protected { display: block; margin: 5px 0 0 30px; color: #929e86; font-size: 10px; }
+.cfop-full-sequence { margin: 20px 0; }
+.cfop-full-sequence summary { cursor: pointer; font-size: 11px; color: #b2bea4; padding: 10px 0; }
+@media (max-width: 640px) {
+  .solution-approach > span { margin: 7px 0 0; flex-basis: 100%; }
+  .cfop-stages > li { padding: 13px 10px; }
+  .cfop-stage-heading { gap: 6px; }
+  .cfop-stage-heading h3 { min-width: 45px; font-size: 11px; }
+  .cfop-case { font-size: 9px; }
+  .cfop-stage-notation, .cfop-protected { margin-left: 26px; }
+}

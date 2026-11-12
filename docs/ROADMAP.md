@@ -1,6 +1,6 @@
 # Implementation roadmap
 
-Status: M0 and checkpoints M1A–M1C and user-requested M2A (verified full-cube solving) are complete. M1C delivers the interactive 3D Explorer and local playback. Persistent solve events, timing/capture, stage predicates, extended notation, and the remaining M2–M9 work are still pending. M2A implements part of the original M3 solver scope; it does not imply completion of M2 capture/persistence or M3 exact search/Next Best Move. See the root README and milestone reports for current behavior.
+Status: M0 and checkpoints M1A–M1C and user-requested M2A–M2B (verified short solutions and genuine CFOP) are complete. M1C delivers the interactive 3D Explorer and local playback. Persistent solve events, timing/capture, general public extended notation, and remaining M2–M9 work are still pending. M2B adds exact stage predicates and fixed-white CFOP; the broader M4 gate still includes color-neutral and Next Best Move work. M2A implements part of the original M3 solver scope; it does not imply completion of M2 capture/persistence or M3 exact search/Next Best Move. See the root README and milestone reports for current behavior.
 
 ## Delivery sequence
 
@@ -13,6 +13,7 @@ Status: M0 and checkpoints M1A–M1C and user-requested M2A (verified full-cube 
 | M1 | Trustworthy cube-state foundation and minimal local harness | M0 | Medium; correctness-sensitive |
 | M2 | Interactive 3D cube, timing, logging, persistent replay | M1 | Medium |
 | M2A | User-requested checkpoint: bounded full-cube solver, engine verification, preview and solution playback | M1C | Implemented; exact proofs, Next Best Move, CFOP remain future work |
+| M2B | User-requested checkpoint: fixed-white Cross, general protected F2L, 57 OLL, 21 PLL, AUF and stage playback | M1C / M2A | Implemented; color neutrality and CFOP Next Best Move remain future work |
 | M3 | Verified short-solution solver and minimum-move Next Best Move | M1–M2 | Medium–large; exact-search latency uncertain |
 | M4 | Genuine CFOP and CFOP Next Best Move | M1–M3 | Large; F2L coverage is the main risk |
 | M5 | Stage review, alternatives, parallel replay, case practice | M2–M4 | Large |
@@ -116,3 +117,7 @@ Each implementation change should identify scope, passed acceptance IDs, actual 
 ## User-requested M2A — delivered
 
 Full-cube two-phase solving is available in the Explorer. Inputs and proposed outputs pass the canonical engine; the API returns notation, HTM, elapsed computation time, unproven optimality metadata, and a verified animation plan. Tests cover known/random scrambles, all grips, invalid states and candidates, worker errors/budgets, and state-bound frontend playback/cancellation. See [M2A evidence](MILESTONE_2A.md). Original numbered milestones above remain planning gates; no CFOP, minimum-move proof, timer, or persistence work is claimed by this checkpoint.
+
+## User-requested M2B — delivered
+
+The independent staged planner implements fixed-white Cross, all target-pair placements with protected slots, full 57 OLL / 21 PLL sets, rotations/setups, AUF, and per-stage animation. Exhaustive projected tests and full scramble regressions pass; no generic full-cube solver is used under the CFOP label. See [CFOP conventions](CFOP_ENGINE.md) and [delivery evidence](MILESTONE_2B.md). This delivers the full requested 2B pipeline within its fixed-cross scope; color neutrality, global pair-order optimization, Next Best Move, trainer/persistence and broader original M4 acceptance remain separate work.

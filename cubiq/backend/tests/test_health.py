@@ -20,7 +20,7 @@ def test_health_contract(client, path):
         "status": "ok",
         "service": "cubiq-api",
         "version": "0.1.0",
-        "milestone": "2A",
+        "milestone": "2B",
     }
 
 

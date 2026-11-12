@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
-import { plans, snapshots, solutions } from '../../test/cube-data'
+import { plans, snapshots, solutions, cfopSolutions } from '../../test/cube-data'
 import type { ActiveTurn } from './CubeController'
 import { CubeExplorer } from './CubeExplorer'
 
@@ -214,4 +214,69 @@ it('labels an already-solved state and offers no unnecessary playback', async ()
   expect(await screen.findByText('This cube is already solved. No face turns are needed.')).toBeVisible()
   expect(screen.queryByRole('button', { name: 'Next solution move' })).not.toBeInTheDocument()
   expect(screen.getByTestId('move-count')).toHaveTextContent('0HTM')
+})
+
+it('chooses CFOP explicitly, shows real stage counts and plays a stage without a two-phase request', async () => {
+  const request = vi.fn().mockResolvedValueOnce(response(snapshots.cfopScrambled)).mockResolvedValueOnce(response(cfopSolutions.scrambled))
+  vi.stubGlobal('fetch', request)
+  const user = userEvent.setup()
+  render(<CubeExplorer />)
+  await screen.findByText('Legal scrambled state')
+  await user.click(screen.getByRole('button', { name: 'CFOP' }))
+  await user.click(screen.getByRole('button', { name: 'Solve cube' }))
+  expect(await screen.findByText('CFOP solution · optimality unproven')).toBeVisible()
+  expect(screen.getByRole('list', { name: 'CFOP stages' }).children).toHaveLength(8)
+  expect(request.mock.calls[1][0]).toBe('/api/cube/cfop')
+  expect(screen.getByTestId('move-count')).toHaveTextContent('0HTM')
+  const stage = cfopSolutions.scrambled.stages!.find(s => s.move_count > 0)!
+  const stageTitle = stage.kind === 'f2l' ? `F2L ${stage.slot}` : stage.kind === 'cross' ? 'Cross' : stage.kind.toUpperCase()
+  await user.click(screen.getByRole('button', { name: `Play ${stageTitle} stage` }))
+  for (let i = 0; i < stage.move_count; i++) await land(user)
+  expect(screen.getByRole('button', { name: 'Finish animation' })).toBeDisabled()
+  expect(screen.getByLabelText('Current facelets')).toHaveValue(cfopSolutions.scrambled.plan.steps[stage.end_step - 1].snapshot.facelets)
+  expect(screen.getByText(`Solution step ${stage.end_step} of ${cfopSolutions.scrambled.move_count}`)).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Play solution' }))
+  for (let i = stage.end_step; i < cfopSolutions.scrambled.move_count; i++) await land(user)
+  expect(screen.getByLabelText('Current facelets')).toHaveValue(cfopSolutions.scrambled.plan.steps.at(-1)!.snapshot.facelets)
+  expect(request).toHaveBeenCalledTimes(2)
+})
+
+it('renders eight genuine skipped stages on an already solved CFOP cube', async () => {
+  const { user } = await start(response(cfopSolutions.solved))
+  await user.click(screen.getByRole('button', { name: 'CFOP' }))
+  await user.click(screen.getByRole('button', { name: 'Solve cube' }))
+  await screen.findByText('CFOP solution · optimality unproven')
+  expect(screen.getAllByText('Skipped · goal already satisfied at this boundary.')).toHaveLength(8)
+  expect(screen.getByRole('button', { name: 'Play OLL stage' })).toBeDisabled()
+  expect(screen.getByTestId('move-count')).toHaveTextContent('0HTM')
+})
+
+it('never relabels a previous short solution when switching the requested approach', async () => {
+  const { user } = await start(response(plans.r), response(solutions.r))
+  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Solve cube' }))
+  await screen.findByText('Engine verified')
+  await user.click(screen.getByRole('button', { name: 'CFOP' }))
+  expect(screen.getByText(/Showing the previous short solution/)).toBeVisible()
+  expect(screen.queryByRole('list', { name: 'CFOP stages' })).not.toBeInTheDocument()
+  expect(screen.getByText('Short solution · optimality unproven')).toBeVisible()
+})
+
+it('rejects a two-phase response to a CFOP request without fabricating stages', async () => {
+  const { user } = await start(response(plans.r), response(solutions.r))
+  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'CFOP' }))
+  await user.click(screen.getByRole('button', { name: 'Solve cube' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('inconsistent solution')
+  expect(screen.queryByRole('list', { name: 'CFOP stages' })).not.toBeInTheDocument()
+  expect(screen.getByLabelText('Current facelets')).toHaveValue(plans.r.steps[0].snapshot.facelets)
+})
+
+it('shows CFOP timeout errors while retaining the real cube', async () => {
+  const { user } = await start(response(plans.r), response({ detail: { code: 'cfop_timeout', message: 'CFOP reached its 30-second budget. No moves were applied.' } }, 504))
+  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'CFOP' }))
+  await user.click(screen.getByRole('button', { name: 'Solve cube' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('CFOP reached its 30-second budget')
+  expect(screen.getByLabelText('Current facelets')).toHaveValue(plans.r.steps[0].snapshot.facelets)
 })

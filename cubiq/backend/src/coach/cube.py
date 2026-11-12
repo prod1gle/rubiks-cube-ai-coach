@@ -343,6 +343,68 @@ def sequence_info(sequence: str | Sequence[Move]) -> dict[str, Any]:
     }
 
 
+def compile_catalog_algorithm(text: str) -> str:
+    """Compile registry-only wide/slice notation to fixed-frame outer turns.
+
+    This does not expand the public input grammar. Slice/wide turns include a
+    center-frame rotation; the final grip is discarded deliberately, while the
+    complete center-relative cubie transformation is preserved. Catalog moves
+    are counted in their compiled HTM, not by the original token count.
+    """
+    import re
+
+    expansions = {
+        "r": "x L",
+        "l": "x' R",
+        "u": "y D",
+        "d": "y' U",
+        "f": "z B",
+        "b": "z' F",
+        "M": "x' R L'",
+        "E": "y' U D'",
+        "S": "z F' B",
+    }
+    cleaned = text.replace("(", " ").replace(")", " ").replace("’", "'").replace("′", "'")
+    tokens = re.findall(r"[URFDLBMESxyzurfdlb](?:w)?(?:2'|2|')?", cleaned)
+    if re.sub(r"[URFDLBMESxyzurfdlb](?:w)?(?:2'|2|')?", "", cleaned).strip():
+        raise CubeError("catalog_notation", "Unsupported registry notation.")
+    expanded = []
+    for token in tokens:
+        face, suffix = token[0], token[1:]
+        if suffix.startswith("w"):
+            face, suffix = face.lower(), suffix[1:]
+        if face in expansions:
+            macro = parse_sequence(expansions[face])
+            if suffix == "'":
+                macro = parse_sequence(inverse_sequence(macro))
+            expanded.extend(macro * (2 if suffix.startswith("2") else 1))
+        else:
+            expanded.extend(parse_sequence(face + suffix))
+    frame, outer = FACES, []
+    for move in expanded:
+        if move.is_rotation:
+            for _ in range(move.turns):
+                frame = _rotate_frame(frame, move.face)
+        else:
+            outer.append(Move(frame[FACES.index(move.face)], move.turns))
+    return format_sequence(outer)
+
+
+def reference_sequence(sequence: str, reference_frame: str, output_frame: str) -> str:
+    """Translate outer moves between two proper grips; no new move semantics."""
+    if reference_frame not in VALID_FRAMES or output_frame not in VALID_FRAMES:
+        raise CubeError("center_orientation", "Invalid reference frame.")
+    moves = parse_sequence(sequence)
+    if any(move.is_rotation for move in moves):
+        raise CubeError("reference_notation", "Reference sequences require outer turns.")
+    return format_sequence(
+        tuple(
+            Move(FACES[output_frame.index(reference_frame[FACES.index(move.face)])], move.turns)
+            for move in moves
+        )
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class CubeState:
     cp: tuple[int, ...] = tuple(range(8))
@@ -399,6 +461,56 @@ class CubeState:
                         state.frame,
                     )
         return state
+
+    def in_reference(self, frame: str) -> "CubeState":
+        """Rebase a search view: relabel that grip's centers as URFDLB.
+
+        The canonical object is unchanged. All subsequent search operations still
+        use this same CubeState type and geometry-derived rules.
+        """
+        viewed = CubeState(self.cp, self.co, self.ep, self.eo, frame).to_facelets()
+        return CubeState.from_facelets(viewed.translate(str.maketrans(frame, FACES)))
+
+    def layer_progress(self) -> dict[str, Any]:
+        """Precise D-Cross/FR,FL,BL,BR/OLL/PLL-up-to-AUF predicates in this reference.
+
+        Call in_reference for a chosen cross color. PLL is separate from the
+        final U alignment; a top face merely having one color is not enough.
+        """
+        cross = all(self.ep[i] == i and self.eo[i] == 0 for i in range(4, 8))
+        pairs = {
+            slot: self.cp[c] == c and self.co[c] == 0 and self.ep[e] == e and self.eo[e] == 0
+            for slot, c, e in (("FR", 4, 8), ("FL", 5, 9), ("BL", 6, 10), ("BR", 7, 11))
+        }
+        f2l = cross and all(pairs.values())
+        oll = f2l and not any(self.co[:4]) and not any(self.eo[:4])
+        auf = None
+        if oll:
+            for word in ("", "U", "U2", "U'"):
+                # These predicates describe cubies in the reference, not the viewer grip.
+                flat = CubeState(self.cp, self.co, self.ep, self.eo)
+                if flat.apply(word).is_solved:
+                    auf = word
+                    break
+        return {
+            "cross": cross,
+            "pairs": pairs,
+            "f2l": f2l,
+            "oll": oll,
+            "pll": auf is not None,
+            "auf": auf,
+            "solved": self.is_solved,
+        }
+
+    def piece_coordinate(self, kind: str, piece: int) -> int:
+        """Project a tracked piece as position * orientation-base + orientation."""
+        if kind == "corner":
+            position = self.cp.index(piece)
+            return position * 3 + self.co[position]
+        if kind == "edge":
+            position = self.ep.index(piece)
+            return position * 2 + self.eo[position]
+        raise CubeError("piece_kind", "Expected corner or edge.")
 
     def to_facelets(self, *, canonical: bool = False) -> str:
         result = list(SOLVED_FACELETS)
@@ -520,6 +632,25 @@ class CubeState:
                 for i, face in enumerate(FACES)
             ],
         }
+
+
+@lru_cache(maxsize=128)
+def piece_coordinate_maps(sequence: str) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    """Engine-derived projected transitions used by abstract search, not a second rules engine."""
+    effect = CubeState().apply(sequence)
+    if effect.frame != FACES:
+        raise CubeError("search_frame", "Search macros must preserve the reference frame.")
+    result = []
+    for permutation, orientations, base in ((effect.cp, effect.co, 3), (effect.ep, effect.eo, 2)):
+        result.append(
+            tuple(
+                permutation.index(position) * base
+                + (orientation + orientations[permutation.index(position)]) % base
+                for position in range(len(permutation))
+                for orientation in range(base)
+            )
+        )
+    return result[0], result[1]
 
 
 def scene_cubies(facelets: str) -> list[dict[str, Any]]:

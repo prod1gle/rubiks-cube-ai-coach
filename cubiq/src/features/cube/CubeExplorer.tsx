@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight, Box, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, LoaderCircle, Pause, Play, Redo2, RefreshCw, ShieldCheck, Shuffle, Sparkles, Undo2 } from 'lucide-react'
+import { ArrowRight, Box, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Pause, Play, Redo2, RefreshCw, ShieldCheck, Shuffle, Undo2 } from 'lucide-react'
 import { useCube } from './useCube'
 import CubeViewport from './CubeViewport'
 import { FaceletNet } from './FaceletNet'
+import { SolutionPanel } from './SolutionPanel'
 
 const faceLabels: Record<string, string> = { U: 'Up', R: 'Right', F: 'Front', D: 'Down', L: 'Left', B: 'Back' }
 
 export function CubeExplorer() {
-  const { snapshot, active, loading, planning, pending, history, cursor, paused, playing, error, lastAlgorithm, solving, solution, solutionStart, controller } = useCube()
+  const view = useCube()
+  const { snapshot, active, loading, planning, pending, history, cursor, paused, playing, error, lastAlgorithm, solving, controller } = view
   const [notation, setNotation] = useState('')
   const [facelets, setFacelets] = useState('')
   const [suffix, setSuffix] = useState('')
@@ -15,8 +17,6 @@ export function CubeExplorer() {
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false)
   const working = !!active || planning || pending > 0
   const blocked = loading || working || solving
-  const solutionPosition = solutionStart === undefined ? 0 : cursor - solutionStart
-  const inSolution = !!solution && solutionStart !== undefined && solutionPosition >= 0 && solutionPosition <= solution.plan.steps.length
   const moveCount = history.slice(0, cursor).reduce((sum, step) => sum + step.htm, 0)
   const rotations = history.slice(0, cursor).filter(step => step.rotation).length
   useEffect(() => {
@@ -51,7 +51,7 @@ export function CubeExplorer() {
   return <>
     <div className="page-heading explorer-heading flex flex-wrap items-start justify-between gap-4">
       <div><p className="eyebrow">YOUR CUBE. EVERY POSSIBILITY.</p><h1 id="page-title">Cube Explorer</h1><p className="explorer-subtitle">Understand the cube, one turn at a time.</p></div>
-      <span className="outline-badge"><ShieldCheck size={12} className="inline mr-2" aria-hidden="true" />Engine-verified · 2A</span>
+      <span className="outline-badge"><ShieldCheck size={12} className="inline mr-2" aria-hidden="true" />Engine-verified · 2B</span>
     </div>
     {error && <div role="alert" className="engine-error">{error} {!snapshot && 'Start the backend and reconnect.'}</div>}
     {!snapshot ? <section className="panel engine-loading"><p role="status">{loading ? 'Connecting to your cube engine…' : 'No validated state is available.'}</p><button className="secondary-button" disabled={loading} onClick={() => void controller.reset()}><RefreshCw size={14} aria-hidden="true" />Reconnect to engine</button></section> : <>
@@ -72,18 +72,7 @@ export function CubeExplorer() {
         </section>
       </div>
 
-      <section className="panel solution-panel" aria-labelledby="solution-title" aria-busy={solving}>
-        <div className="solution-heading"><div><p className="eyebrow">A PATH TO SOLVED</p><h2 id="solution-title">Find a solution.</h2><p>Kociemba two-phase search, checked against your exact cube state.</p></div><button className="primary-button" disabled={blocked || (playing && !paused)} onClick={() => void controller.solve()}>{solving ? <LoaderCircle className="solver-spinner" size={16} aria-hidden="true" /> : <Sparkles size={16} aria-hidden="true" />}{solving ? 'Finding a solution…' : 'Solve cube'}</button></div>
-        {solving && <div className="solution-loading" role="status"><span>Searching locally. The first solve also builds cached tables; the worker has a 30-second budget.</span><button className="secondary-button" onClick={controller.cancelSolve}>Cancel solve</button></div>}
-        {solution ? <>
-          <div className="solution-metadata"><span className="solution-verified"><ShieldCheck size={14} aria-hidden="true" />Engine verified</span><span>Short solution · optimality unproven</span><span>{solution.move_count} HTM</span><span>{(solution.elapsed_ms / 1000).toFixed(3)} s computation</span></div>
-          {solution.plan.steps.length ? <>
-            <ol className="solution-tokens" aria-label="Computed solution">{solution.plan.steps.map((step, index) => <li key={index} className={inSolution && index < solutionPosition ? 'applied' : ''} aria-current={inSolution && index === solutionPosition - 1 ? 'step' : undefined}><span>{step.token}</span><small>{index + 1}</small></li>)}</ol>
-            <div className="solution-playback"><div className="playback-buttons"><button aria-label="Go to solution start" disabled={blocked} onClick={controller.solutionStart}><ChevronFirst size={17} /></button><button aria-label="Previous solution move" disabled={blocked || !inSolution || solutionPosition === 0} onClick={controller.back}><ChevronLeft size={18} /></button><button className="play-toggle" aria-label={playing && !paused ? 'Pause solution' : 'Play solution'} disabled={loading || solving || (!!active && !playing) || planning || pending > 0} onClick={playing && !paused ? controller.pause : controller.playSolution}>{playing && !paused ? <Pause size={17} /> : <Play size={17} />}</button><button aria-label="Next solution move" disabled={blocked || !inSolution || solutionPosition === solution.plan.steps.length} onClick={controller.forward}><ChevronRight size={18} /></button></div><span role="status">{inSolution ? `Solution step ${solutionPosition} of ${solution.plan.steps.length}${solutionPosition === solution.plan.steps.length ? ' · Solved' : ''}` : 'Return to the solution start to practice this state.'}</span></div>
-          </> : <p className="solution-empty">This cube is already solved. No face turns are needed.</p>}
-          <p className="solution-note">Verified to solve this state. This search does not prove a global minimum or a distance from optimum. <span>Metric: {solution.metric} · {solution.solver.name} {solution.solver.version}</span></p>
-        </> : !solving && <p className="solution-note">Solve displays a plan before making any moves. Step through it or play it at your chosen speed. CFOP solving is not implemented yet.</p>}
-      </section>
+      <SolutionPanel view={view} />
 
       <section className="panel timeline-panel" aria-labelledby="sequence-title">
         <div className="timeline-heading"><div><p className="eyebrow">FOLLOW THE TURNS</p><h2 id="sequence-title">Your move sequence</h2></div><div className="move-metrics"><strong data-testid="move-count">{moveCount}<small>HTM</small></strong><span>{cursor} / {history.length} actions<small>{rotations} grip rotations</small></span></div></div>

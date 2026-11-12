@@ -5,6 +5,9 @@ from typing import Any, Literal
 from fastapi import APIRouter
 from pydantic import BaseModel, ConfigDict, Field
 
+from coach.cfop.pipeline import recognize
+from coach.cfop.registry import manifest
+from coach.cfop.service import solve_cfop
 from coach.cube import (
     MAX_SEQUENCE_LENGTH,
     CubeError,
@@ -86,6 +89,33 @@ class SolutionReply(BaseModel):
     plan: dict[str, Any]
 
 
+class CFOPStageReply(BaseModel):
+    id: str
+    kind: Literal["cross", "f2l", "oll", "pll", "auf"]
+    slot: str | None
+    case_id: str
+    status: Literal["performed", "skipped"]
+    notation: str
+    reference_notation: str
+    setup: str
+    algorithm: str
+    macro_ids: list[str]
+    move_count: int
+    start_step: int
+    end_step: int
+    before_hash: str
+    after_hash: str
+    protected_pairs: list[str]
+    progress_after: dict[str, Any]
+
+
+class CFOPReply(SolutionReply):
+    method: Literal["cfop"]
+    stages: list[CFOPStageReply]
+    initial_progress: dict[str, Any]
+    reference: dict[str, str]
+
+
 @router.get("", response_model=CubeReply)
 def solved_cube():
     """A new solved state; there is no global mutable session."""
@@ -128,3 +158,21 @@ def scramble(request: StateInput):
 def solve(request: StateInput):
     """Validate, search, re-verify, and plan without changing any live cube state."""
     return solve_cube(request.to_cube())
+
+
+@router.post("/cfop", response_model=CFOPReply, tags=["CFOP"])
+def cfop_solve(request: StateInput):
+    """Genuine staged planning, independent of the two-phase full-cube solver."""
+    return solve_cfop(request.to_cube())
+
+
+@router.post("/cfop/recognize", tags=["CFOP"])
+def cfop_recognize(request: StateInput):
+    """Precise stage predicates and cases, gated on their actual preconditions."""
+    return recognize(request.to_cube())
+
+
+@router.get("/cfop/registry", tags=["CFOP"])
+def cfop_registry():
+    """Versioned cases, setup conventions, sources, and validated insertion macros."""
+    return manifest()

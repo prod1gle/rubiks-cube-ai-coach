@@ -1,0 +1,400 @@
+{
+  "schema_version": 1,
+  "registry_version": "cfop-1",
+  "source": "https://github.com/linluiben/cfop-tracker/blob/main/js/algs.js",
+  "source_sha256": "e97693dd7e1f9d9b4da5ff058bf9b4d2fa5ffe9d0b1aefb7c516f4a2f2c3f31d",
+  "retrieved": "2026-11-12",
+  "license": "MIT; see CFOP_TRACKER_LICENSE.txt",
+  "cases": [
+    {
+      "id": "OLL-1",
+      "stage": "OLL",
+      "algorithm": "R U2 (R2' F R F') U2 (R' F R F')"
+    },
+    {
+      "id": "OLL-2",
+      "stage": "OLL",
+      "algorithm": "L F L' (U2 R U2' R' U2) L F' L'"
+    },
+    {
+      "id": "OLL-3",
+      "stage": "OLL",
+      "algorithm": "r' R2 U R' U r U2' r' U M'"
+    },
+    {
+      "id": "OLL-4",
+      "stage": "OLL",
+      "algorithm": "l L2' U' L U' l' U2 l U' M'"
+    },
+    {
+      "id": "OLL-5",
+      "stage": "OLL",
+      "algorithm": "l' U2 L U L' U l"
+    },
+    {
+      "id": "OLL-6",
+      "stage": "OLL",
+      "algorithm": "r U2' R' U' R U' r'"
+    },
+    {
+      "id": "OLL-7",
+      "stage": "OLL",
+      "algorithm": "r U R' U R U2' r'"
+    },
+    {
+      "id": "OLL-8",
+      "stage": "OLL",
+      "algorithm": "l' U' L U' L' U2 l"
+    },
+    {
+      "id": "OLL-9",
+      "stage": "OLL",
+      "algorithm": "(R U R' U') R' F (R2 U R' U') F'"
+    },
+    {
+      "id": "OLL-10",
+      "stage": "OLL",
+      "algorithm": "r R2' U2' R U R' U R U R r'"
+    },
+    {
+      "id": "OLL-11",
+      "stage": "OLL",
+      "algorithm": "S' U2 R U R' U R U2' R' S"
+    },
+    {
+      "id": "OLL-12",
+      "stage": "OLL",
+      "algorithm": "M' R' U' R U' R' U2 R U' R r'"
+    },
+    {
+      "id": "OLL-13",
+      "stage": "OLL",
+      "algorithm": "F (U R U' R2') F' R (U R U' R')"
+    },
+    {
+      "id": "OLL-14",
+      "stage": "OLL",
+      "algorithm": "R' F R U R' F' R F U' F'"
+    },
+    {
+      "id": "OLL-15",
+      "stage": "OLL",
+      "algorithm": "l' U' l (L' U' L U) l' U l"
+    },
+    {
+      "id": "OLL-16",
+      "stage": "OLL",
+      "algorithm": "r U r' (R U R' U') r U' r'"
+    },
+    {
+      "id": "OLL-17",
+      "stage": "OLL",
+      "algorithm": "F R' F' R2 r' (U R U' R') U' M'"
+    },
+    {
+      "id": "OLL-18",
+      "stage": "OLL",
+      "algorithm": "r U R' U R U2' r2' U' R U' R' U2' r"
+    },
+    {
+      "id": "OLL-19",
+      "stage": "OLL",
+      "algorithm": "r' R U (R U R' U') M' (R' F R F')"
+    },
+    {
+      "id": "OLL-20",
+      "stage": "OLL",
+      "algorithm": "(r U R' U') M2' (U R U' R') U' M'"
+    },
+    {
+      "id": "OLL-21",
+      "stage": "OLL",
+      "algorithm": "R U R' U R U' R' U R U2' R'"
+    },
+    {
+      "id": "OLL-22",
+      "stage": "OLL",
+      "algorithm": "R U2' (R2' U' R2 U' R2') U2' R"
+    },
+    {
+      "id": "OLL-23",
+      "stage": "OLL",
+      "algorithm": "R2 D R' U2 R D' R' U2 R'"
+    },
+    {
+      "id": "OLL-24",
+      "stage": "OLL",
+      "algorithm": "(r U R' U') (r' F R F')"
+    },
+    {
+      "id": "OLL-25",
+      "stage": "OLL",
+      "algorithm": "(F R' F' r) (U R U' r')"
+    },
+    {
+      "id": "OLL-26",
+      "stage": "OLL",
+      "algorithm": "R U2' R' U' R U' R'"
+    },
+    {
+      "id": "OLL-27",
+      "stage": "OLL",
+      "algorithm": "R U R' U R U2' R'"
+    },
+    {
+      "id": "OLL-28",
+      "stage": "OLL",
+      "algorithm": "(r U R' U') r' R (U R U' R')"
+    },
+    {
+      "id": "OLL-29",
+      "stage": "OLL",
+      "algorithm": "M U R U R' U' R' F R F' M'"
+    },
+    {
+      "id": "OLL-30",
+      "stage": "OLL",
+      "algorithm": "M U' L' U' L U L F' L' F M'"
+    },
+    {
+      "id": "OLL-31",
+      "stage": "OLL",
+      "algorithm": "R' U' F (U R U' R') F' R"
+    },
+    {
+      "id": "OLL-32",
+      "stage": "OLL",
+      "algorithm": "L U F' (U' L' U L) F L'"
+    },
+    {
+      "id": "OLL-33",
+      "stage": "OLL",
+      "algorithm": "(R U R' U') (R' F R F')"
+    },
+    {
+      "id": "OLL-34",
+      "stage": "OLL",
+      "algorithm": "f R f' U' r' U' R U M'"
+    },
+    {
+      "id": "OLL-35",
+      "stage": "OLL",
+      "algorithm": "R U2' (R2' F R F') R U2' R'"
+    },
+    {
+      "id": "OLL-36",
+      "stage": "OLL",
+      "algorithm": "L' U' L U' L' U L U (L F' L' F)"
+    },
+    {
+      "id": "OLL-37",
+      "stage": "OLL",
+      "algorithm": "(F R' F' R) (U R U' R')"
+    },
+    {
+      "id": "OLL-38",
+      "stage": "OLL",
+      "algorithm": "R U R' U R U' R' U' (R' F R F')"
+    },
+    {
+      "id": "OLL-39",
+      "stage": "OLL",
+      "algorithm": "(f' L F L') (U' L' U L) S"
+    },
+    {
+      "id": "OLL-40",
+      "stage": "OLL",
+      "algorithm": "(f R' F' R) (U R U' R') S'"
+    },
+    {
+      "id": "OLL-41",
+      "stage": "OLL",
+      "algorithm": "R U R' U R U2' R' F (R U R' U') F'"
+    },
+    {
+      "id": "OLL-42",
+      "stage": "OLL",
+      "algorithm": "(R' F R F') (R' F R F') (R U R' U') R U R'"
+    },
+    {
+      "id": "OLL-43",
+      "stage": "OLL",
+      "algorithm": "R' U' F' U F R"
+    },
+    {
+      "id": "OLL-44",
+      "stage": "OLL",
+      "algorithm": "F (U R U' R') F'"
+    },
+    {
+      "id": "OLL-45",
+      "stage": "OLL",
+      "algorithm": "F (R U R' U') F'"
+    },
+    {
+      "id": "OLL-46",
+      "stage": "OLL",
+      "algorithm": "R' U' (R' F R F') U R"
+    },
+    {
+      "id": "OLL-47",
+      "stage": "OLL",
+      "algorithm": "(F R' F' R) U2 R U' R' U R U2' R'"
+    },
+    {
+      "id": "OLL-48",
+      "stage": "OLL",
+      "algorithm": "F (R U R' U') (R U R' U') F'"
+    },
+    {
+      "id": "OLL-49",
+      "stage": "OLL",
+      "algorithm": "r U' r2' U r2 U r2' U' r"
+    },
+    {
+      "id": "OLL-50",
+      "stage": "OLL",
+      "algorithm": "l' U l2 U' l2' U' l2 U l'"
+    },
+    {
+      "id": "OLL-51",
+      "stage": "OLL",
+      "algorithm": "F (U R U' R') (U R U' R') F'"
+    },
+    {
+      "id": "OLL-52",
+      "stage": "OLL",
+      "algorithm": "R' F' U' F U' R U R' U R"
+    },
+    {
+      "id": "OLL-53",
+      "stage": "OLL",
+      "algorithm": "l' U' L U' L' U L U' L' U2 l"
+    },
+    {
+      "id": "OLL-54",
+      "stage": "OLL",
+      "algorithm": "r U R' U R U' R' U R U2' r'"
+    },
+    {
+      "id": "OLL-55",
+      "stage": "OLL",
+      "algorithm": "R' F U R U' R2' F' R2 U R' U' R"
+    },
+    {
+      "id": "OLL-56",
+      "stage": "OLL",
+      "algorithm": "r U r' (U R U' R') U R U' M' U' r'"
+    },
+    {
+      "id": "OLL-57",
+      "stage": "OLL",
+      "algorithm": "(R U R' U') M' (U R U' r')"
+    },
+    {
+      "id": "PLL-Aa",
+      "stage": "PLL",
+      "algorithm": "x L2 D2 (L' U' L) D2 (L' U L')"
+    },
+    {
+      "id": "PLL-Ab",
+      "stage": "PLL",
+      "algorithm": "x R2 D2 (R U R') D2 (R U' R)"
+    },
+    {
+      "id": "PLL-E",
+      "stage": "PLL",
+      "algorithm": "x' (L' U L D') (L' U' L D) (L' U' L D') (L' U L D)"
+    },
+    {
+      "id": "PLL-Ua",
+      "stage": "PLL",
+      "algorithm": "R U' R U R U R U' R' U' R2"
+    },
+    {
+      "id": "PLL-Ub",
+      "stage": "PLL",
+      "algorithm": "R2 U R U R' U' R' U' R' U R'"
+    },
+    {
+      "id": "PLL-H",
+      "stage": "PLL",
+      "algorithm": "M2 U M2 U2 M2 U M2"
+    },
+    {
+      "id": "PLL-Z",
+      "stage": "PLL",
+      "algorithm": "M' U M2 U M2 U M' U2 M2"
+    },
+    {
+      "id": "PLL-Ga",
+      "stage": "PLL",
+      "algorithm": "R2 U R' U R' U' R U' R2 U' D R' U R D'"
+    },
+    {
+      "id": "PLL-Gb",
+      "stage": "PLL",
+      "algorithm": "(R' U' R) (U D') R2 U R' U R U' R U' R2 D"
+    },
+    {
+      "id": "PLL-Gc",
+      "stage": "PLL",
+      "algorithm": "R2 U' R U' R U R' U R2 U D' R U' R' D"
+    },
+    {
+      "id": "PLL-Gd",
+      "stage": "PLL",
+      "algorithm": "(R U R') (U' D) R2 U' R U' R' U R' U R2 D'"
+    },
+    {
+      "id": "PLL-T",
+      "stage": "PLL",
+      "algorithm": "(R U R' U') R' F R2 U' R' U' (R U R') F'"
+    },
+    {
+      "id": "PLL-F",
+      "stage": "PLL",
+      "algorithm": "R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R"
+    },
+    {
+      "id": "PLL-Ja",
+      "stage": "PLL",
+      "algorithm": "x (R2 F R F') R U2 (r' U r) U2"
+    },
+    {
+      "id": "PLL-Jb",
+      "stage": "PLL",
+      "algorithm": "(R U R' F') (R U R' U') R' F R2 U' R'"
+    },
+    {
+      "id": "PLL-Ra",
+      "stage": "PLL",
+      "algorithm": "(R U' R' U') (R U R D) (R' U' R D') (R' U2 R')"
+    },
+    {
+      "id": "PLL-Rb",
+      "stage": "PLL",
+      "algorithm": "R2 F R (U R U' R') F' R U2 R' U2 R"
+    },
+    {
+      "id": "PLL-Na",
+      "stage": "PLL",
+      "algorithm": "(R U R' U) (R U R' F' R U R' U' R' F R2 U' R') (U2 R U' R')"
+    },
+    {
+      "id": "PLL-Nb",
+      "stage": "PLL",
+      "algorithm": "r' D' F (r U' r') F' D (r2 U r' U') (r' F r F')"
+    },
+    {
+      "id": "PLL-V",
+      "stage": "PLL",
+      "algorithm": "R' U R' U' y R' F' R2 U' R' U R' F R F"
+    },
+    {
+      "id": "PLL-Y",
+      "stage": "PLL",
+      "algorithm": "F (R U' R' U') (R U R') F' (R U R' U') (R' F R F')"
+    }
+  ]
+}

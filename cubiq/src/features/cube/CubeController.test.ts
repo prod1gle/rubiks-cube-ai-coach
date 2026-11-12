@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { plans, snapshots, solutions } from '../../test/cube-data'
+import { plans, snapshots, solutions, cfopSolutions } from '../../test/cube-data'
 import { CubeController } from './CubeController'
 import type { CubeTransport } from './CubeController'
 import type { CubePlan, CubeSolution } from '../../api/cube'
 
 const flush = async () => { for (let i = 0; i < 10; i++) await Promise.resolve() }
 async function setup() {
-  const api = { load: vi.fn().mockResolvedValue(snapshots.solved), plan: vi.fn(), scramble: vi.fn().mockResolvedValue(plans.scramble), import: vi.fn(), solve: vi.fn() } satisfies CubeTransport
+  const api = { load: vi.fn().mockResolvedValue(snapshots.solved), plan: vi.fn(), scramble: vi.fn().mockResolvedValue(plans.scramble), import: vi.fn(), solve: vi.fn(), cfop: vi.fn() } satisfies CubeTransport
   const controller = new CubeController(api)
   controller.connect(); await flush()
   return { controller, api }
@@ -319,5 +319,82 @@ describe('verified full-cube solving', () => {
     expect(c.getSnapshot().active).toBeUndefined()
     expect(c.getSnapshot().history).toHaveLength(0)
     expect(c.getSnapshot().solution?.move_count).toBe(0)
+  })
+})
+
+describe('genuine CFOP transport and stage playback', () => {
+  async function startCFOP() {
+    const context = await setup()
+    context.api.load.mockResolvedValue(snapshots.cfopScrambled)
+    await context.controller.reset()
+    context.api.cfop.mockResolvedValue(cfopSolutions.scrambled)
+    return context
+  }
+  it('uses the independent CFOP endpoint, previews eight stage boundaries, and never calls two-phase', async () => {
+    const { controller: c, api } = await startCFOP()
+    await c.solve('cfop')
+    expect(api.cfop).toHaveBeenCalledWith(snapshots.cfopScrambled.state, expect.any(AbortSignal))
+    expect(api.solve).not.toHaveBeenCalled()
+    expect(c.getSnapshot().solution?.method).toBe('cfop')
+    expect(c.getSnapshot().solution?.stages).toHaveLength(8)
+    expect(c.getSnapshot().cursor).toBe(0)
+    expect(c.getSnapshot().snapshot).toBe(snapshots.cfopScrambled)
+  })
+  it('plays a chosen stage from its exact saved start and stops at its boundary', async () => {
+    const { controller: c, api } = await startCFOP()
+    await c.solve('cfop')
+    const stage = cfopSolutions.scrambled.stages!.find(s => s.move_count > 0)!
+    c.playStage(stage.id)
+    for (let i = 0; i < stage.move_count; i++) await finish(c)
+    expect(c.getSnapshot().cursor).toBe(stage.end_step)
+    expect(c.getSnapshot().snapshot?.state_hash).toBe(stage.after_hash)
+    expect(c.getSnapshot().playing).toBe(false)
+    expect(c.getSnapshot().active).toBeUndefined()
+    c.playStage(stage.id)
+    expect(c.getSnapshot().cursor).toBe(stage.start_step)
+    c.pause(); await finish(c)
+    c.resume(); await flush()
+    for (let i = 1; i < stage.move_count; i++) await finish(c)
+    expect(c.getSnapshot().cursor).toBe(stage.end_step)
+    expect(api.cfop).toHaveBeenCalledTimes(1)
+    expect(api.plan).not.toHaveBeenCalled()
+  })
+  it('a full solution playback after stage playback continues through all remaining stages', async () => {
+    const { controller: c } = await startCFOP()
+    await c.solve('cfop')
+    const stage = cfopSolutions.scrambled.stages!.find(s => s.move_count > 0)!
+    c.playStage(stage.id)
+    for (let i = 0; i < stage.move_count; i++) await finish(c)
+    c.playSolution()
+    for (let i = stage.end_step; i < cfopSolutions.scrambled.plan.steps.length; i++) await finish(c)
+    expect(c.getSnapshot().snapshot?.is_solved).toBe(true)
+    expect(c.getSnapshot().cursor).toBe(cfopSolutions.scrambled.plan.steps.length)
+  })
+  it.each([
+    solutions.r,
+    { ...cfopSolutions.scrambled, stages: cfopSolutions.scrambled.stages!.slice(1) },
+    { ...cfopSolutions.scrambled, stages: cfopSolutions.scrambled.stages!.map((s, i) => i === 2 ? { ...s, before_hash: 'gap' } : s) },
+    { ...cfopSolutions.scrambled, stages: cfopSolutions.scrambled.stages!.map((s, i) => i === 2 ? { ...s, end_step: s.end_step + 1 } : s) },
+    { ...cfopSolutions.scrambled, stages: cfopSolutions.scrambled.stages!.map((s, i) => i === 2 ? { ...s, notation: 'R U' } : s) },
+    { ...cfopSolutions.scrambled, stages: cfopSolutions.scrambled.stages!.map((s, i) => i === 2 ? { ...s, slot: 'FR', id: 'f2l-FR' } : s) },
+  ])('rejects generic fallback, corrupt boundaries, and duplicated pair metadata', async result => {
+    const { controller: c, api } = await startCFOP()
+    api.cfop.mockResolvedValue(result)
+    await c.solve('cfop')
+    expect(c.getSnapshot().solution).toBeUndefined()
+    expect(c.getSnapshot().error).toContain('No moves were applied')
+    expect(c.getSnapshot().cursor).toBe(0)
+  })
+  it('reset during CFOP search invalidates its result and clears future stage playback', async () => {
+    const { controller: c, api } = await startCFOP()
+    let resolve!: (value: CubeSolution) => void
+    api.cfop.mockReturnValue(new Promise<CubeSolution>(done => { resolve = done }))
+    const search = c.solve('cfop')
+    api.load.mockResolvedValueOnce(snapshots.solved)
+    await c.reset(); resolve(cfopSolutions.scrambled); await search
+    expect(c.getSnapshot().snapshot).toBe(snapshots.solved)
+    expect(c.getSnapshot().solution).toBeUndefined()
+    c.playStage('cross')
+    expect(c.getSnapshot().active).toBeUndefined()
   })
 })

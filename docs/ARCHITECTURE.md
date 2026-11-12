@@ -6,6 +6,8 @@ Status: architecture baseline, November 12, 2026. M1A implements the application
 
 **M2A checkpoint:** `coach.solvers` adds an isolated two-phase candidate worker and a verifying coordinator. `/api/cube/solve` validates an immutable state, verifies the returned algorithm using the engine, and returns metadata plus exact playback snapshots. The client previews these as future timeline entries; animation advances the existing guarded cursor once per turn. No competing frontend move engine, persisted sessions, or CFOP stages are added. See [2A delivery](MILESTONE_2A.md).
 
+**M2B checkpoint:** `coach.cfop` is an independent staged planner with engine-derived projected searches, a versioned OLL/PLL registry, isolated worker, and stage verifier. New predicates, reference rebasing, private catalog notation compilation, and projected piece transitions remain in `coach.cube`. `coach.solvers.runtime` contains only a shared admission gate/error contract; CFOP never imports the two-phase algorithm. The UI previews and animates exact per-stage ranges. See [CFOP engine design](CFOP_ENGINE.md).
+
 ## Runtime and trust boundaries
 
 Build a modular local monolith with two development processes: Vite and FastAPI. FastAPI owns sessions and database writes and launches a small, bounded process pool for CPU-heavy work. A production local build needs only the backend process and its child workers. Avoid a third Node service, Redis, or a distributed job queue initially.

@@ -57,6 +57,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
+    { name = "numpy" },
     { name = "rubik-solver-py" },
     { name = "uvicorn" },
 ]
@@ -71,6 +72,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115,<1" },
+    { name = "numpy", specifier = ">=2,<3" },
     { name = "rubik-solver-py", specifier = "==0.1.1" },
     { name = "uvicorn", specifier = ">=0.34,<1" },
 ]

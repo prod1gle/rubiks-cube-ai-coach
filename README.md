@@ -1,19 +1,19 @@
 # Cubiq — Rubik’s Cube AI Coach
 
-A local workspace for more intentional 3×3 practice. **Milestones 1A–1C and 2A are implemented: application scaffolding, the canonical state engine, an interactive 3D Cube Explorer, and verified full-cube solving.** CFOP, optimality proofs, timer, analytics, algorithm trainer, persistent solve storage, physical camera tracking, and AI features are not implemented yet.
+A local workspace for more intentional 3×3 practice. **Milestones 1A–1C and 2A–2B are implemented: application scaffolding, the canonical state engine, an interactive 3D Cube Explorer, verified full-cube solving, and a genuine CFOP pipeline.** Full-solve optimality proofs, timer, analytics, algorithm trainer, persistent solve storage, physical camera tracking, and AI features are not implemented yet.
 
 ## Available now
 
 - React + TypeScript + Vite frontend with Tailwind CSS, a responsive dark layout, keyboard focus styles, reduced-motion support, and skip navigation.
 - Six working routes: Dashboard, Cube Explorer, Live Solve, Solve Analysis, Algorithm Trainer, and History. The four future solve/training/history workflows explicitly say **Not implemented yet**.
 - Cube Explorer: Three.js / React Three Fiber rendering of all 26 cubies and 54 stickers, smooth face/grip animations, orbit/zoom, keyboard and button moves, manual algorithms, legal random scrambles, reset, undo/redo, and playback. The 2D state inspector and import/export remain available. The frontend never computes cube permutations.
-- Full-cube two-phase solving: state validation, independent solution verification, honest optimality labeling, and step-by-step solution playback.
+- Two independent solving approaches: engine-verified two-phase short solutions, and genuine Cross → four F2L pairs → OLL → PLL → AUF with stage counts and playback. Both label full-solve optimality unproven.
 - One immutable Python cubie engine with all face-turn variants, x/y/z grip rotations, complete parsing, serialization, inversion, HTM, and reachability validation. See [the exact cube conventions](docs/CUBE_CONVENTIONS.md).
 - A real API connection check on the Dashboard, with checking, reachable, unavailable, and retry states. No sample solves or fabricated analytics.
 - FastAPI application factory, typed health response, explicit local CORS policy, pytest, Ruff, and a uv-managed virtual environment.
 - Locked frontend/backend dependencies and build, lint, and test commands.
 
-The Dashboard hero cube remains a decorative CSS illustration. The separate interactive Cube Explorer renders real engine-provided geometry and snapshots. The full-cube solver returns engine-verified two-phase solutions with optimality explicitly unproven. The interface makes no timing, vision, or AI claims. Full M1 acceptance remains pending for sessions/events, persistence, stage predicates, and expanded notation; 1B does not imply those are implemented.
+The Dashboard hero cube remains a decorative CSS illustration. The separate interactive Cube Explorer renders real engine-provided geometry and snapshots. Both solving approaches return engine-verified solutions with full-solve optimality explicitly unproven. The interface makes no timing, vision, or AI claims. Full M1 acceptance remains pending for sessions/events, persistence, stage predicates, and expanded notation; 1B does not imply those are implemented.
 
 ## macOS prerequisites
 
@@ -82,7 +82,7 @@ Stop each process with `Ctrl+C`. Both services bind to loopback. Ports are fixed
 `GET /health` returns:
 
 ```json
-{"status":"ok","service":"cubiq-api","version":"0.1.0","milestone":"2A"}
+{"status":"ok","service":"cubiq-api","version":"0.1.0","milestone":"2B"}
 ```
 
 `GET /api/health` is an equivalent alias for the frontend’s `/api` proxy. Both Vite development and preview forward `/api/*` to `http://127.0.0.1:8000`. The health endpoint reports API availability, not readiness of future cube features.
@@ -109,6 +109,9 @@ Open [Cube Explorer](http://127.0.0.1:5173/cube-explorer) after starting both ap
 | `POST /api/cube/plan` | Validate up to 128 moves and return exact per-turn snapshots and animation descriptors. |
 | `POST /api/cube/scramble` | Return a plan of 20 random legal outer turns from the supplied state. |
 | `POST /api/cube/solve` | Validate a legal state, run a bounded two-phase search, independently verify its solution, and return metadata plus a playback plan. |
+| `POST /api/cube/cfop` | Generate and independently verify genuine Cross, four pairs, OLL, PLL and AUF stages. |
+| `POST /api/cube/cfop/recognize` | Return exact stage predicates and eligible case recognition in the fixed white-down reference. |
+| `GET /api/cube/cfop/registry` | Versioned 57 OLL / 21 PLL records, source metadata, compiled notation, U setup conventions, and insertion macros. |
 
 For example, from another terminal:
 
@@ -152,6 +155,20 @@ One worker is allowed per API process. The worker has a **30-second wall-clock b
 
 The first unsolved request creates versioned NumPy tables in **`cubiq/backend/.cache/rubik-solver-py-0.1.1/`**. This ignored cache is local derived data, requires a writable directory, and needs no network. Subsequent subprocesses reload it. For a different cache location, set `CUBIQ_SOLVER_CACHE_DIR` to a writable absolute path before starting the backend. No additional install or warmup command is required. Measured cold/warm evidence and known limits are recorded in [the 2A report](docs/MILESTONE_2A.md). This is a small, single-maintainer upstream dependency; the adapter is isolated, pinned, and regression-tested so it can be replaced.
 
+## Genuine CFOP solving (milestone 2B)
+
+Choose **CFOP** under Solving approach, then **Solve cube**. The plan contains Cross, all four F2L slots in the chosen order, OLL, PLL, and final AUF. Each row shows its case ID, actual emitted HTM count, translated moves, and a stage play button. A skipped goal is explicit with zero moves. **Play a stage** restores its exact verified starting state and stops at its endpoint. **Play solution**, next/previous, pause, and restart use the same verified animation path. Switching approaches never relabels an existing short solution as CFOP.
+
+This pipeline uses a fixed **white Cross down, green front** reference. The current cube grip is preserved and all playback notation is translated into that grip. OLL/PLL IDs and registry algorithms refer to the fixed reference, so AUF can appear as a different face in the displayed current-grip notation. This is not color-neutral solving.
+
+The implementation is independent of the two-phase solver: an exact 190,080-state Cross search; a pair-selection/insertion graph that covers all 8,256 target-pair/protected-slot configurations; full **57 OLL** recognition across all 216 legal orientations; full **21 PLL** recognition across all 288 legal permutations; and separate AUF. All slots solved at the start of a pair stage remain solved at each insertion boundary. Individual turns can temporarily disturb them. The pair order is greedy, and the result is not optimized for global HTM or human execution speed.
+
+There is no known missing F2L placement subset within this fixed-reference legal-state scope. Color neutrality, advanced multislotting/pseudoslotting, user algorithm preferences, global pair-order optimization, and recorded-solve stage inference are not implemented. The conventional 41 basic F2L numbers are not used to mislabel arbitrary trapped-piece configurations; exact coordinate case IDs are documented in [CFOP engine conventions](docs/CFOP_ENGINE.md).
+
+Both approaches share a single worker-admission slot per API process and a 30-second worker budget. CFOP derives its search tables locally in memory; it needs no downloaded tables, external solver service, API key, or extra startup command. Every stage's goals, registry identity, protected endpoints, hashes and complete notation are rechecked by the canonical engine before a result is returned. Failures return no candidate moves. The current plan cap is 128 outer-turn actions.
+
+Registry slice/wide notation is privately compiled through the canonical engine into outer turns; the public manual-entry grammar still supports only face turns and x/y/z. Counts are the actual emitted outer HTM actions, not original source token counts or reduced move counts. Production last-layer notation is sourced from an MIT-licensed registry with its notice packaged. All 78 case labels are independently checked against the requested SolveTheCube reference using committed cubejs oracle states. See [the complete design and provenance](docs/CFOP_ENGINE.md) and [2B delivery evidence](docs/MILESTONE_2B.md).
+
 ## Build, lint, and test
 
 From the repository root:
@@ -171,7 +188,7 @@ npm --prefix cubiq test
 .tools/bin/uv build --project cubiq/backend --cache-dir .cache/uv
 ```
 
-Backend pytest covers all move/inverse and fourth-power identities, 32 named oracle states, 1,000 seeded oracle sequences, 128 arbitrary legal-state fixtures, all 24 grips, parser/metric/serialization behavior, impossible states, and the real HTTP API. The committed corpus comes from pinned `cubejs@1.3.2`; pytest requires no Node process or network access. Current verification includes 410 backend tests and 56 frontend tests. The 2A additions run the real solver on known scrambles, 24 seeded 25-face-turn scrambles, and all 24 grips; inject invalid output, worker failure, timeout, and busy conditions; and verify preview, step/playback, state binding, cancellation, and stale-result rejection in the frontend. The 1C tests cover exact animation endpoints, rapid inputs, duplicate/stale callbacks, reset and disconnect races, undo/redo branching, pause/resume, playback, keyboard editing guards, WebGL fallback, and reduced motion. See [M1C delivery evidence](docs/MILESTONE_1C.md); the [M1B report](docs/MILESTONE_1B.md) records the earlier engine checkpoint.
+Backend pytest covers all move/inverse and fourth-power identities, 32 named oracle states, 1,000 seeded oracle sequences, 128 arbitrary legal-state fixtures, all 24 grips, parser/metric/serialization behavior, impossible states, and the real HTTP API. The committed corpus comes from pinned `cubejs@1.3.2`; pytest requires no Node process or network access. Current verification includes 839 backend tests and 71 frontend tests. The 2B suite exhausts the projected F2L configurations, legal OLL orientations and PLL permutations; checks 78 independent reference labels and all 24 grips; and solves 200 seeded 25-face-turn scrambles plus 30 independently sampled legal cubie states. Frontend tests cover CFOP selection, truthful method labels, stage boundaries, stage-only/full playback, skipped stages, cancellation and failure states. The 2A additions run the real solver on known scrambles, 24 seeded 25-face-turn scrambles, and all 24 grips; inject invalid output, worker failure, timeout, and busy conditions; and verify preview, step/playback, state binding, cancellation, and stale-result rejection in the frontend. The 1C tests cover exact animation endpoints, rapid inputs, duplicate/stale callbacks, reset and disconnect races, undo/redo branching, pause/resume, playback, keyboard editing guards, WebGL fallback, and reduced motion. See [M1C delivery evidence](docs/MILESTONE_1C.md); the [M1B report](docs/MILESTONE_1B.md) records the earlier engine checkpoint.
 
 For frontend test watch mode: `npm --prefix cubiq run test:watch`.
 
@@ -201,10 +218,12 @@ cubiq/
     src/coach/main.py          # application factory, CORS, and health
     src/coach/cube.py          # single authoritative state/rules module
     src/coach/api/cube.py      # stateless HTTP adapters, no move rules
-    src/coach/solvers/         # bounded third-party worker and independent verification
+    src/coach/solvers/         # two-phase adapter and shared process admission/errors
+    src/coach/cfop/            # independent staged search, registry, worker and verifier
     tests/test_health.py       # health and CORS integration tests
     tests/test_cube*.py        # engine and API tests
     tests/test_solver.py       # real solver and failure-injection tests
+    tests/test_cfop.py         # exhaustive CFOP projections, case coverage and scramble tests
     tests/fixtures/            # independent oracle outputs
   scripts/generate-cube-fixtures.cjs # optional, local-only oracle regeneration
   scripts/generate-ui-fixtures.py # engine snapshots/plans used by frontend tests
@@ -218,8 +237,8 @@ The original `cubejs` runtime dependency was removed from the scaffold. M1B uses
 
 The [architecture](docs/ARCHITECTURE.md), [technical decisions](docs/TECHNICAL_DECISIONS.md), [roadmap](docs/ROADMAP.md), [acceptance tests](docs/ACCEPTANCE_TESTS.md), and [risks](docs/RISKS.md) remain the implementation baseline. The Python cube engine is the sole state authority. Future recommendations must use it for verification. Two-phase solving will remain distinct from proven optimality. Physical tracking will abstain when evidence is uncertain.
 
-The requested [SolveTheCube CFOP reference](https://solvethecube.com/algorithms) remains a future catalog source; no catalog has been imported in this milestone.
+The requested [SolveTheCube CFOP reference](https://solvethecube.com/algorithms) is used to check case numbering and independent reference states. Functional production notation comes from the MIT-licensed source documented in [CFOP conventions](docs/CFOP_ENGINE.md); no reference illustrations, prose, or page presentation are bundled.
 
 ## Stopping point
 
-Milestone **2A ends here**. Verified full-cube solutions and solution playback are available. See the [2A delivery report](docs/MILESTONE_2A.md) and earlier [1C report](docs/MILESTONE_1C.md). Persistent solve sessions/event logs, CFOP, exact optimality search, timing, and physical tracking remain future work. Earlier reports preserve the [1B engine](docs/MILESTONE_1B.md) and [1A scaffold](docs/MILESTONE_1A.md) checkpoints.
+Milestone **2B ends here**. Genuine CFOP plans and per-stage playback join the verified short-solution solver. See the [2B delivery report](docs/MILESTONE_2B.md), [2A report](docs/MILESTONE_2A.md), and earlier [1C report](docs/MILESTONE_1C.md). Persistent solve sessions/event logs, color-neutral solving, exact full-solve optimality search, timing, and physical tracking remain future work. Earlier reports preserve the [1B engine](docs/MILESTONE_1B.md) and [1A scaffold](docs/MILESTONE_1A.md) checkpoints.

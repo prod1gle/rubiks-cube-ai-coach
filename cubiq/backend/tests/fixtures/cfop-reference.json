@@ -1,0 +1,466 @@
+{
+  "source": "https://solvethecube.com/algorithms",
+  "retrieved": "2026-11-12",
+  "source_sha256": "b189522ae18f0fd19a6b90de67f4235192fd8bacd8881d6184839946d6f2679e",
+  "oracle": "cubejs@1.3.2",
+  "cases": [
+    {
+      "id": "OLL-27",
+      "facelets": "RUFUUUBUULLURRRRRRRRBFFFFFFDDDDDDDDDFFULLLLLLLBUBBBBBB"
+    },
+    {
+      "id": "OLL-26",
+      "facelets": "FUUUUURUBULLRRRRRRUFLFFFFFFDDDDDDDDDUBBLLLLLLFRRBBBBBB"
+    },
+    {
+      "id": "OLL-25",
+      "facelets": "FUUUUUUUBRRBRRRRRRFFUFFFFFFDDDDDDDDDULLLLLLLLLBRBBBBBB"
+    },
+    {
+      "id": "OLL-24",
+      "facelets": "FUUUUURUURRBRRRRRRUFFFFFFFFDDDDDDDDDLLBLLLLLLLBUBBBBBB"
+    },
+    {
+      "id": "OLL-22",
+      "facelets": "FULUUUBULBRFRRRRRRRBUFFFFFFDDDDDDDDDUFULLLLLLULRBBBBBB"
+    },
+    {
+      "id": "OLL-21",
+      "facelets": "BUBUUUFUFULURRRRRRLFRFFFFFFDDDDDDDDDUBULLLLLLRRLBBBBBB"
+    },
+    {
+      "id": "OLL-23",
+      "facelets": "UUUUUURUFLRFRRRRRRUFUFFFFFFDDDDDDDDDLLBLLLLLLRBBBBBBBB"
+    },
+    {
+      "id": "OLL-1",
+      "facelets": "BLFBUFRRRUUURRRRRRFUBFFFFFFDDDDDDDDDUUULLLLLLLULBBBBBB"
+    },
+    {
+      "id": "OLL-2",
+      "facelets": "BLRBUFFRRFUBRRRRRRLUUFFFFFFDDDDDDDDDUUULLLLLLUULBBBBBB"
+    },
+    {
+      "id": "OLL-4",
+      "facelets": "LLUBURFFRUUBRRRRRRUUBFFFFFFDDDDDDDDDUURLLLLLLLUFBBBBBB"
+    },
+    {
+      "id": "OLL-3",
+      "facelets": "BBRLUFLRUFUURRRRRRBULFFFFFFDDDDDDDDDRUULLLLLLFUUBBBBBB"
+    },
+    {
+      "id": "OLL-19",
+      "facelets": "ULUFUBFRRUUFRRRRRRLUBFFFFFFDDDDDDDDDLUULLLLLLRUBBBBBBB"
+    },
+    {
+      "id": "OLL-18",
+      "facelets": "FBRFULURULUBRRRRRRRUBFFFFFFDDDDDDDDDLUFLLLLLLUUUBBBBBB"
+    },
+    {
+      "id": "OLL-17",
+      "facelets": "UBFFULFRULURRRRRRRLUBFFFFFFDDDDDDDDDBUULLLLLLUURBBBBBB"
+    },
+    {
+      "id": "OLL-20",
+      "facelets": "ULUFUBURUFUFRRRRRRLULFFFFFFDDDDDDDDDBUBLLLLLLRURBBBBBB"
+    },
+    {
+      "id": "OLL-57",
+      "facelets": "UFUUUUURURBRRRRRRRFUFFFFFFFDDDDDDDDDLLLLLLLLLBUBBBBBBB"
+    },
+    {
+      "id": "OLL-28",
+      "facelets": "ULUUUBUUURURRRRRRRFFFFFFFFFDDDDDDDDDLRLLLLLLLBUBBBBBBB"
+    },
+    {
+      "id": "OLL-55",
+      "facelets": "FUBFURLULUUURRRRRRBBFFFFFFFDDDDDDDDDUUULLLLLLRLRBBBBBB"
+    },
+    {
+      "id": "OLL-52",
+      "facelets": "BULLURFULUUURRRRRRUFFFFFFFFDDDDDDDDDRURLLLLLLBBUBBBBBB"
+    },
+    {
+      "id": "OLL-51",
+      "facelets": "BLRUUUFBRFRBRRRRRRLUUFFFFFFDDDDDDDDDUFULLLLLLUULBBBBBB"
+    },
+    {
+      "id": "OLL-56",
+      "facelets": "RFRUUUFRBUBURRRRRRLULFFFFFFDDDDDDDDDULULLLLLLFUBBBBBBB"
+    },
+    {
+      "id": "OLL-45",
+      "facelets": "RFUUUURRUFBBRRRRRRFULFFFFFFDDDDDDDDDULULLLLLLLUBBBBBBB"
+    },
+    {
+      "id": "OLL-33",
+      "facelets": "FFUUUURRURBBRRRRRRUUFFFFFFFDDDDDDDDDLLBLLLLLLLUUBBBBBB"
+    },
+    {
+      "id": "OLL-40",
+      "facelets": "ULBUUUFFURRLRRRRRRLUFFFFFFFDDDDDDDDDBBULLLLLLUURBBBBBB"
+    },
+    {
+      "id": "OLL-39",
+      "facelets": "BRUUUUUFFUBBRRRRRRFURFFFFFFDDDDDDDDDRLLLLLLLLLUUBBBBBB"
+    },
+    {
+      "id": "OLL-14",
+      "facelets": "RFLUUUBRURBFRRRRRRUUFFFFFFFDDDDDDDDDULLLLLLLLUUBBBBBBB"
+    },
+    {
+      "id": "OLL-13",
+      "facelets": "FFBUUUURLBBURRRRRRRUUFFFFFFDDDDDDDDDLLFLLLLLLRUUBBBBBB"
+    },
+    {
+      "id": "OLL-16",
+      "facelets": "FFUUUURRBUBLRRRRRRUULFFFFFFDDDDDDDDDULBLLLLLLFURBBBBBB"
+    },
+    {
+      "id": "OLL-15",
+      "facelets": "UFFUUUBLLBRURRRRRRRUUFFFFFFDDDDDDDDDRBULLLLLLLUFBBBBBB"
+    },
+    {
+      "id": "OLL-46",
+      "facelets": "UULFULUULUUURRRRRRRRFFFFFFFDDDDDDDDDBUFLLLLLLBBRBBBBBB"
+    },
+    {
+      "id": "OLL-34",
+      "facelets": "RFFUUUURURBURRRRRRLUFFFFFFFDDDDDDDDDULBLLLLLLLUBBBBBBB"
+    },
+    {
+      "id": "OLL-38",
+      "facelets": "RUUUUFURLUURRRRRRRLUFFFFFFFDDDDDDDDDFBBLLLLLLBLUBBBBBB"
+    },
+    {
+      "id": "OLL-36",
+      "facelets": "UULFUURLUBBFRRRRRRFURFFFFFFDDDDDDDDDLUULLLLLLURBBBBBBB"
+    },
+    {
+      "id": "OLL-44",
+      "facelets": "RFUBUURUUFRBRRRRRRFLLFFFFFFDDDDDDDDDUUULLLLLLLUBBBBBBB"
+    },
+    {
+      "id": "OLL-43",
+      "facelets": "UFLUUBUULUUURRRRRRRRFFFFFFFDDDDDDDDDBLFLLLLLLBURBBBBBB"
+    },
+    {
+      "id": "OLL-31",
+      "facelets": "BUUBUULFURRBRRRRRRUUFFFFFFFDDDDDDDDDRUFLLLLLLLLUBBBBBB"
+    },
+    {
+      "id": "OLL-32",
+      "facelets": "UUFUUFUBLBURRRRRRRFUUFFFFFFDDDDDDDDDBLLLLLLLLURRBBBBBB"
+    },
+    {
+      "id": "OLL-35",
+      "facelets": "URRBUUBUUBLURRRRRRUFRFFFFFFDDDDDDDDDFULLLLLLLFULBBBBBB"
+    },
+    {
+      "id": "OLL-37",
+      "facelets": "UUFUUFBBURUURRRRRRUUFFFFFFFDDDDDDDDDBLLLLLLLLLRRBBBBBB"
+    },
+    {
+      "id": "OLL-5",
+      "facelets": "RRFBUUBUULLURRRRRRRFBFFFFFFDDDDDDDDDFUULLLLLLLUUBBBBBB"
+    },
+    {
+      "id": "OLL-6",
+      "facelets": "FUUFUURRBULLRRRRRRUULFFFFFFDDDDDDDDDUUBLLLLLLFBRBBBBBB"
+    },
+    {
+      "id": "OLL-48",
+      "facelets": "BURUUFFBRFUBRRRRRRLUUFFFFFFDDDDDDDDDULULLLLLLURLBBBBBB"
+    },
+    {
+      "id": "OLL-47",
+      "facelets": "LUBFUULBFURURRRRRRUURFFFFFFDDDDDDDDDBUFLLLLLLRLUBBBBBB"
+    },
+    {
+      "id": "OLL-50",
+      "facelets": "RUFUUBRRBUUURRRRRRUULFFFFFFDDDDDDDDDFLBLLLLLLLFUBBBBBB"
+    },
+    {
+      "id": "OLL-49",
+      "facelets": "BUFBUUBLFLRRRRRRRRRUUFFFFFFDDDDDDDDDUUULLLLLLUFLBBBBBB"
+    },
+    {
+      "id": "OLL-53",
+      "facelets": "BUBUUFFLFUUURRRRRRLURFFFFFFDDDDDDDDDURULLLLLLRBLBBBBBB"
+    },
+    {
+      "id": "OLL-54",
+      "facelets": "BUBFUUFRFULURRRRRRLURFFFFFFDDDDDDDDDUUULLLLLLRBLBBBBBB"
+    },
+    {
+      "id": "OLL-11",
+      "facelets": "UFFUUBBULBUURRRRRRRRUFFFFFFDDDDDDDDDRLULLLLLLLUFBBBBBB"
+    },
+    {
+      "id": "OLL-12",
+      "facelets": "LLUFUUFURUBBRRRRRRURBFFFFFFDDDDDDDDDUURLLLLLLLUFBBBBBB"
+    },
+    {
+      "id": "OLL-7",
+      "facelets": "RUFUUFULLBUURRRRRRBUUFFFFFFDDDDDDDDDFRRLLLLLLLBUBBBBBB"
+    },
+    {
+      "id": "OLL-8",
+      "facelets": "ULLUUBRUBUUFRRRRRRUFLFFFFFFDDDDDDDDDRRBLLLLLLUUFBBBBBB"
+    },
+    {
+      "id": "OLL-10",
+      "facelets": "BBUUURRUFLUBRRRRRRFFUFFFFFFDDDDDDDDDRLULLLLLLLUUBBBBBB"
+    },
+    {
+      "id": "OLL-9",
+      "facelets": "FURUUFBBUFUBRRRRRRUULFFFFFFDDDDDDDDDULLLLLLLLURRBBBBBB"
+    },
+    {
+      "id": "OLL-29",
+      "facelets": "RUUUUFRRUFUBRRRRRRUULFFFFFFDDDDDDDDDFLBLLLLLLLBUBBBBBB"
+    },
+    {
+      "id": "OLL-42",
+      "facelets": "RUUUULLRUFUFRRRRRRBULFFFFFFDDDDDDDDDUBULLLLLLRFBBBBBBB"
+    },
+    {
+      "id": "OLL-41",
+      "facelets": "FUFUUFURUBURRRRRRRLURFFFFFFDDDDDDDDDLBBLLLLLLULUBBBBBB"
+    },
+    {
+      "id": "OLL-30",
+      "facelets": "RULUULURUFUURRRRRRRULFFFFFFDDDDDDDDDUFFLLLLLLBBBBBBBBB"
+    },
+    {
+      "id": "PLL-H",
+      "facelets": "UUUUUUUUURLRRRRRRRFBFFFFFFFDDDDDDDDDLRLLLLLLLBFBBBBBBB"
+    },
+    {
+      "id": "PLL-Z",
+      "facelets": "UUUUUUUUURFRRRRRRRFRFFFFFFFDDDDDDDDDLBLLLLLLLBLBBBBBBB"
+    },
+    {
+      "id": "PLL-Ua",
+      "facelets": "UUUUUUUUURBRRRRRRRFFFFFFFFFDDDDDDDDDLRLLLLLLLBLBBBBBBB"
+    },
+    {
+      "id": "PLL-Ub",
+      "facelets": "UUUUUUUUURLRRRRRRRFFFFFFFFFDDDDDDDDDLBLLLLLLLBRBBBBBBB"
+    },
+    {
+      "id": "PLL-Aa",
+      "facelets": "UUUUUUUUULRFRRRRRRFFBFFFFFFDDDDDDDDDBLLLLLLLLRBRBBBBBB"
+    },
+    {
+      "id": "PLL-Ab",
+      "facelets": "UUUUUUUUUBRBRRRRRRFFRFFFFFFDDDDDDDDDRLLLLLLLLLBFBBBBBB"
+    },
+    {
+      "id": "PLL-E",
+      "facelets": "UUUUUUUUUFRBRRRRRRRFLFFFFFFDDDDDDDDDBLFLLLLLLLBRBBBBBB"
+    },
+    {
+      "id": "PLL-T",
+      "facelets": "UUUUUUUUUBLFRRRRRRFFRFFFFFFDDDDDDDDDLRLLLLLLLRBBBBBBBB"
+    },
+    {
+      "id": "PLL-Y",
+      "facelets": "UUUUUUUUULRRRRRRRRFFBFFFFFFDDDDDDDDDRBLLLLLLLBLFBBBBBB"
+    },
+    {
+      "id": "PLL-F",
+      "facelets": "UUUUUUUUUBRFRRRRRRFBRFFFFFFDDDDDDDDDLLLLLLLLLRFBBBBBBB"
+    },
+    {
+      "id": "PLL-V",
+      "facelets": "UUUUUUUUULBRRRRRRRFFBFFFFFFDDDDDDDDDRLLLLLLLLBRFBBBBBB"
+    },
+    {
+      "id": "PLL-Ja",
+      "facelets": "UUUUUUUUURRRRRRRRRLLFFFFFFFDDDDDDDDDFFBLLLLLLBBLBBBBBB"
+    },
+    {
+      "id": "PLL-Jb",
+      "facelets": "UUUUUUUUUBFFRRRRRRFRRFFFFFFDDDDDDDDDLLLLLLLLLRBBBBBBBB"
+    },
+    {
+      "id": "PLL-Ra",
+      "facelets": "UUUUUUUUURRBRRRRRRFLFFFFFFFDDDDDDDDDBFLLLLLLLLBRBBBBBB"
+    },
+    {
+      "id": "PLL-Rb",
+      "facelets": "UUUUUUUUURFBRRRRRRFRFFFFFFFDDDDDDDDDBLLLLLLLLLBRBBBBBB"
+    },
+    {
+      "id": "PLL-Na",
+      "facelets": "UUUUUUUUURLLRRRRRRBFFFFFFFFDDDDDDDDDLRRLLLLLLFBBBBBBBB"
+    },
+    {
+      "id": "PLL-Nb",
+      "facelets": "UUUUUUUUULLRRRRRRRFFBFFFFFFDDDDDDDDDRRLLLLLLLBBFBBBBBB"
+    },
+    {
+      "id": "PLL-Ga",
+      "facelets": "UUUUUUUUUFRRRRRRRRLBLFFFFFFDDDDDDDDDRFBLLLLLLBLFBBBBBB"
+    },
+    {
+      "id": "PLL-Gb",
+      "facelets": "UUUUUUUUULRRRRRRRRRLBFFFFFFDDDDDDDDDFBFLLLLLLBFLBBBBBB"
+    },
+    {
+      "id": "PLL-Gc",
+      "facelets": "UUUUUUUUUBFLRRRRRRRBRFFFFFFDDDDDDDDDLLFLLLLLLFRBBBBBBB"
+    },
+    {
+      "id": "PLL-Gd",
+      "facelets": "UUUUUUUUUFBFRRRRRRBRLFFFFFFDDDDDDDDDLLRLLLLLLRFBBBBBBB"
+    }
+  ],
+  "notation": [
+    {
+      "original": "M",
+      "canonical_facelets": "FUFFUFFUFRRRRRRRRRDFDDFDDFDBDBBDBBDBLLLLLLLLLUBUUBUUBU"
+    },
+    {
+      "original": "M2",
+      "canonical_facelets": "DUDDUDDUDRRRRRRRRRBFBBFBBFBUDUUDUUDULLLLLLLLLFBFFBFFBF"
+    },
+    {
+      "original": "M'",
+      "canonical_facelets": "BUBBUBBUBRRRRRRRRRUFUUFUUFUFDFFDFFDFLLLLLLLLLDBDDBDDBD"
+    },
+    {
+      "original": "E",
+      "canonical_facelets": "UUUUUUUUUBBBRRRBBBRRRFFFRRRDDDDDDDDDFFFLLLFFFLLLBBBLLL"
+    },
+    {
+      "original": "E2",
+      "canonical_facelets": "UUUUUUUUULLLRRRLLLBBBFFFBBBDDDDDDDDDRRRLLLRRRFFFBBBFFF"
+    },
+    {
+      "original": "E'",
+      "canonical_facelets": "UUUUUUUUUFFFRRRFFFLLLFFFLLLDDDDDDDDDBBBLLLBBBRRRBBBRRR"
+    },
+    {
+      "original": "S",
+      "canonical_facelets": "RRRUUURRRDRDDRDDRDFFFFFFFFFLLLDDDLLLULUULUULUBBBBBBBBB"
+    },
+    {
+      "original": "S2",
+      "canonical_facelets": "DDDUUUDDDLRLLRLLRLFFFFFFFFFUUUDDDUUURLRRLRRLRBBBBBBBBB"
+    },
+    {
+      "original": "S'",
+      "canonical_facelets": "LLLUUULLLURUURUURUFFFFFFFFFRRRDDDRRRDLDDLDDLDBBBBBBBBB"
+    },
+    {
+      "original": "u",
+      "canonical_facelets": "UUUUUUUUURRRRRRFFFFFFFFFLLLDDDDDDDDDLLLLLLBBBBBBBBBRRR"
+    },
+    {
+      "original": "u2",
+      "canonical_facelets": "UUUUUUUUURRRRRRLLLFFFFFFBBBDDDDDDDDDLLLLLLRRRBBBBBBFFF"
+    },
+    {
+      "original": "u'",
+      "canonical_facelets": "UUUUUUUUURRRRRRBBBFFFFFFRRRDDDDDDDDDLLLLLLFFFBBBBBBLLL"
+    },
+    {
+      "original": "r",
+      "canonical_facelets": "BUUBUUBUURRRRRRRRRUFFUFFUFFFDDFDDFDDLLLLLLLLLBBDBBDBBD"
+    },
+    {
+      "original": "r2",
+      "canonical_facelets": "DUUDUUDUURRRRRRRRRBFFBFFBFFUDDUDDUDDLLLLLLLLLBBFBBFBBF"
+    },
+    {
+      "original": "r'",
+      "canonical_facelets": "FUUFUUFUURRRRRRRRRDFFDFFDFFBDDBDDBDDLLLLLLLLLBBUBBUBBU"
+    },
+    {
+      "original": "f",
+      "canonical_facelets": "RRRUUUUUURRDRRDRRDFFFFFFFFFDDDDDDLLLULLULLULLBBBBBBBBB"
+    },
+    {
+      "original": "f2",
+      "canonical_facelets": "DDDUUUUUURRLRRLRRLFFFFFFFFFDDDDDDUUURLLRLLRLLBBBBBBBBB"
+    },
+    {
+      "original": "f'",
+      "canonical_facelets": "LLLUUUUUURRURRURRUFFFFFFFFFDDDDDDRRRDLLDLLDLLBBBBBBBBB"
+    },
+    {
+      "original": "d",
+      "canonical_facelets": "UUUUUUUUUBBBRRRRRRRRRFFFFFFDDDDDDDDDFFFLLLLLLLLLBBBBBB"
+    },
+    {
+      "original": "d2",
+      "canonical_facelets": "UUUUUUUUULLLRRRRRRBBBFFFFFFDDDDDDDDDRRRLLLLLLFFFBBBBBB"
+    },
+    {
+      "original": "d'",
+      "canonical_facelets": "UUUUUUUUUFFFRRRRRRLLLFFFFFFDDDDDDDDDBBBLLLLLLRRRBBBBBB"
+    },
+    {
+      "original": "l",
+      "canonical_facelets": "UUFUUFUUFRRRRRRRRRFFDFFDFFDDDBDDBDDBLLLLLLLLLUBBUBBUBB"
+    },
+    {
+      "original": "l2",
+      "canonical_facelets": "UUDUUDUUDRRRRRRRRRFFBFFBFFBDDUDDUDDULLLLLLLLLFBBFBBFBB"
+    },
+    {
+      "original": "l'",
+      "canonical_facelets": "UUBUUBUUBRRRRRRRRRFFUFFUFFUDDFDDFDDFLLLLLLLLLDBBDBBDBB"
+    },
+    {
+      "original": "b",
+      "canonical_facelets": "UUUUUULLLURRURRURRFFFFFFFFFRRRDDDDDDLLDLLDLLDBBBBBBBBB"
+    },
+    {
+      "original": "b2",
+      "canonical_facelets": "UUUUUUDDDLRRLRRLRRFFFFFFFFFUUUDDDDDDLLRLLRLLRBBBBBBBBB"
+    },
+    {
+      "original": "b'",
+      "canonical_facelets": "UUUUUURRRDRRDRRDRRFFFFFFFFFLLLDDDDDDLLULLULLUBBBBBBBBB"
+    },
+    {
+      "original": "x",
+      "canonical_facelets": "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
+    },
+    {
+      "original": "x2",
+      "canonical_facelets": "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
+    },
+    {
+      "original": "x'",
+      "canonical_facelets": "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
+    },
+    {
+      "original": "y",
+      "canonical_facelets": "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
+    },
+    {
+      "original": "y2",
+      "canonical_facelets": "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
+    },
+    {
+      "original": "y'",
+      "canonical_facelets": "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
+    },
+    {
+      "original": "z",
+      "canonical_facelets": "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
+    },
+    {
+      "original": "z2",
+      "canonical_facelets": "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
+    },
+    {
+      "original": "z'",
+      "canonical_facelets": "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
+    }
+  ]
+}

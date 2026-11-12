@@ -172,3 +172,20 @@ These gates describe this delivered slice; the broader M3 and M4 gates remain pe
 | 2A-06 | Click Solve, step back/forward, play/pause, restart solution | Preview leaves accepted state unchanged. Playback begins at the saved solution start, reaches solved, and reverses using verified snapshots. Duplicate callbacks commit once. |
 | 2A-07 | Reset/cancel/import/unmount during search; late reply; edit after preview | Stale result cannot replace state/history. Edits blocked during search; a committed manual branch invalidates the old solution. Explicit cancellation/epoch tests. |
 | 2A-08 | Start locally, cold/warm solve, desktop/mobile layout, full regression | README commands work; local cache needs no network after installation; live browser solve reaches solved and reverses to its exact start. See [delivery report](MILESTONE_2A.md) for actual verification and limitations. |
+
+## User-requested M2B — genuine CFOP checkpoint
+
+The complete fixed-white pipeline is implemented; this does not claim the broader original M4 color-neutral/Next Best Move gate.
+
+| ID | Action / fixture | Acceptance and evidence |
+| --- | --- | --- |
+| 2B-01 | Scrambled states, solid-but-misaligned bottom, LL cases, U-only alignment | Exact Cross/pair/F2L/OLL/PLL-up-to-AUF predicates; no recognition before prerequisites. |
+| 2B-02 | Complete Cross projection and independent full-state transition tests | All 190,080 coordinates reached, maximum distance 8; emitted Cross path descends exact distances. |
+| 2B-03 | All targets/protected masks, legal completions of every reachable pair coordinate | All 8,256 configurations solve with Cross and protected slots intact at macro endpoints; no wrong-slot/flip/twist subset omitted. |
+| 2B-04 | Every legal OLL orientation with unrelated legal top permutations | All 216 orient correctly, 57 numbered classes plus skip; first two layers preserved. |
+| 2B-05 | Every legal LL permutation after OLL | All 288 map to 21 named PLL classes plus AUF skip states, then explicit AUF solves. |
+| 2B-06 | Independent requested-reference fixtures and frame transformations | All 78 IDs agree in four y views; 36 compiler transformations match the independent full-sticker oracle; all 24 user grips map correctly. |
+| 2B-07 | 200 seeded 25-face-turn scrambles plus 30 random legal cubie states | Complete genuine CFOP sequence solves, grip retained, eight contiguous stage ranges and exact counts. Two-phase calls forbidden. |
+| 2B-08 | Inject false stage labels/order, arbitrary non-descending Cross, non-registry LL, undeclared F2L macros, wrong AUF, worker errors | Rejected with no candidate moves. Shared worker gate released on failure; budget enforced. |
+| 2B-09 | Choose CFOP in Explorer, preview, play individual/full stages, pause, reset or late response | No automatic state change on arrival. Stage playback starts at the verified hash and stops at its boundary. No generic response accepted/relabelled as CFOP. |
+| 2B-10 | Full build/lint/tests, packaged resources, live local playback and responsive layouts | See [M2B delivery report](MILESTONE_2B.md); actual evidence is distinct from the broader future product gates. |

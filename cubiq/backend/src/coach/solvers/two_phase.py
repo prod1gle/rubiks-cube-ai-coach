@@ -5,7 +5,6 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from threading import BoundedSemaphore
 from time import perf_counter
 
 from coach.cube import (
@@ -17,17 +16,12 @@ from coach.cube import (
     parse_sequence,
     plan_sequence,
 )
+from coach.solvers.runtime import SolverError
+from coach.solvers.runtime import worker_slot as _worker_slot
 
 SOLVER_VERSION = "0.1.1"
 TIMEOUT_SECONDS = 30
 MAX_DEPTH = 24
-_worker_slot = BoundedSemaphore(1)
-
-
-class SolverError(Exception):
-    def __init__(self, code: str, message: str, status: int = 503):
-        super().__init__(message)
-        self.code, self.message, self.status = code, message, status
 
 
 def _candidate(facelets: str) -> str:

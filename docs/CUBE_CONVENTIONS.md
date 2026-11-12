@@ -191,3 +191,7 @@ node cubiq/scripts/generate-cube-fixtures.cjs
 ```
 
 The generator uses an independent fixed-seed PRNG and imports no application engine code. Tests also freeze a published R-turn cubie state and all sticker index tuples, exercise all 27 move variants and all 24 frames, and check inverses, fourth powers, composition, parser errors, reachability rejection, immutable serialization, and API behavior. The small frontend fixture file is captured from engine snapshots and tests transport/rendering only; it is not an independent mathematical oracle.
+
+## M2B staged-planning extension
+
+The canonical representation, sticker/frame conventions, public parser, metric and existing hashes remain unchanged. New engine helpers implement exact layer predicates, temporary reference rebasing, fixed-grip outer-turn translation, projected piece-transition maps, and registry-only slice/wide compilation. All CFOP search transitions are derived from these helpers and every final stage is verified with full `CubeState` objects. Public manual entry still rejects slices/wide turns. See [CFOP engine v1](CFOP_ENGINE.md) for the white-down reference, precise predicates, case identifiers and counting semantics.

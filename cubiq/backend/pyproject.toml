@@ -5,6 +5,7 @@ description = "Local API for the Cubiq Rubik's Cube coach"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "fastapi>=0.115,<1",
+    "numpy>=2,<3",
     "rubik-solver-py==0.1.1",
     "uvicorn>=0.34,<1",
 ]

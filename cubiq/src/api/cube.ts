@@ -34,10 +34,20 @@ export interface CubePlan { input_hash: string; sequence: CubeSnapshot['sequence
 export interface CubeSolution {
   status: 'solved' | 'already_solved'
   input_hash: string; result_hash: string; notation: string; move_count: number; metric: string
-  elapsed_ms: number; method: 'kociemba-two-phase'; optimality: 'unproven'; label: string; verified: true
+  elapsed_ms: number; method: 'kociemba-two-phase' | 'cfop'; optimality: 'unproven'; label: string; verified: true
   solver: { name: string; version: string }
-  search_limits: { max_depth_htm: number; timeout_ms: number }
+  search_limits: { max_depth_htm?: number; max_plan_htm?: number; timeout_ms: number }
   plan: CubePlan
+  stages?: CFOPStage[]
+  reference?: { frame: string; cross_color: string; front_color: string; description: string }
+}
+
+export interface CFOPStage {
+  id: string; kind: 'cross' | 'f2l' | 'oll' | 'pll' | 'auf'; slot: string | null
+  case_id: string; status: 'performed' | 'skipped'; notation: string; reference_notation: string
+  setup: string; algorithm: string; macro_ids: string[]; move_count: number
+  start_step: number; end_step: number; before_hash: string; after_hash: string
+  protected_pairs: string[]; progress_after: Record<string, unknown>
 }
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -77,10 +87,23 @@ function isSolution(value: unknown): value is CubeSolution {
     typeof value.notation === 'string' && typeof value.metric === 'string' &&
     Number.isInteger(value.move_count) && Number(value.move_count) >= 0 &&
     typeof value.elapsed_ms === 'number' && Number.isFinite(value.elapsed_ms) && value.elapsed_ms >= 0 &&
-    value.method === 'kociemba-two-phase' && value.optimality === 'unproven' && value.verified === true &&
+    ['kociemba-two-phase', 'cfop'].includes(String(value.method)) && value.optimality === 'unproven' && value.verified === true &&
     typeof value.label === 'string' && record(value.solver) && typeof value.solver.name === 'string' &&
     typeof value.solver.version === 'string' && record(value.search_limits) &&
-    typeof value.search_limits.max_depth_htm === 'number' && typeof value.search_limits.timeout_ms === 'number' && isPlan(value.plan)
+    typeof value.search_limits.timeout_ms === 'number' && isPlan(value.plan) &&
+    (value.method === 'cfop' ? isCFOP(value) : typeof value.search_limits.max_depth_htm === 'number')
+}
+
+function isCFOP(value: Record<string, unknown>): boolean {
+  return record(value.reference) && typeof value.reference.frame === 'string' &&
+    typeof value.reference.description === 'string' && Array.isArray(value.stages) && value.stages.length === 8 &&
+    value.stages.every(stage => record(stage) &&
+      ['id', 'case_id', 'notation', 'reference_notation', 'setup', 'algorithm', 'before_hash', 'after_hash'].every(key => typeof stage[key] === 'string') &&
+      ['cross', 'f2l', 'oll', 'pll', 'auf'].includes(String(stage.kind)) &&
+      ['performed', 'skipped'].includes(String(stage.status)) && (stage.slot === null || typeof stage.slot === 'string') &&
+      ['move_count', 'start_step', 'end_step'].every(key => Number.isInteger(stage[key]) && Number(stage[key]) >= 0) &&
+      Array.isArray(stage.macro_ids) && stage.macro_ids.every(id => typeof id === 'string') &&
+      Array.isArray(stage.protected_pairs) && stage.protected_pairs.every(id => typeof id === 'string') && record(stage.progress_after))
 }
 
 async function request<T>(path: string, signal: AbortSignal, check: (data: unknown) => data is T, body?: unknown, timeoutMs = 5000): Promise<T> {
@@ -122,3 +145,4 @@ export const scrambleCube = (state: CanonicalCubeState, signal: AbortSignal) => 
 // The backend's 30 s worker budget includes cold table generation. Leave time
 // for local HTTP overhead; abort/reset still cancels adoption immediately.
 export const solveCube = (state: CanonicalCubeState, signal: AbortSignal) => request('/api/cube/solve', signal, isSolution, { state }, 35000)
+export const solveCFOP = (state: CanonicalCubeState, signal: AbortSignal) => request('/api/cube/cfop', signal, isSolution, { state }, 35000)
