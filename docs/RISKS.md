@@ -41,4 +41,10 @@ Status: planning assessment, November 12, 2026. Severity combines impact on corr
 
 ## Decisions to resolve during implementation
 
-M1 selects runtime versions, locks conventions, and records dependency/license suitability without changing project distribution terms by assumption. M3 measures practical proof/table/latency limits. M4 establishes F2L coverage and CFOP completion budgets. M7–M8 establish camera operating conditions and calibration from actual recordings. M9 selects an optional explanation provider only if wanted. None of these unknowns prevents the current documentation-only task from completing; each has an explicit future gate.
+M1 selects runtime versions, locks conventions, and records dependency/license suitability without changing project distribution terms by assumption. M3 measures practical proof/table/latency limits. M4 establishes F2L coverage and CFOP completion budgets. M7–M8 establish camera operating conditions and calibration from actual recordings. M9 selects an optional explanation provider only if wanted. These remain future gates beyond the delivered checkpoints; implemented limits and evidence are recorded in the milestone reports.
+
+## M2A implementation limits
+
+The adopted MIT-declared `rubik-solver-py==0.1.1` has a small maintainer base. Pinning and engine verification protect state correctness, not continued upstream support, completeness within a budget, or solution quality. A two-phase result may be much longer than an available solution even for a simple state. No distance from optimum is certified. CFOP and optimality proofs remain separate future work.
+
+Cold table construction and search share a 30-second worker budget. The cache is writable, ignored, versioned local data; an interrupted/corrupt cache can require rebuilding. Only one worker is allowed per FastAPI process; this is a local single-process application, not a multi-user scheduler. Client cancel/reset prevents result adoption but does not immediately kill a disconnected request's worker. It can finish or hit the budget; another solve may receive a busy response in the meantime. The UI freezes move input during a search, and all result adoption is epoch/state-hash guarded. No solver result is ever applied automatically on arrival.

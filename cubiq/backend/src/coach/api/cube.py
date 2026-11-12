@@ -1,6 +1,6 @@
 """Stateless cube endpoints; these adapters contain no move or reachability logic."""
 
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter
 from pydantic import BaseModel, ConfigDict, Field
@@ -13,6 +13,7 @@ from coach.cube import (
     random_scramble,
     sequence_info,
 )
+from coach.solvers.two_phase import solve_cube
 
 router = APIRouter(prefix="/api/cube", tags=["Cube engine"])
 
@@ -68,6 +69,23 @@ class CubeReply(BaseModel):
     sequence: SequenceInfo
 
 
+class SolutionReply(BaseModel):
+    status: Literal["solved", "already_solved"]
+    input_hash: str
+    result_hash: str
+    notation: str
+    move_count: int
+    metric: str
+    elapsed_ms: float
+    method: Literal["kociemba-two-phase"]
+    solver: dict[str, str]
+    search_limits: dict[str, int]
+    optimality: Literal["unproven"]
+    label: str
+    verified: Literal[True]
+    plan: dict[str, Any]
+
+
 @router.get("", response_model=CubeReply)
 def solved_cube():
     """A new solved state; there is no global mutable session."""
@@ -104,3 +122,9 @@ def plan_moves(request: ApplyInput):
 def scramble(request: StateInput):
     """Plan 20 random legal turns starting at the supplied state."""
     return plan_sequence(request.to_cube(), random_scramble())
+
+
+@router.post("/solve", response_model=SolutionReply)
+def solve(request: StateInput):
+    """Validate, search, re-verify, and plan without changing any live cube state."""
+    return solve_cube(request.to_cube())

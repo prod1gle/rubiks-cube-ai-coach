@@ -1,6 +1,6 @@
 # Technical decisions
 
-Status: architecture decisions, November 12, 2026. M1A implements the application scaffold; M1B implements the canonical engine in `coach.cube` and stateless API/2D inspector. Solver, session, and extended-notation decisions remain future work. See the root README, [cube conventions](CUBE_CONVENTIONS.md), and lockfiles for implemented details.
+Status: architecture decisions, November 12, 2026. M1A implements the application scaffold; M1B implements the canonical engine in `coach.cube` and stateless API/2D inspector. M2A now implements the verified full-cube adapter described in TD-04; sessions, exact optimality search, CFOP, and extended notation remain future work. See the root README, [cube conventions](CUBE_CONVENTIONS.md), and lockfiles for implemented details.
 
 ## TD-01 — One authoritative Python cube engine
 
@@ -34,9 +34,15 @@ The [WCA notation rules](https://www.worldcubeassociation.org/regulations/#artic
 
 ## TD-04 — Established two-phase adapter, explicit optimality evidence
 
-**Decision:** evaluate the Python [`kociemba` package](https://github.com/muodov/kociemba) as the initial short-solution adapter. Its upstream implementation is two-phase; validate its facelet mapping, outputs, native build behavior, warmup, timeout isolation, and exact pinned version before adoption. The original scaffold declared [`cubejs`](https://github.com/ldez/cubejs); M1A removes that unused runtime dependency. It remains an independent test-oracle or alternative-adapter candidate, not evidence that a solver works today.
+**Initial candidate:** the Python [`kociemba` package](https://github.com/muodov/kociemba) was considered for the short-solution adapter. M2A selects the package below instead. Its upstream implementation is two-phase; evaluate its facelet mapping, outputs, native build behavior, warmup, timeout isolation, and exact pinned version before adoption. The original scaffold declared [`cubejs`](https://github.com/ldez/cubejs); M1A removes that unused runtime dependency. It remains an independent test-oracle or alternative-adapter candidate, not evidence that a solver works today.
 
-M1B uses pinned MIT-licensed `cubejs@1.3.2` solely to generate committed independent reference data. No cubejs source, runtime dependency, or solver is added to the application. The Python engine generates its own move tables from integer geometry and passes the reference corpus. Solver adoption remains unresolved and out of scope.
+M1B uses pinned MIT-licensed `cubejs@1.3.2` solely to generate committed independent reference data. No cubejs source, runtime dependency, or solver is added to the application. The Python engine generates its own move tables from integer geometry and passes the reference corpus. This describes the M1B checkpoint. M2A adopts the separate adapter below.
+
+**M2A adoption:** use the PyPI artifact `rubik-solver-py==0.1.1` (released February 22, 2026), locked with NumPy in `uv.lock`. The [upstream repository](https://github.com/mrrtmob/rubik-solver-py) and installed artifact declare MIT. This avoids adopting the GPL `kociemba` candidate or introducing a Node runtime service. It is a small, single-maintainer project, so maintenance and solver quality remain risks; current-release packaging alone does not establish long-term support. Its upstream optimality wording is not accepted as proof.
+
+`coach.solvers.two_phase` passes canonical URFDLB facelets to an isolated `sys.executable -m coach.solvers.worker` subprocess, with a 24-turn depth setting, hard 30-second subprocess timeout, and one nonblocking worker slot per API process. No search runs at API import/startup. Versioned local NumPy tables initialize on first use. Failure or interruption can require a cache rebuild; cache content is performance data, never proof. The worker's cube model stays private to candidate generation. The coordinator translates the candidate through the canonical state's frame, then verifies it entirely with `coach.cube` before returning an engine-generated animation plan. Every result is unproven, including empty solved-state responses; no lower bound or exact-search metadata is invented. `elapsed_ms` includes worker setup, table load/build, search, verification, and planning.
+
+Client cancellation/reset invalidates adoption immediately. There is no persistent job API yet; a worker can finish its bounded computation after HTTP/client cancellation, and new requests can receive `solver_busy`. A future job protocol can add server-side cancellation. M2A does not satisfy the broader M3 optimal-search or Next Best Move gate.
 
 Two-phase solving is an upper-bound candidate generator. A bounded exact search can improve candidates and sometimes prove them optimal. Herbert Kociemba documents [two-phase search](https://kociemba.org/math/twophase.htm) and [optimal solvers](https://kociemba.org/math/optimal.htm) separately; the project must preserve that distinction.
 
@@ -65,7 +71,7 @@ Initially rank by verified stage goal, HTM, and rotation count with deterministi
 
 Use [SolveTheCube](https://solvethecube.com/algorithms) as the requested reference, verify sequences independently, and create original case renderings. Do not copy its explanations, diagrams, or complete page presentation. Record content provenance before bundling a catalog and resolve reuse terms if needed.
 
-Upstream [`kociemba` declares GPL-2.0](https://github.com/muodov/kociemba/blob/master/LICENSE). Its project compatibility is unresolved until a project distribution/license choice is made. Do not assume subprocess isolation removes license considerations. No project license is chosen in this task. M1 records the dependency/license decision; if this candidate is unsuitable, evaluate another established adapter before M3. `cubejs` declares MIT in its [repository](https://github.com/ldez/cubejs); confirm the exact artifact's license. [`cubing.js`](https://github.com/cubing/cubing.js#license) is another possible development oracle with its own licensing terms. No vendoring or upstream code copying is planned here.
+Upstream [`kociemba` declares GPL-2.0](https://github.com/muodov/kociemba/blob/master/LICENSE). Its project compatibility is unresolved until a project distribution/license choice is made. Do not assume subprocess isolation removes license considerations. M2A instead adopts the MIT-declared `rubik-solver-py` artifact; see TD-04. No project distribution license is chosen. M1 records the dependency/license decision; if this candidate is unsuitable, evaluate another established adapter before M3. `cubejs` declares MIT in its [repository](https://github.com/ldez/cubejs); confirm the exact artifact's license. [`cubing.js`](https://github.com/cubing/cubing.js#license) is another possible development oracle with its own licensing terms. No vendoring or upstream code copying is planned here.
 
 ## TD-07 — Events and checkpoints support reproducible coaching
 

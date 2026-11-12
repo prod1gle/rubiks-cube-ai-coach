@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from coach.api.cube import router as cube_router
 from coach.cube import CubeError
+from coach.solvers.two_phase import SolverError
 
 LOCAL_ORIGINS = [
     "http://localhost:5173",
@@ -20,15 +21,15 @@ class HealthResponse(BaseModel):
     status: str = "ok"
     service: str = "cubiq-api"
     version: str = "0.1.0"
-    milestone: str = "1C"
+    milestone: str = "2A"
 
 
 def create_app() -> FastAPI:
-    """Create an isolated application; no camera, solver, or storage side effects."""
+    """Create an isolated application; the solver starts only on explicit requests."""
     app = FastAPI(
         title="Cubiq Local API",
         version="0.1.0",
-        description="Milestone 1C: cube engine, 3D geometry and verified animation plans.",
+        description="Milestone 2A: canonical cube engine and verified two-phase full-cube solving.",
     )
     app.add_middleware(
         CORSMiddleware,
@@ -42,6 +43,13 @@ def create_app() -> FastAPI:
     @app.exception_handler(CubeError)
     async def invalid_cube(_request: Request, error: CubeError) -> JSONResponse:
         return JSONResponse(status_code=422, content={"detail": error.as_dict()})
+
+    @app.exception_handler(SolverError)
+    async def failed_solver(_request: Request, error: SolverError) -> JSONResponse:
+        return JSONResponse(
+            status_code=error.status,
+            content={"detail": {"code": error.code, "message": error.message}},
+        )
 
     @app.get("/health", response_model=HealthResponse, tags=["System"])
     @app.get("/api/health", response_model=HealthResponse, include_in_schema=False)

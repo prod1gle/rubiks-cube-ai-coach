@@ -1,18 +1,19 @@
 # Cubiq — Rubik’s Cube AI Coach
 
-A local workspace for more intentional 3×3 practice. **Milestones 1A–1C are implemented: application scaffolding, the canonical state engine, and an interactive 3D Cube Explorer.** Solvers, timer, analytics, algorithm trainer, persistent solve storage, physical camera tracking, and AI features are not implemented yet.
+A local workspace for more intentional 3×3 practice. **Milestones 1A–1C and 2A are implemented: application scaffolding, the canonical state engine, an interactive 3D Cube Explorer, and verified full-cube solving.** CFOP, optimality proofs, timer, analytics, algorithm trainer, persistent solve storage, physical camera tracking, and AI features are not implemented yet.
 
 ## Available now
 
 - React + TypeScript + Vite frontend with Tailwind CSS, a responsive dark layout, keyboard focus styles, reduced-motion support, and skip navigation.
 - Six working routes: Dashboard, Cube Explorer, Live Solve, Solve Analysis, Algorithm Trainer, and History. The four future solve/training/history workflows explicitly say **Not implemented yet**.
 - Cube Explorer: Three.js / React Three Fiber rendering of all 26 cubies and 54 stickers, smooth face/grip animations, orbit/zoom, keyboard and button moves, manual algorithms, legal random scrambles, reset, undo/redo, and playback. The 2D state inspector and import/export remain available. The frontend never computes cube permutations.
+- Full-cube two-phase solving: state validation, independent solution verification, honest optimality labeling, and step-by-step solution playback.
 - One immutable Python cubie engine with all face-turn variants, x/y/z grip rotations, complete parsing, serialization, inversion, HTM, and reachability validation. See [the exact cube conventions](docs/CUBE_CONVENTIONS.md).
 - A real API connection check on the Dashboard, with checking, reachable, unavailable, and retry states. No sample solves or fabricated analytics.
 - FastAPI application factory, typed health response, explicit local CORS policy, pytest, Ruff, and a uv-managed virtual environment.
 - Locked frontend/backend dependencies and build, lint, and test commands.
 
-The Dashboard hero cube remains a decorative CSS illustration. The separate interactive Cube Explorer renders real engine-provided geometry and snapshots. The interface makes no solver, timing, vision, or AI claims. Full M1 acceptance remains pending for sessions/events, persistence, stage predicates, and expanded notation; 1B does not imply those are implemented.
+The Dashboard hero cube remains a decorative CSS illustration. The separate interactive Cube Explorer renders real engine-provided geometry and snapshots. The full-cube solver returns engine-verified two-phase solutions with optimality explicitly unproven. The interface makes no timing, vision, or AI claims. Full M1 acceptance remains pending for sessions/events, persistence, stage predicates, and expanded notation; 1B does not imply those are implemented.
 
 ## macOS prerequisites
 
@@ -81,7 +82,7 @@ Stop each process with `Ctrl+C`. Both services bind to loopback. Ports are fixed
 `GET /health` returns:
 
 ```json
-{"status":"ok","service":"cubiq-api","version":"0.1.0","milestone":"1C"}
+{"status":"ok","service":"cubiq-api","version":"0.1.0","milestone":"2A"}
 ```
 
 `GET /api/health` is an equivalent alias for the frontend’s `/api` proxy. Both Vite development and preview forward `/api/*` to `http://127.0.0.1:8000`. The health endpoint reports API availability, not readiness of future cube features.
@@ -107,6 +108,7 @@ Open [Cube Explorer](http://127.0.0.1:5173/cube-explorer) after starting both ap
 | `POST /api/cube/sequence` | Return normalized notation, inverse, executed HTM, and rotation count. |
 | `POST /api/cube/plan` | Validate up to 128 moves and return exact per-turn snapshots and animation descriptors. |
 | `POST /api/cube/scramble` | Return a plan of 20 random legal outer turns from the supplied state. |
+| `POST /api/cube/solve` | Validate a legal state, run a bounded two-phase search, independently verify its solution, and return metadata plus a playback plan. |
 
 For example, from another terminal:
 
@@ -132,6 +134,24 @@ Responses contain a canonical schema-1 state, current-view and canonical facelet
 
 The renderer is loaded lazily and split into separate Three.js / Fiber chunks. Pinned Three.js 0.182.0 is compatible with the stable Fiber 9 animation clock. No remote images, environment maps, fonts, or other assets are needed at runtime.
 
+## Full-cube solving (milestone 2A)
+
+In Cube Explorer, finish any pending turns, then click **Solve cube**. The solution is computed from the exact current state, including its grip. Solve displays the verified plan without applying moves. Use **Next/Previous solution move**, **Play/Pause solution**, or **Go to solution start** to practice it. Future moves appear separately from applied moves in the local timeline; the HTM total counts only the applied prefix. A manual turn creates a new branch and clears the previous solution when that turn commits.
+
+The adapter uses pinned [`rubik-solver-py==0.1.1`](https://pypi.org/project/rubik-solver-py/), a Python/NumPy Kociemba two-phase implementation. It is a candidate generator, never the source of cube truth. The canonical engine validates the input, translates canonical face names to the current grip, applies the entire proposed algorithm, verifies solvedness, and produces every playback snapshot. All successful responses use **“Short solution · optimality unproven.”** There is no certified approximation gap, global shortest-move guarantee, CFOP classification, or optimality proof. Even simple states can receive a longer-than-necessary solution.
+
+`POST /api/cube/solve` accepts exactly one `state` object or `facelets` string, like `/validate`. It returns `notation`, `move_count`, `metric: "HTM-outer-v1"`, `elapsed_ms`, `optimality: "unproven"`, `verified: true`, solver/version, search limits, input/result hashes, status, and a per-turn `plan`. `elapsed_ms` measures the backend adapter, including process startup, cold table generation/loading, search, verification, and plan construction; it excludes HTTP transit and animation. An already-solved state returns empty notation and zero moves without launching the library.
+
+```sh
+curl --fail -H 'Content-Type: application/json' \
+  -d '{"facelets":"UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"}' \
+  http://127.0.0.1:8000/api/cube/solve
+```
+
+One worker is allowed per API process. The worker has a **30-second wall-clock budget**, including initialization, and a **24 HTM candidate limit**. HTTP 422 rejects invalid states; 502 rejects malformed or incorrect solver output; 503 reports busy/unavailable/no result; 504 reports timeout. Failures return no solution moves and preserve the displayed cube. The frontend waits up to 35 seconds and rejects late responses after reset, cancellation, import, or unmount. Cancel stops waiting/adoption immediately; a disconnected request's worker can continue until completion or its 30-second limit. A new solve may report busy during that interval. Run one FastAPI worker locally.
+
+The first unsolved request creates versioned NumPy tables in **`cubiq/backend/.cache/rubik-solver-py-0.1.1/`**. This ignored cache is local derived data, requires a writable directory, and needs no network. Subsequent subprocesses reload it. For a different cache location, set `CUBIQ_SOLVER_CACHE_DIR` to a writable absolute path before starting the backend. No additional install or warmup command is required. Measured cold/warm evidence and known limits are recorded in [the 2A report](docs/MILESTONE_2A.md). This is a small, single-maintainer upstream dependency; the adapter is isolated, pinned, and regression-tested so it can be replaced.
+
 ## Build, lint, and test
 
 From the repository root:
@@ -151,7 +171,7 @@ npm --prefix cubiq test
 .tools/bin/uv build --project cubiq/backend --cache-dir .cache/uv
 ```
 
-Backend pytest covers all move/inverse and fourth-power identities, 32 named oracle states, 1,000 seeded oracle sequences, 128 arbitrary legal-state fixtures, all 24 grips, parser/metric/serialization behavior, impossible states, and the real HTTP API. The committed corpus comes from pinned `cubejs@1.3.2`; pytest requires no Node process or network access. Current verification includes 328 backend tests and 35 frontend tests. The 1C tests cover exact animation endpoints, rapid inputs, duplicate/stale callbacks, reset and disconnect races, undo/redo branching, pause/resume, playback, keyboard editing guards, WebGL fallback, and reduced motion. See [M1C delivery evidence](docs/MILESTONE_1C.md); the [M1B report](docs/MILESTONE_1B.md) records the earlier engine checkpoint.
+Backend pytest covers all move/inverse and fourth-power identities, 32 named oracle states, 1,000 seeded oracle sequences, 128 arbitrary legal-state fixtures, all 24 grips, parser/metric/serialization behavior, impossible states, and the real HTTP API. The committed corpus comes from pinned `cubejs@1.3.2`; pytest requires no Node process or network access. Current verification includes 410 backend tests and 56 frontend tests. The 2A additions run the real solver on known scrambles, 24 seeded 25-face-turn scrambles, and all 24 grips; inject invalid output, worker failure, timeout, and busy conditions; and verify preview, step/playback, state binding, cancellation, and stale-result rejection in the frontend. The 1C tests cover exact animation endpoints, rapid inputs, duplicate/stale callbacks, reset and disconnect races, undo/redo branching, pause/resume, playback, keyboard editing guards, WebGL fallback, and reduced motion. See [M1C delivery evidence](docs/MILESTONE_1C.md); the [M1B report](docs/MILESTONE_1B.md) records the earlier engine checkpoint.
 
 For frontend test watch mode: `npm --prefix cubiq run test:watch`.
 
@@ -181,8 +201,10 @@ cubiq/
     src/coach/main.py          # application factory, CORS, and health
     src/coach/cube.py          # single authoritative state/rules module
     src/coach/api/cube.py      # stateless HTTP adapters, no move rules
+    src/coach/solvers/         # bounded third-party worker and independent verification
     tests/test_health.py       # health and CORS integration tests
     tests/test_cube*.py        # engine and API tests
+    tests/test_solver.py       # real solver and failure-injection tests
     tests/fixtures/            # independent oracle outputs
   scripts/generate-cube-fixtures.cjs # optional, local-only oracle regeneration
   scripts/generate-ui-fixtures.py # engine snapshots/plans used by frontend tests
@@ -200,4 +222,4 @@ The requested [SolveTheCube CFOP reference](https://solvethecube.com/algorithms)
 
 ## Stopping point
 
-Milestone **1C ends here**. The interactive 3D Explorer and local move-history playback are available. See the [M1C delivery report](docs/MILESTONE_1C.md). Persistent solve sessions/event logs, CFOP stage analysis, solvers, timing, and physical tracking remain future work. Earlier reports preserve the [1B engine](docs/MILESTONE_1B.md) and [1A scaffold](docs/MILESTONE_1A.md) checkpoints.
+Milestone **2A ends here**. Verified full-cube solutions and solution playback are available. See the [2A delivery report](docs/MILESTONE_2A.md) and earlier [1C report](docs/MILESTONE_1C.md). Persistent solve sessions/event logs, CFOP, exact optimality search, timing, and physical tracking remain future work. Earlier reports preserve the [1B engine](docs/MILESTONE_1B.md) and [1A scaffold](docs/MILESTONE_1A.md) checkpoints.

@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { plans, snapshots } from '../../test/cube-data'
+import { plans, snapshots, solutions } from '../../test/cube-data'
 import { CubeController } from './CubeController'
 import type { CubeTransport } from './CubeController'
-import type { CubePlan } from '../../api/cube'
+import type { CubePlan, CubeSolution } from '../../api/cube'
 
 const flush = async () => { for (let i = 0; i < 10; i++) await Promise.resolve() }
 async function setup() {
-  const api = { load: vi.fn().mockResolvedValue(snapshots.solved), plan: vi.fn(), scramble: vi.fn().mockResolvedValue(plans.scramble), import: vi.fn() } satisfies CubeTransport
+  const api = { load: vi.fn().mockResolvedValue(snapshots.solved), plan: vi.fn(), scramble: vi.fn().mockResolvedValue(plans.scramble), import: vi.fn(), solve: vi.fn() } satisfies CubeTransport
   const controller = new CubeController(api)
   controller.connect(); await flush()
   return { controller, api }
@@ -187,5 +187,137 @@ describe('history and playback', () => {
     await c.importFacelets('bad')
     expect(c.getSnapshot().history).toHaveLength(1)
     expect(c.getSnapshot().snapshot).toBe(plans.r.steps[0].snapshot)
+  })
+})
+
+describe('verified full-cube solving', () => {
+  async function scrambled() {
+    const context = await setup()
+    context.api.plan.mockResolvedValue(plans.r)
+    context.controller.enqueue('R'); await flush(); await finish(context.controller)
+    context.api.solve.mockResolvedValue(solutions.r)
+    return context
+  }
+  it('previews a state-bound solution without committing moves, then steps with duplicate-callback protection', async () => {
+    const { controller: c, api } = await scrambled()
+    const before = c.getSnapshot().snapshot
+    await c.solve()
+    expect(api.solve).toHaveBeenCalledWith(before!.state, expect.any(AbortSignal))
+    expect(c.getSnapshot().snapshot).toBe(before)
+    expect(c.getSnapshot().cursor).toBe(1)
+    expect(c.getSnapshot().solutionStart).toBe(1)
+    expect(c.getSnapshot().history).toHaveLength(1 + solutions.r.plan.steps.length)
+    c.forward(); expect(c.getSnapshot().snapshot).toBe(before)
+    await finish(c)
+    expect(c.getSnapshot().snapshot).toBe(solutions.r.plan.steps[0].snapshot)
+    expect(c.getSnapshot().cursor).toBe(2)
+    c.back(); await finish(c)
+    expect(c.getSnapshot().snapshot).toBe(before)
+    expect(api.plan).toHaveBeenCalledTimes(1)
+  })
+  it('plays and restarts only the solution, retaining its exact scrambled starting state', async () => {
+    const { controller: c, api } = await scrambled()
+    await c.solve(); c.playSolution()
+    expect(c.getSnapshot().active?.token).toBe(solutions.r.plan.steps[0].token)
+    c.pause(); await finish(c)
+    expect(c.getSnapshot().cursor).toBe(2)
+    expect(c.getSnapshot().active).toBeUndefined()
+    c.playSolution()
+    for (let i = 1; i < solutions.r.plan.steps.length; i++) await finish(c)
+    expect(c.getSnapshot().snapshot?.is_solved).toBe(true)
+    expect(c.getSnapshot().history).toHaveLength(1 + solutions.r.plan.steps.length)
+    c.playSolution()
+    expect(c.getSnapshot().cursor).toBe(1)
+    expect(c.getSnapshot().snapshot).toBe(plans.r.steps[0].snapshot)
+    expect(api.solve).toHaveBeenCalledTimes(1)
+    c.disconnect()
+  })
+  it('blocks edits, seeks, and duplicate solves during a search', async () => {
+    const { controller: c, api } = await scrambled()
+    let resolve!: (value: CubeSolution) => void
+    api.solve.mockReturnValue(new Promise<CubeSolution>(done => { resolve = done }))
+    const search = c.solve(); void c.solve()
+    expect(c.enqueue('U')).toBe(false)
+    c.seek(0); c.back(); c.play()
+    expect(c.getSnapshot().cursor).toBe(1)
+    expect(c.getSnapshot().active).toBeUndefined()
+    expect(api.solve).toHaveBeenCalledTimes(1)
+    resolve(solutions.r); await search
+  })
+  it('can solve from a paused replay intermediate state without advancing it', async () => {
+    const { controller: c, api } = await scrambled()
+    await c.solve(); c.playSolution(); c.pause(); await finish(c)
+    const intermediate = c.getSnapshot().snapshot
+    expect(c.getSnapshot().paused).toBe(true)
+    api.solve.mockRejectedValue(new Error('No result within budget'))
+    await c.solve()
+    expect(api.solve).toHaveBeenLastCalledWith(intermediate!.state, expect.any(AbortSignal))
+    expect(api.solve).toHaveBeenCalledTimes(2)
+    expect(c.getSnapshot().snapshot).toBe(intermediate)
+    expect(c.getSnapshot().playing).toBe(false)
+    expect(c.getSnapshot().error).toBe('No result within budget')
+  })
+  it('reset aborts search and ignores a late response from a transport that disregards abort', async () => {
+    const { controller: c, api } = await scrambled()
+    let resolve!: (value: CubeSolution) => void
+    api.solve.mockReturnValue(new Promise<CubeSolution>(done => { resolve = done }))
+    const search = c.solve(), signal = api.solve.mock.calls[0][1]
+    await c.reset(); resolve(solutions.r); await search
+    expect(signal.aborted).toBe(true)
+    expect(c.getSnapshot().snapshot).toBe(snapshots.solved)
+    expect(c.getSnapshot().solution).toBeUndefined()
+    expect(c.getSnapshot().history).toHaveLength(0)
+    expect(c.getSnapshot().solving).toBe(false)
+  })
+  it('cancellation retains accepted state and ignores late results', async () => {
+    const { controller: c, api } = await scrambled()
+    let resolve!: (value: CubeSolution) => void
+    api.solve.mockReturnValue(new Promise<CubeSolution>(done => { resolve = done }))
+    const search = c.solve(); c.cancelSolve()
+    expect(api.solve.mock.calls[0][1].aborted).toBe(true)
+    resolve(solutions.r); await search
+    expect(c.getSnapshot().snapshot).toBe(plans.r.steps[0].snapshot)
+    expect(c.getSnapshot().solution).toBeUndefined()
+    expect(c.getSnapshot().history).toHaveLength(1)
+  })
+  it.each([
+    { ...solutions.r, input_hash: 'stale' },
+    { ...solutions.r, result_hash: 'wrong endpoint' },
+    { ...solutions.r, move_count: 999 },
+    { ...solutions.r, notation: 'Q' },
+    { ...solutions.r, plan: { ...solutions.r.plan, steps: [] } },
+    { ...solutions.r, plan: { ...solutions.r.plan, steps: solutions.r.plan.steps.map((s, i) => i === 2 ? { ...s, before_hash: 'gap' } : s) } },
+  ])('rejects stale or inconsistent solution metadata and plans', async result => {
+    const { controller: c, api } = await scrambled()
+    api.solve.mockResolvedValue(result)
+    await c.solve()
+    expect(c.getSnapshot().error).toContain('No moves were applied')
+    expect(c.getSnapshot().snapshot).toBe(plans.r.steps[0].snapshot)
+    expect(c.getSnapshot().history).toHaveLength(1)
+    expect(c.getSnapshot().solution).toBeUndefined()
+  })
+  it('keeps a previous valid preview on solver failure and clears it only when a manual branch commits', async () => {
+    const { controller: c, api } = await scrambled()
+    await c.solve()
+    const history = c.getSnapshot().history
+    api.solve.mockRejectedValue(new Error('Search budget reached'))
+    await c.solve()
+    expect(c.getSnapshot().error).toBe('Search budget reached')
+    expect(c.getSnapshot().history).toBe(history)
+    api.plan.mockResolvedValue(plans.uAfterR)
+    c.enqueue('U'); await flush()
+    expect(c.getSnapshot().solution).toBe(solutions.r)
+    await finish(c)
+    expect(c.getSnapshot().solution).toBeUndefined()
+    expect(c.getSnapshot().history).toHaveLength(2)
+  })
+  it('handles an already-solved result without fabricating animation or history', async () => {
+    const { controller: c, api } = await setup()
+    api.solve.mockResolvedValue(solutions.solved)
+    await c.solve(); c.playSolution()
+    expect(c.getSnapshot().snapshot).toBe(snapshots.solved)
+    expect(c.getSnapshot().active).toBeUndefined()
+    expect(c.getSnapshot().history).toHaveLength(0)
+    expect(c.getSnapshot().solution?.move_count).toBe(0)
   })
 })

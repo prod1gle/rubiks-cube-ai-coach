@@ -14,7 +14,7 @@ export function Dashboard({ connection, retry }: { connection: ConnectionState; 
     <>
       <div className="page-heading flex items-start justify-between gap-4">
         <div><p className="eyebrow">YOUR PERSONAL CUBE LAB</p><h1 id="page-title">Dashboard</h1></div>
-        <span className="outline-badge">Interactive cube <span>1C</span></span>
+        <span className="outline-badge">Verified solver <span>2A</span></span>
       </div>
 
       <section className="hero" aria-labelledby="hero-title">
@@ -23,7 +23,7 @@ export function Dashboard({ connection, retry }: { connection: ConnectionState; 
           <h2 id="hero-title">Every turn.<br /><span>A little better.</span></h2>
           <p>A thoughtful space to understand your cube,<br className="desktop-break" /> build good habits, and find your next breakthrough.</p>
           <Link className="primary-button" to="/cube-explorer">Explore the workspace <ArrowRight size={16} aria-hidden="true" /></Link>
-          <p className="hero-note">Your interactive 3D cube is ready. Solvers and coaching come next.</p>
+          <p className="hero-note">Your interactive 3D cube is ready. Full-cube solutions are ready. CFOP coaching comes next.</p>
         </div>
         <div className="hero-art" aria-hidden="true">
           <div className="art-orbit orbit-one" /><div className="art-orbit orbit-two" />
@@ -53,7 +53,7 @@ export function Dashboard({ connection, retry }: { connection: ConnectionState; 
       <div className="dashboard-bottom">
         <ConnectionCard connection={connection} retry={retry} />
         <section className="panel readiness-card" aria-labelledby="readiness-title">
-          <div className="flex items-center justify-between"><span className="eyebrow">BUILT WITH INTENTION</span><span className="muted text-xs">MILESTONE 1C</span></div>
+          <div className="flex items-center justify-between"><span className="eyebrow">BUILT WITH INTENTION</span><span className="muted text-xs">MILESTONE 2A</span></div>
           <h2 id="readiness-title">First, a reliable foundation.</h2>
           <ul className="readiness-list">
             <li><span className="ready-icon"><Check size={13} /></span><span>Local application & navigation</span><span className="readiness-status">Available</span></li>

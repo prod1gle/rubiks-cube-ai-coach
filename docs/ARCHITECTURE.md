@@ -4,6 +4,8 @@ Status: architecture baseline, November 12, 2026. M1A implements the application
 
 **M1C checkpoint:** the Explorer adds Three.js/React Three Fiber rendering, with engine-provided cubie geometry and per-turn animation plans. A client controller serializes requests and commits verified snapshots with epoch/turn guards; local undo/replay restores saved verified states. This local transient history does not implement the persistent session/event architecture below. See [M1C delivery](MILESTONE_1C.md).
 
+**M2A checkpoint:** `coach.solvers` adds an isolated two-phase candidate worker and a verifying coordinator. `/api/cube/solve` validates an immutable state, verifies the returned algorithm using the engine, and returns metadata plus exact playback snapshots. The client previews these as future timeline entries; animation advances the existing guarded cursor once per turn. No competing frontend move engine, persisted sessions, or CFOP stages are added. See [2A delivery](MILESTONE_2A.md).
+
 ## Runtime and trust boundaries
 
 Build a modular local monolith with two development processes: Vite and FastAPI. FastAPI owns sessions and database writes and launches a small, bounded process pool for CPU-heavy work. A production local build needs only the backend process and its child workers. Avoid a third Node service, Redis, or a distributed job queue initially.

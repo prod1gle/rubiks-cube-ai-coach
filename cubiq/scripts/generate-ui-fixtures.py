@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from coach.cube import CubeState, plan_sequence, sequence_info
+from coach.solvers.two_phase import solve_cube
 
 solved = CubeState()
 sequence = "R U R' U'"
@@ -28,3 +29,10 @@ plans = {
 }
 for name, value in (("cube-fixtures", snapshots), ("cube-plans", plans)):
     Path(f"cubiq/src/test/{name}.json").write_text(json.dumps(value, separators=(",", ":")) + "\n")
+
+# These are actual verified adapter responses for UI transport tests. Elapsed
+# time is deliberately normalized only in test data, never in the application.
+solutions = {"r": solve_cube(solved.apply("R")), "solved": solve_cube(solved)}
+for solution in solutions.values():
+    solution["elapsed_ms"] = 123.0
+Path("cubiq/src/test/cube-solutions.json").write_text(json.dumps(solutions, separators=(",", ":")) + "\n")

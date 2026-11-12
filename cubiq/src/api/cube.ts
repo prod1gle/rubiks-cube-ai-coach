@@ -31,6 +31,14 @@ export interface CubeTransition {
   animation: TurnAnimation; inverse_animation: TurnAnimation; snapshot: CubeSnapshot
 }
 export interface CubePlan { input_hash: string; sequence: CubeSnapshot['sequence']; steps: CubeTransition[] }
+export interface CubeSolution {
+  status: 'solved' | 'already_solved'
+  input_hash: string; result_hash: string; notation: string; move_count: number; metric: string
+  elapsed_ms: number; method: 'kociemba-two-phase'; optimality: 'unproven'; label: string; verified: true
+  solver: { name: string; version: string }
+  search_limits: { max_depth_htm: number; timeout_ms: number }
+  plan: CubePlan
+}
 
 function record(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -63,12 +71,24 @@ function isPlan(value: unknown): value is CubePlan {
       typeof step.rotation === 'boolean' && animation(step.animation) && animation(step.inverse_animation) && isSnapshot(step.snapshot))
 }
 
-async function request<T>(path: string, signal: AbortSignal, check: (data: unknown) => data is T, body?: unknown): Promise<T> {
+function isSolution(value: unknown): value is CubeSolution {
+  return record(value) && ['solved', 'already_solved'].includes(String(value.status)) &&
+    typeof value.input_hash === 'string' && typeof value.result_hash === 'string' &&
+    typeof value.notation === 'string' && typeof value.metric === 'string' &&
+    Number.isInteger(value.move_count) && Number(value.move_count) >= 0 &&
+    typeof value.elapsed_ms === 'number' && Number.isFinite(value.elapsed_ms) && value.elapsed_ms >= 0 &&
+    value.method === 'kociemba-two-phase' && value.optimality === 'unproven' && value.verified === true &&
+    typeof value.label === 'string' && record(value.solver) && typeof value.solver.name === 'string' &&
+    typeof value.solver.version === 'string' && record(value.search_limits) &&
+    typeof value.search_limits.max_depth_htm === 'number' && typeof value.search_limits.timeout_ms === 'number' && isPlan(value.plan)
+}
+
+async function request<T>(path: string, signal: AbortSignal, check: (data: unknown) => data is T, body?: unknown, timeoutMs = 5000): Promise<T> {
   const controller = new AbortController()
   const abort = () => controller.abort()
   signal.addEventListener('abort', abort, { once: true })
   if (signal.aborted) controller.abort()
-  const timeout = window.setTimeout(abort, 5000)
+  const timeout = window.setTimeout(abort, timeoutMs)
   try {
     const response = await fetch(path, {
       signal: controller.signal,
@@ -99,3 +119,6 @@ export const applyCubeSequence = (state: CanonicalCubeState, sequence: string, s
 export const importCubeFacelets = (facelets: string, signal: AbortSignal) => request('/api/cube/validate', signal, isSnapshot, { facelets })
 export const planCubeSequence = (state: CanonicalCubeState, sequence: string, signal: AbortSignal) => request('/api/cube/plan', signal, isPlan, { state, sequence })
 export const scrambleCube = (state: CanonicalCubeState, signal: AbortSignal) => request('/api/cube/scramble', signal, isPlan, { state })
+// The backend's 30 s worker budget includes cold table generation. Leave time
+// for local HTTP overhead; abort/reset still cancels adoption immediately.
+export const solveCube = (state: CanonicalCubeState, signal: AbortSignal) => request('/api/cube/solve', signal, isSolution, { state }, 35000)

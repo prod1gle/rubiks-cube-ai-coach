@@ -157,3 +157,18 @@ M1C adds an independently verified checkpoint: all 26 cubies/54 stickers render 
 | M9-05 | Untrusted HTTP/WebSocket origin, invalid local token, oversized frame/input | Requests are rejected without state changes or resource exhaustion. Services remain bound to loopback by default. |
 | M9-06 | Stop application during job/capture and reopen; inspect capability UI | Camera and child processes shut down; acknowledged history survives. Missing solver/vision modules show unavailable. No demo figures masquerade as measurements. |
 | M9-07 | Final full applicable regression and source/license inventory | Release report contains passed gates, measured performance, real video evidence, dependency notices, scope exclusions, and unresolved limits. Optional AI and experimental tracking status are explicit. |
+
+## User-requested M2A — full-cube solving checkpoint
+
+These gates describe this delivered slice; the broader M3 and M4 gates remain pending.
+
+| ID | Action | Acceptance / evidence |
+| --- | --- | --- |
+| 2A-01 | Submit valid cubies or viewed facelets | Validate before any worker; canonical URFDLB search input. Known scramble and all-24-grip real HTTP tests. |
+| 2A-02 | Solve known and seeded random scrambles with the actual dependency | Returned notation solves the exact state under `coach.cube`; every intermediate snapshot agrees; grip preserved. Eight known, 24 seeded 25-face-turn, and 24 grip tests. |
+| 2A-03 | Inject malformed, wrong, rotation-containing, or over-limit output | 502 without notation; no unchecked candidate escapes. Solved input needs no worker. |
+| 2A-04 | Inspect response and UI | Notation, HTM metric/count, elapsed backend milliseconds, method/version/budget, input/result hashes and verification returned. Optimality always unproven; no approximation-gap claim. |
+| 2A-05 | Solver timeout, crash, missing dependency, no result, busy slot | Specific 502/503/504 error, worker timeout enforced with `subprocess.run(timeout=30)`, slot released on every path; health remains usable. Failure injection, not fabricated runtime success. |
+| 2A-06 | Click Solve, step back/forward, play/pause, restart solution | Preview leaves accepted state unchanged. Playback begins at the saved solution start, reaches solved, and reverses using verified snapshots. Duplicate callbacks commit once. |
+| 2A-07 | Reset/cancel/import/unmount during search; late reply; edit after preview | Stale result cannot replace state/history. Edits blocked during search; a committed manual branch invalidates the old solution. Explicit cancellation/epoch tests. |
+| 2A-08 | Start locally, cold/warm solve, desktop/mobile layout, full regression | README commands work; local cache needs no network after installation; live browser solve reaches solved and reverses to its exact start. See [delivery report](MILESTONE_2A.md) for actual verification and limitations. |

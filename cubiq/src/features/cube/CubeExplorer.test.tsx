@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
-import { plans, snapshots } from '../../test/cube-data'
+import { plans, snapshots, solutions } from '../../test/cube-data'
 import type { ActiveTurn } from './CubeController'
 import { CubeExplorer } from './CubeExplorer'
 
@@ -134,4 +134,84 @@ it('unavailable or malformed initial engine responses never fabricate a cube', a
   expect(screen.queryByTestId('viewport')).not.toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Reconnect to engine' }))
   expect(await screen.findByText('Solved · in any grip')).toBeVisible()
+})
+
+it('shows a verified solution without moving the cube, then plays forward and backward from the exact start', async () => {
+  const { request, user } = await start(response(plans.r), response(solutions.r))
+  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Solve cube' }))
+  expect(await screen.findByText('Engine verified')).toBeVisible()
+  expect(screen.getByText('Short solution · optimality unproven')).toBeVisible()
+  expect(screen.getByText('0.123 s computation')).toBeVisible()
+  expect(screen.getByTestId('move-count')).toHaveTextContent('1HTM')
+  expect(screen.getByLabelText('Current facelets')).toHaveValue(plans.r.steps[0].snapshot.facelets)
+  expect(request.mock.calls[2][0]).toBe('/api/cube/solve')
+  expect(JSON.parse(request.mock.calls[2][1].body).state).toEqual(plans.r.steps[0].snapshot.state)
+  await user.click(screen.getByRole('button', { name: 'Next solution move' })); await land(user)
+  expect(screen.getByText(`Solution step 1 of ${solutions.r.move_count}`)).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Previous solution move' })); await land(user)
+  expect(screen.getByLabelText('Current facelets')).toHaveValue(plans.r.steps[0].snapshot.facelets)
+  await user.click(screen.getByRole('button', { name: 'Play solution' }))
+  for (let i = 0; i < solutions.r.plan.steps.length; i++) await land(user)
+  expect(screen.getByText(`Solution step ${solutions.r.move_count} of ${solutions.r.move_count} · Solved`)).toBeVisible()
+  expect(screen.getByLabelText('Current facelets')).toHaveValue(snapshots.solved.facelets)
+  await user.click(screen.getByRole('button', { name: 'Go to solution start' }))
+  expect(screen.getByLabelText('Current facelets')).toHaveValue(plans.r.steps[0].snapshot.facelets)
+  expect(request).toHaveBeenCalledTimes(3)
+})
+
+it('uses the saved solution start after scrubbing earlier history', async () => {
+  const { user } = await start(response(plans.r), response(solutions.r))
+  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Solve cube' }))
+  await screen.findByText('Engine verified')
+  await user.click(screen.getByRole('button', { name: 'Go to start' }))
+  expect(screen.getByRole('button', { name: 'Next solution move' })).toBeDisabled()
+  await user.click(screen.getByRole('button', { name: 'Play solution' }))
+  expect(screen.getByLabelText('Current facelets')).toHaveValue(plans.r.steps[0].snapshot.facelets)
+  await land(user)
+  expect(screen.getByText(`Solution step 1 of ${solutions.r.move_count}`)).toBeVisible()
+})
+
+it('retains the cube and displays an actionable solver timeout', async () => {
+  const { user } = await start(response(plans.r), response({ detail: { code: 'solver_timeout', message: 'Search budget reached. No moves were applied.' } }, 504))
+  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Solve cube' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Search budget reached')
+  expect(screen.getByLabelText('Current facelets')).toHaveValue(plans.r.steps[0].snapshot.facelets)
+  expect(screen.getByRole('button', { name: 'Solve cube' })).toBeEnabled()
+  expect(screen.queryByLabelText('Computed solution')).not.toBeInTheDocument()
+})
+
+it.each([{ ...solutions.r, optimality: 'proven' }, { ...solutions.r, verified: false }])('rejects unsupported proof or verification metadata from the API', async result => {
+  const { user } = await start(response(plans.r), response(result))
+  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Solve cube' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('unexpected snapshot or transition plan')
+  expect(screen.queryByText('Engine verified')).not.toBeInTheDocument()
+})
+
+it('offers cancellation while searching and restores controls without accepting a late result', async () => {
+  const { request, user } = await start(response(plans.r))
+  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land(user)
+  let resolve!: (value: Response) => void
+  request.mockReturnValueOnce(new Promise<Response>(done => { resolve = done }))
+  await user.click(screen.getByRole('button', { name: 'Solve cube' }))
+  expect(screen.getByText(/Searching locally/)).toBeVisible()
+  expect(screen.getByRole('button', { name: 'Apply U' })).toBeDisabled()
+  fireEvent.keyDown(window, { key: 'u' })
+  await user.click(screen.getByRole('button', { name: 'Cancel solve' }))
+  resolve(response(solutions.r))
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Solve cube' })).toBeEnabled())
+  expect(screen.queryByLabelText('Computed solution')).not.toBeInTheDocument()
+  expect(screen.getByTestId('move-count')).toHaveTextContent('1HTM')
+  expect(request).toHaveBeenCalledTimes(3)
+})
+
+it('labels an already-solved state and offers no unnecessary playback', async () => {
+  const { user } = await start(response(solutions.solved))
+  await user.click(screen.getByRole('button', { name: 'Solve cube' }))
+  expect(await screen.findByText('This cube is already solved. No face turns are needed.')).toBeVisible()
+  expect(screen.queryByRole('button', { name: 'Next solution move' })).not.toBeInTheDocument()
+  expect(screen.getByTestId('move-count')).toHaveTextContent('0HTM')
 })
