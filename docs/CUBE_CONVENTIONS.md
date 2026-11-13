@@ -195,3 +195,7 @@ The generator uses an independent fixed-seed PRNG and imports no application eng
 ## M2B staged-planning extension
 
 The canonical representation, sticker/frame conventions, public parser, metric and existing hashes remain unchanged. New engine helpers implement exact layer predicates, temporary reference rebasing, fixed-grip outer-turn translation, projected piece-transition maps, and registry-only slice/wide compilation. All CFOP search transitions are derived from these helpers and every final stage is verified with full `CubeState` objects. Public manual entry still rejects slices/wide turns. See [CFOP engine v1](CFOP_ENGINE.md) for the white-down reference, precise predicates, case identifiers and counting semantics.
+
+## M2C targeting and grip helpers
+
+Canonical serialization, indices, colors, HTM and hash semantics are unchanged. `reference_piece_views` maps reference piece identities through the engine's frame/color conventions to their actual viewer cubie IDs, positions and physical color identities. `rotation_sequence` searches the 24 valid frames for explicit shortest x/y/z rotation actions; it never changes physical cubie coordinates. These helpers drive coaching highlights and grip prefixes without competing frontend move logic. See [coaching conventions](COACHING.md).

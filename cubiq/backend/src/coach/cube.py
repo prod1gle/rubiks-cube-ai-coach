@@ -512,6 +512,28 @@ class CubeState:
             return position * 2 + self.eo[position]
         raise CubeError("piece_kind", "Expected corner or edge.")
 
+    def reference_piece_views(self, frame: str, corners=(), edges=()) -> list[dict[str, Any]]:
+        """Locate physical target identities in the current viewer's 26 cubies."""
+        if frame not in VALID_FRAMES:
+            raise CubeError("center_orientation", "Invalid reference frame.")
+        visible = scene_cubies(self.to_facelets())
+        result = []
+        for kind, names, pieces in (("corner", CORNER_NAMES, corners), ("edge", EDGE_NAMES, edges)):
+            for piece in pieces:
+                colors = {frame[FACES.index(face)] for face in names[piece]}
+                name = next(name for name in names if set(name) == colors)
+                cubie = next(c for c in visible if {s["color"] for s in c["stickers"]} == colors)
+                result.append(
+                    {
+                        "kind": kind,
+                        "name": name,
+                        "colors": list(name),
+                        "slot_id": cubie["id"],
+                        "position": cubie["position"],
+                    }
+                )
+        return result
+
     def to_facelets(self, *, canonical: bool = False) -> str:
         result = list(SOLVED_FACELETS)
         for permutation, orientation, names, indices in (
@@ -651,6 +673,25 @@ def piece_coordinate_maps(sequence: str) -> tuple[tuple[int, ...], tuple[int, ..
             )
         )
     return result[0], result[1]
+
+
+@lru_cache(maxsize=576)
+def rotation_sequence(source: str, target: str) -> str:
+    """Shortest orientation-only word between two legal grips (rotation actions, not HTM)."""
+    if source not in VALID_FRAMES or target not in VALID_FRAMES:
+        raise CubeError("center_orientation", "Invalid rotation frame.")
+    pending, seen = [(source, "")], {source}
+    for frame, word in pending:
+        if frame == target:
+            return word.strip()
+        for face in ROTATIONS:
+            for suffix in ("", "'", "2"):
+                token = face + suffix
+                after = CubeState(frame=frame).apply(token).frame
+                if after not in seen:
+                    seen.add(after)
+                    pending.append((after, word + " " + token))
+    raise AssertionError("All proper grips must be reachable")
 
 
 def scene_cubies(facelets: str) -> list[dict[str, Any]]:

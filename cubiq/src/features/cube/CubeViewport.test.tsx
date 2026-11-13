@@ -4,7 +4,7 @@ import { plans, snapshots } from '../../test/cube-data'
 import CubeViewport from './CubeViewport'
 import type { ActiveTurn } from './CubeController'
 
-vi.mock('./CubeScene', () => ({ default: ({ active }: { active?: ActiveTurn }) => <div data-testid="scene-state">{active ? 'Animating' : 'Static'}</div> }))
+vi.mock('./CubeScene', () => ({ default: ({ active, highlighted = [] }: { active?: ActiveTurn; highlighted?: string[] }) => <div><div data-testid="scene-state">{active ? 'Animating' : 'Static'}</div><output data-testid="scene-highlights">{highlighted.join('|')}</output></div> }))
 
 it('provides a truthful 2D fallback without WebGL and completes a verified transition once', async () => {
   const finish = vi.fn()
@@ -23,4 +23,11 @@ it('honors reduced motion and adopts the verified state without a simulated turn
   render(<CubeViewport snapshot={snapshots.solved} active={active} duration={0.28} reducedMotion={true} onFinish={finish} />)
   expect(await screen.findByTestId('scene-state')).toHaveTextContent('Static')
   await waitFor(() => expect(finish).toHaveBeenCalledExactlyOnceWith('reduced:1'))
+})
+
+it('passes only supplied engine cubie IDs to the scene and exposes a text equivalent', async () => {
+  vi.stubGlobal('WebGL2RenderingContext', class {})
+  render(<CubeViewport snapshot={snapshots.solved} duration={0.28} reducedMotion={false} onFinish={vi.fn()} highlighted={['1,1,1', '0,1,1']} />)
+  expect(await screen.findByTestId('scene-highlights')).toHaveTextContent('1,1,1|0,1,1')
+  expect(screen.getByText('2 target cubies outlined · orbit to inspect hidden stickers.')).toBeVisible()
 })

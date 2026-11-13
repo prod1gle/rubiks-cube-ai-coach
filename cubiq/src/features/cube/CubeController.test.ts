@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { plans, snapshots, solutions, cfopSolutions } from '../../test/cube-data'
+import { plans, snapshots, solutions, cfopSolutions, coachingFixtures as hintFixtures } from '../../test/cube-data'
 import { CubeController } from './CubeController'
 import type { CubeTransport } from './CubeController'
-import type { CubePlan, CubeSolution } from '../../api/cube'
+import type { CoachingReply, CubePlan, CubeSolution } from '../../api/cube'
 
 const flush = async () => { for (let i = 0; i < 10; i++) await Promise.resolve() }
 async function setup() {
-  const api = { load: vi.fn().mockResolvedValue(snapshots.solved), plan: vi.fn(), scramble: vi.fn().mockResolvedValue(plans.scramble), import: vi.fn(), solve: vi.fn(), cfop: vi.fn() } satisfies CubeTransport
+  const api = { load: vi.fn().mockResolvedValue(snapshots.solved), plan: vi.fn(), scramble: vi.fn().mockResolvedValue(plans.scramble), import: vi.fn(), solve: vi.fn(), cfop: vi.fn(), hint: vi.fn() } satisfies CubeTransport
   const controller = new CubeController(api)
   controller.connect(); await flush()
   return { controller, api }
@@ -396,5 +396,86 @@ describe('genuine CFOP transport and stage playback', () => {
     expect(c.getSnapshot().solution).toBeUndefined()
     c.playStage('cross')
     expect(c.getSnapshot().active).toBeUndefined()
+  })
+})
+
+
+describe('state-bound coaching concurrency', () => {
+  const settings = { mode: 'cfop' as const, ranking: 'ergonomic' as const, allow_rotations: true }
+  async function coached() {
+    const context = await setup()
+    context.api.load.mockResolvedValue(hintFixtures.back.snapshot)
+    await context.controller.reset()
+    context.api.hint.mockResolvedValue(hintFixtures.back.hint)
+    context.controller.requestHint(settings); await flush()
+    return context
+  }
+  it('does not compute or fabricate hints until enabled', async () => {
+    const { controller: c, api } = await setup()
+    expect(c.getSnapshot().hintEnabled).toBe(false)
+    expect(api.hint).not.toHaveBeenCalled()
+  })
+  it('uses current-state hints and invalidates highlighting as soon as a turn starts', async () => {
+    const { controller: c, api } = await coached()
+    expect(c.getSnapshot().coaching?.input_hash).toBe(hintFixtures.back.snapshot.state_hash)
+    api.plan.mockResolvedValue(hintFixtures.back.firstPlan)
+    api.hint.mockResolvedValue(hintFixtures.back.afterFirstHint)
+    expect(c.applyHint(true)).toBe(true)
+    expect(c.applyHint(true)).toBe(false)
+    await flush()
+    expect(c.getSnapshot().coaching).toBeUndefined()
+    await finish(c)
+    expect(c.getSnapshot().coaching?.input_hash).toBe(hintFixtures.back.firstPlan.steps[0].snapshot.state_hash)
+    expect(api.hint.mock.calls.at(-1)![3]?.consumed).toBe(1)
+    expect(c.getSnapshot().history).toHaveLength(1)
+  })
+  it('ignores an old hint arriving after a different manual move', async () => {
+    const { controller: c, api } = await coached()
+    let resolve!: (hint: CoachingReply) => void
+    api.hint.mockReturnValueOnce(new Promise<CoachingReply>(done => { resolve = done })).mockResolvedValueOnce(hintFixtures.back.afterManualHint)
+    c.requestHint(settings); await flush()
+    const oldSignal = api.hint.mock.calls[1][2]
+    api.plan.mockResolvedValue(hintFixtures.back.manualPlan)
+    c.enqueue('U'); await flush(); await finish(c)
+    resolve(hintFixtures.back.hint); await flush()
+    expect(oldSignal.aborted).toBe(true)
+    expect(c.getSnapshot().coaching?.input_hash).toBe(hintFixtures.back.manualPlan.steps[0].snapshot.state_hash)
+    expect(api.hint.mock.calls.at(-1)![3]).toBeUndefined()
+  })
+  it('reset and disable reject late hint responses even if transport ignores abort', async () => {
+    const { controller: c, api } = await coached()
+    let resolve!: (hint: CoachingReply) => void
+    api.hint.mockReturnValueOnce(new Promise<CoachingReply>(done => { resolve = done }))
+    c.requestHint(settings); await flush(); c.disableHints()
+    api.load.mockResolvedValueOnce(snapshots.solved)
+    await c.reset(); resolve(hintFixtures.back.hint); await flush()
+    expect(c.getSnapshot().coaching).toBeUndefined()
+    expect(c.getSnapshot().hintEnabled).toBe(false)
+    expect(c.getSnapshot().snapshot).toBe(snapshots.solved)
+  })
+  it.each([
+    { ...hintFixtures.back.hint, input_hash: 'old' },
+    { ...hintFixtures.back.hint, recommended_id: 'missing' },
+    { ...hintFixtures.back.hint, candidates: hintFixtures.back.hint.candidates.map((h, i) => i ? h : { ...h, highlight_ids: ['unknown-slot'] }) },
+    { ...hintFixtures.back.hint, candidates: hintFixtures.back.hint.candidates.map((h, i) => i ? h : { ...h, first_move: 'R' }) },
+  ])('rejects stale recommendation metadata without applying anything', async result => {
+    const { controller: c, api } = await coached()
+    api.hint.mockResolvedValue(result)
+    c.requestHint(settings); await flush()
+    expect(c.getSnapshot().hintError).toContain('No moves were applied')
+    expect(c.getSnapshot().coaching).toBeUndefined()
+    expect(c.getSnapshot().snapshot).toBe(hintFixtures.back.snapshot)
+    expect(c.getSnapshot().history).toHaveLength(0)
+  })
+  it('can stop a paused queue at its exact accepted state before coaching', async () => {
+    const { controller: c, api } = await setup()
+    api.plan.mockResolvedValue(plans.algorithm)
+    c.enqueue('algorithm'); await flush(); c.pause(); await finish(c)
+    const state = c.getSnapshot().snapshot
+    expect(c.getSnapshot().pending).toBe(3)
+    c.stopQueue()
+    expect(c.getSnapshot().pending).toBe(0)
+    expect(c.getSnapshot().snapshot).toBe(state)
+    expect(c.getSnapshot().history).toHaveLength(1)
   })
 })

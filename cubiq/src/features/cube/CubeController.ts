@@ -1,5 +1,5 @@
-import { getCube, importCubeFacelets, planCubeSequence, scrambleCube, solveCube, solveCFOP } from '../../api/cube'
-import type { CanonicalCubeState, CubePlan, CubeSnapshot, CubeSolution, CubeTransition, TurnAnimation } from '../../api/cube'
+import { getCube, importCubeFacelets, planCubeSequence, scrambleCube, solveCube, solveCFOP, getCoaching } from '../../api/cube'
+import type { CanonicalCubeState, CoachingReply, CubePlan, CubeSnapshot, CubeSolution, CubeTransition, HintContinuation, HintSettings, TurnAnimation } from '../../api/cube'
 
 export interface CubeTransport {
   load: (signal: AbortSignal) => Promise<CubeSnapshot>
@@ -8,21 +8,23 @@ export interface CubeTransport {
   import: (facelets: string, signal: AbortSignal) => Promise<CubeSnapshot>
   solve: (state: CanonicalCubeState, signal: AbortSignal) => Promise<CubeSolution>
   cfop: (state: CanonicalCubeState, signal: AbortSignal) => Promise<CubeSolution>
+  hint: (state: CanonicalCubeState, settings: HintSettings, signal: AbortSignal, continuation?: HintContinuation) => Promise<CoachingReply>
 }
-const transport: CubeTransport = { load: getCube, plan: planCubeSequence, scramble: scrambleCube, import: importCubeFacelets, solve: solveCube, cfop: solveCFOP }
+const transport: CubeTransport = { load: getCube, plan: planCubeSequence, scramble: scrambleCube, import: importCubeFacelets, solve: solveCube, cfop: solveCFOP, hint: getCoaching }
 export interface ActiveTurn { id: string; token: string; animation: TurnAnimation; after: CubeSnapshot }
 export interface ExplorerState {
   snapshot?: CubeSnapshot; active?: ActiveTurn; history: readonly CubeTransition[]; cursor: number
   loading: boolean; planning: boolean; pending: number; paused: boolean; playing: boolean
   error: string; lastAlgorithm: string
   solving: boolean; solution?: CubeSolution; solutionStart?: number
+  hintEnabled: boolean; hintLoading: boolean; hintError: string; coaching?: CoachingReply; hintSelectedId?: string
 }
 type Command = { kind: 'moves'; sequence: string } | { kind: 'scramble' }
 type Completion = { id: string; step: CubeTransition } | { id: string; cursor: number }
 
 /** Orders opaque engine snapshots. Contains no cube transformations or notation rules. */
 export class CubeController {
-  private state: ExplorerState = { history: [], cursor: 0, loading: true, planning: false, pending: 0, paused: false, playing: false, error: '', lastAlgorithm: '', solving: false }
+  private state: ExplorerState = { history: [], cursor: 0, loading: true, planning: false, pending: 0, paused: false, playing: false, error: '', lastAlgorithm: '', solving: false, hintEnabled: false, hintLoading: false, hintError: '' }
   private listeners = new Set<() => void>()
   private commands: Command[] = []
   private steps: CubeTransition[] = []
@@ -33,18 +35,94 @@ export class CubeController {
   private serial = 0
   private live = false
   private playUntil?: number
+  private hintSettings?: HintSettings
+  private hintAbort?: AbortController
+  private hintSerial = 0
+  private lastHintKey?: string
+  private hintContinuation?: HintContinuation
   constructor(private api: CubeTransport = transport) {}
   getSnapshot = () => this.state
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener) } }
   private publish(patch: Partial<ExplorerState> = {}) {
-    this.state = { ...this.state, ...patch, pending: this.commands.length + this.steps.length + ((patch.planning ?? this.state.planning) ? 1 : 0) }
+    const changed = patch.snapshot && patch.snapshot.state_hash !== this.state.snapshot?.state_hash
+    const next = { ...this.state, ...patch, pending: this.commands.length + this.steps.length + ((patch.planning ?? this.state.planning) ? 1 : 0) }
+    const unstable = next.loading || next.solving || next.planning || !!next.active || next.pending > 0 || (next.playing && !next.paused)
+    if (changed || (unstable && (next.coaching || next.hintLoading))) {
+      this.invalidateHint()
+      next.coaching = undefined; next.hintSelectedId = undefined; next.hintLoading = false; next.hintError = ''
+    }
+    this.state = next
     this.listeners.forEach(listener => listener())
+    if (this.live && next.hintEnabled && !unstable && !next.hintLoading && !next.coaching && !next.hintError) queueMicrotask(() => void this.fetchHint())
   }
   connect = () => { if (!this.live) { this.live = true; void this.reset() } }
-  disconnect = () => { this.live = false; this.epoch++; this.abort?.abort(); this.commands = []; this.steps = []; this.completion = undefined; this.playUntil = undefined }
+  disconnect = () => { this.live = false; this.epoch++; this.abort?.abort(); this.invalidateHint(); this.hintContinuation = undefined; this.commands = []; this.steps = []; this.completion = undefined; this.playUntil = undefined }
+  private invalidateHint() { this.hintSerial++; this.hintAbort?.abort(); this.lastHintKey = undefined }
+  requestHint = (settings: HintSettings) => {
+    if (JSON.stringify(settings) !== JSON.stringify(this.hintSettings)) this.hintContinuation = undefined
+    this.invalidateHint(); this.hintSettings = { ...settings }
+    this.publish({ hintEnabled: true, coaching: undefined, hintSelectedId: undefined, hintLoading: false, hintError: '' })
+  }
+  disableHints = () => {
+    this.invalidateHint(); this.hintContinuation = undefined
+    this.publish({ hintEnabled: false, coaching: undefined, hintSelectedId: undefined, hintLoading: false, hintError: '' })
+  }
+  private async fetchHint() {
+    if (!this.live || !this.hintSettings || !this.state.hintEnabled || !this.canSeek() || (this.state.playing && !this.state.paused) || !this.state.snapshot) return
+    const snapshot = this.state.snapshot, settings = this.hintSettings
+    const key = snapshot.state_hash + JSON.stringify(settings) + JSON.stringify(this.hintContinuation)
+    if (this.lastHintKey === key) return
+    this.lastHintKey = key
+    const serial = ++this.hintSerial
+    this.hintAbort?.abort(); this.hintAbort = new AbortController()
+    this.publish({ hintLoading: true, hintError: '' })
+    try {
+      const coaching = await this.api.hint(snapshot.state, settings, this.hintAbort.signal, this.hintContinuation)
+      if (!this.live || serial !== this.hintSerial || this.state.snapshot?.state_hash !== snapshot.state_hash) return
+      const ids = new Set(snapshot.cubies.map(c => c.id))
+      if (coaching.input_hash !== snapshot.state_hash || coaching.mode !== settings.mode ||
+        coaching.ranking !== (settings.mode === 'short' ? 'htm' : settings.ranking) ||
+        coaching.allow_rotations !== (settings.mode === 'cfop' && settings.allow_rotations) ||
+        new Set(coaching.candidates.map(c => c.id)).size !== coaching.candidates.length ||
+        coaching.candidates.some(c => c.input_hash !== snapshot.state_hash || c.first_move !== c.notation.split(/\s+/)[0] || c.highlight_ids.some(id => !ids.has(id))) ||
+        (coaching.status === 'ready' && !coaching.candidates.some(c => c.id === coaching.recommended_id)) ||
+        (coaching.status === 'solved' && (!snapshot.is_solved || coaching.candidates.length > 0))) {
+        throw new Error('The engine returned a stale or inconsistent hint. No moves were applied.')
+      }
+      this.publish({ coaching, hintSelectedId: coaching.recommended_id ?? undefined, hintLoading: false })
+      if (!coaching.continuation) this.hintContinuation = undefined
+    } catch (error) {
+      if (this.live && serial === this.hintSerial) this.publish({ hintLoading: false, hintError: this.message(error) })
+    }
+  }
+  selectHint = (id: string) => {
+    if (this.state.coaching?.input_hash === this.state.snapshot?.state_hash && this.state.coaching?.candidates.some(c => c.id === id)) this.publish({ hintSelectedId: id })
+  }
+  applyHint = (single: boolean) => {
+    const coaching = this.state.coaching
+    const candidate = coaching?.candidates.find(c => c.id === this.state.hintSelectedId)
+    if (!this.canSeek() || (this.state.playing && !this.state.paused) || !candidate || coaching?.input_hash !== this.state.snapshot?.state_hash) return false
+    // Stop paused history playback before branching into this exact state's hint.
+    this.publish({ paused: false, playing: false })
+    if (single && this.state.snapshot) {
+      const context = coaching?.continuation ?? { start_state: this.state.snapshot.state, candidate_id: candidate.id, consumed: 0 }
+      this.hintContinuation = { ...context, consumed: context.consumed + 1 }
+    } else this.hintContinuation = undefined
+    return this.add({ kind: 'moves', sequence: single ? candidate.first_move : candidate.notation }, true)
+  }
+  replanHint = () => {
+    if (!this.hintSettings) return
+    this.hintContinuation = undefined; this.requestHint(this.hintSettings)
+  }
+  stopQueue = () => {
+    if (this.state.active || this.state.loading || this.state.solving) return
+    this.epoch++; this.abort?.abort(); this.hintContinuation = undefined; this.commands = []; this.steps = []; this.completion = undefined; this.playUntil = undefined
+    this.publish({ planning: false, playing: false, paused: false })
+  }
   private async replace(operation: (signal: AbortSignal) => Promise<CubeSnapshot>) {
     if (!this.live) return
     const epoch = ++this.epoch
+    this.hintContinuation = undefined
     this.abort?.abort(); this.abort = new AbortController()
     this.commands = []; this.steps = []; this.completion = undefined
     this.playUntil = undefined
@@ -63,8 +141,9 @@ export class CubeController {
   private message(error: unknown) { return error instanceof Error ? error.message : 'Unable to reach the cube engine.' }
   enqueue = (sequence: string) => this.add({ kind: 'moves', sequence })
   scramble = () => this.add({ kind: 'scramble' })
-  private add(command: Command) {
+  private add(command: Command, fromHint = false) {
     if (!this.live || !this.state.snapshot || this.state.loading || this.state.solving) return false
+    if (!fromHint) this.hintContinuation = undefined
     if (this.commands.length >= 64) { this.publish({ error: 'The input queue is full (64 requests). Let it finish or reset.' }); return false }
     this.commands.push(command)
     this.playUntil = undefined
@@ -128,6 +207,7 @@ export class CubeController {
   solve = async (approach: 'short' | 'cfop' = 'short') => {
     if (!this.live || !this.canSeek() || (this.state.playing && !this.state.paused) || !this.state.snapshot) return
     const epoch = this.epoch, snapshot = this.state.snapshot, start = this.state.cursor
+    this.hintContinuation = undefined
     this.abort = new AbortController()
     this.playUntil = undefined
     this.publish({ solving: true, paused: false, playing: false, error: '' })
@@ -199,6 +279,7 @@ export class CubeController {
   }
   back = () => {
     if (!this.canSeek() || this.state.cursor === 0) return
+    this.hintContinuation = undefined
     this.playUntil = undefined
     this.publish({ playing: false, paused: false })
     const cursor = this.state.cursor - 1, step = this.state.history[cursor]
@@ -207,11 +288,13 @@ export class CubeController {
   }
   forward = () => {
     if (!this.canSeek() || this.state.cursor >= this.state.history.length) return
+    this.hintContinuation = undefined
     const step = this.state.history[this.state.cursor]
     this.activate(step.animation, step.snapshot, step.token, { cursor: this.state.cursor + 1 })
   }
   seek = (cursor: number) => {
     if (!this.canSeek() || !Number.isInteger(cursor) || cursor < 0 || cursor > this.state.history.length) return
+    this.hintContinuation = undefined
     const snapshot = cursor === 0 ? this.baseline : this.state.history[cursor - 1].snapshot
     if (snapshot) { this.playUntil = undefined; this.publish({ snapshot, cursor, playing: false, paused: false }) }
   }

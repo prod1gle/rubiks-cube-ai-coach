@@ -4,6 +4,7 @@ import { useCube } from './useCube'
 import CubeViewport from './CubeViewport'
 import { FaceletNet } from './FaceletNet'
 import { SolutionPanel } from './SolutionPanel'
+import { CoachPanel } from './CoachPanel'
 
 const faceLabels: Record<string, string> = { U: 'Up', R: 'Right', F: 'Front', D: 'Down', L: 'Left', B: 'Back' }
 
@@ -19,6 +20,7 @@ export function CubeExplorer() {
   const blocked = loading || working || solving
   const moveCount = history.slice(0, cursor).reduce((sum, step) => sum + step.htm, 0)
   const rotations = history.slice(0, cursor).filter(step => step.rotation).length
+  const highlighted = view.coaching?.input_hash === snapshot?.state_hash ? view.coaching?.candidates.find(c => c.id === view.hintSelectedId)?.highlight_ids : undefined
   useEffect(() => {
     const media = window.matchMedia?.('(prefers-reduced-motion: reduce)')
     const update = () => setReducedMotion(media?.matches ?? false)
@@ -51,14 +53,14 @@ export function CubeExplorer() {
   return <>
     <div className="page-heading explorer-heading flex flex-wrap items-start justify-between gap-4">
       <div><p className="eyebrow">YOUR CUBE. EVERY POSSIBILITY.</p><h1 id="page-title">Cube Explorer</h1><p className="explorer-subtitle">Understand the cube, one turn at a time.</p></div>
-      <span className="outline-badge"><ShieldCheck size={12} className="inline mr-2" aria-hidden="true" />Engine-verified · 2B</span>
+      <span className="outline-badge"><ShieldCheck size={12} className="inline mr-2" aria-hidden="true" />Engine-verified · 2C</span>
     </div>
     {error && <div role="alert" className="engine-error">{error} {!snapshot && 'Start the backend and reconnect.'}</div>}
     {!snapshot ? <section className="panel engine-loading"><p role="status">{loading ? 'Connecting to your cube engine…' : 'No validated state is available.'}</p><button className="secondary-button" disabled={loading} onClick={() => void controller.reset()}><RefreshCw size={14} aria-hidden="true" />Reconnect to engine</button></section> : <>
       <div className="explorer-stage">
-        <section className="scene-shell panel" aria-label="Interactive cube workspace">
+        <section id="cube-workspace" tabIndex={-1} className="scene-shell panel" aria-label="Interactive cube workspace">
           <div className="scene-topline"><span className="scene-type"><Box size={15} aria-hidden="true" />3 × 3 <span>/</span> STANDARD CUBE</span><div className="scene-history"><button aria-label="Undo move" title="Undo / step backward (Ctrl or Command Z)" disabled={blocked || cursor === 0} onClick={controller.back}><Undo2 size={15} />Undo</button><button aria-label="Redo move" title="Redo / step forward" disabled={blocked || cursor >= history.length} onClick={controller.forward}><Redo2 size={15} />Redo</button></div></div>
-          <CubeViewport snapshot={snapshot} active={active} duration={duration} reducedMotion={reducedMotion} onFinish={controller.finish} />
+          <CubeViewport snapshot={snapshot} active={active} duration={duration} reducedMotion={reducedMotion} onFinish={controller.finish} highlighted={highlighted} />
           <div className="scene-status"><span className="scene-state"><span className="status-dot" />{snapshot.is_solved ? 'Solved · in any grip' : 'Legal scrambled state'}</span><span>Grip <code data-testid="cube-frame">{snapshot.state.frame}</code></span></div>
         </section>
         <section className="panel move-panel" aria-labelledby="move-controls-title">
@@ -72,6 +74,7 @@ export function CubeExplorer() {
         </section>
       </div>
 
+      <CoachPanel view={view} />
       <SolutionPanel view={view} />
 
       <section className="panel timeline-panel" aria-labelledby="sequence-title">

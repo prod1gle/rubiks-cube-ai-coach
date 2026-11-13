@@ -43,3 +43,37 @@ cfop = {"r": solve_cfop(solved.apply("R")), "scrambled": solve_cfop(solved.apply
 for result in cfop.values():
     result["elapsed_ms"] = 234.0
 Path("cubiq/src/test/cube-cfop.json").write_text(json.dumps(cfop, separators=(",", ":")) + "\n")
+
+from coach.cfop.registry import WHITE_DOWN_FRAME as W
+from coach.coaching.service import recommend
+from coach.cube import inverse_sequence
+
+def display(state):
+    return state.snapshot() | {"sequence": sequence_info("")}
+
+physical = solved.apply(inverse_sequence("B U B'")).in_reference(W)
+back = CubeState(physical.cp, physical.co, physical.ep, physical.eo, W)
+partial = solved.apply("R U R' L U2 L' B U B'").in_reference(W)
+first = plan_sequence(back, "y")
+manual = plan_sequence(back, "U")
+back_hint = recommend(back)
+coaching = {
+    "back": {
+        "snapshot": display(back), "hint": back_hint,
+        "firstPlan": first, "afterFirstHint": recommend(back.apply("y"), continuation={"start_state": back.to_dict(), "candidate_id": back_hint["recommended_id"], "consumed": 1}),
+        "secondPlan": plan_sequence(back.apply("y"), "R"),
+        "afterSecondHint": recommend(back.apply("y R"), continuation={"start_state": back.to_dict(), "candidate_id": back_hint["recommended_id"], "consumed": 2}),
+        "manualPlan": manual, "afterManualHint": recommend(back.apply("U")),
+        "fullPlan": plan_sequence(back, back_hint["candidates"][0]["notation"]),
+        "afterFullHint": recommend(back.apply(back_hint["candidates"][0]["notation"])),
+        "htmHint": recommend(back, ranking="htm"), "shortHint": recommend(back, mode="short"),
+    },
+    "partial": {"snapshot": display(partial), "hint": recommend(partial)},
+    "solved": recommend(solved),
+}
+for group in (coaching["back"], coaching["partial"]):
+    for key, value in group.items():
+        if isinstance(value, dict) and "elapsed_ms" in value:
+            value["elapsed_ms"] = 12.0
+coaching["solved"]["elapsed_ms"] = 12.0
+Path("cubiq/src/test/cube-coaching.json").write_text(json.dumps(coaching, separators=(",", ":")) + "\n")

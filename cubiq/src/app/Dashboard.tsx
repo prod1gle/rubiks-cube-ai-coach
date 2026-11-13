@@ -14,7 +14,7 @@ export function Dashboard({ connection, retry }: { connection: ConnectionState; 
     <>
       <div className="page-heading flex items-start justify-between gap-4">
         <div><p className="eyebrow">YOUR PERSONAL CUBE LAB</p><h1 id="page-title">Dashboard</h1></div>
-        <span className="outline-badge">Verified solver <span>2B</span></span>
+        <span className="outline-badge">Verified solver <span>2C</span></span>
       </div>
 
       <section className="hero" aria-labelledby="hero-title">
@@ -53,7 +53,7 @@ export function Dashboard({ connection, retry }: { connection: ConnectionState; 
       <div className="dashboard-bottom">
         <ConnectionCard connection={connection} retry={retry} />
         <section className="panel readiness-card" aria-labelledby="readiness-title">
-          <div className="flex items-center justify-between"><span className="eyebrow">BUILT WITH INTENTION</span><span className="muted text-xs">MILESTONE 2B</span></div>
+          <div className="flex items-center justify-between"><span className="eyebrow">BUILT WITH INTENTION</span><span className="muted text-xs">MILESTONE 2C</span></div>
           <h2 id="readiness-title">First, a reliable foundation.</h2>
           <ul className="readiness-list">
             <li><span className="ready-icon"><Check size={13} /></span><span>Local application & navigation</span><span className="readiness-status">Available</span></li>

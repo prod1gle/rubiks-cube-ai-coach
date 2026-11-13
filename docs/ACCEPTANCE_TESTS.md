@@ -189,3 +189,21 @@ The complete fixed-white pipeline is implemented; this does not claim the broade
 | 2B-08 | Inject false stage labels/order, arbitrary non-descending Cross, non-registry LL, undeclared F2L macros, wrong AUF, worker errors | Rejected with no candidate moves. Shared worker gate released on failure; budget enforced. |
 | 2B-09 | Choose CFOP in Explorer, preview, play individual/full stages, pause, reset or late response | No automatic state change on arrival. Stage playback starts at the verified hash and stops at its boundary. No generic response accepted/relabelled as CFOP. |
 | 2B-10 | Full build/lint/tests, packaged resources, live local playback and responsive layouts | See [M2B delivery report](MILESTONE_2B.md); actual evidence is distinct from the broader future product gates. |
+
+## User-requested M2C — Next Best Move checkpoint
+
+Delivered fixed-white/exact-state scope; broader color-neutral, optimal-search, practice-capture and personalization gates remain future work.
+
+| ID | Action / fixture | Acceptance and evidence |
+| --- | --- | --- |
+| 2C-01 | Invalid states, modes and partial CFOP states via `/api/cube/next` | Canonical legality/schema rejection; exact Cross, individual slots, OLL/PLL/AUF progress and input hash. No moves on hint arrival. |
+| 2C-02 | Completed Cross with only FL pair solved | All three remaining pairs represented; valid distinct insertion alternatives; FL and Cross protected at macro endpoints. Every endpoint verified by full engine. |
+| 2C-03 | Weighted tables, all pair/protected-mask domains and all 24 viewer grips | All 8,256 projected configurations remain covered; grip translation, no-rotation option, shortest rotation prefixes and target cubie identities agree with engine. |
+| 2C-04 | Awkward back-turn case and explicit ranking switches | Documented formula reproduced; `y R U R'` scores 5 versus `B U B'` at 7; HTM counts remain 3 and rotations remain separate. Deterministic tie breaking; unproven labels throughout. |
+| 2C-05 | Repeated CFOP hints on 12 deterministic scrambles, all stage prerequisites, short known states | Every recommended goal completes; complete solve after repeated goals. Short solutions solve exact input; unavailable/wrong native candidates handled honestly. |
+| 2C-06 | Subtle/Guided/Full levels, keyboard tabs, alternative selection | Correct detail disclosure, target highlights change without changing cube; counts/preservation/scope visible; Full offers verified goal notation and playback. |
+| 2C-07 | Apply single suggested moves through a rotation and a temporarily disturbed Cross | Each accepted transition commits once; context proves exact prefix and remaining endpoint; no recommendation to undo the insertion. Bad context returns 422; explicit replanning available. |
+| 2C-08 | Different manual move, rapid/duplicate input, reset, disconnect, delayed or inconsistent hint reply | Recalculate from accepted state; no stale adoption/highlights or duplicate application. Stop pending queue retains exact accepted snapshot. |
+| 2C-09 | Full hint playback, solved cube, loading/failure/retry | Exact verified endpoint; solved input has no invented next move; failures retain state and expose retry/replan. |
+| 2C-10 | Inspect policy/personalization UI and records | Fixed versioned heuristic weights, no measured-time/global-best claims; personalization explicitly unavailable until real practice data. No fake training or analytics. |
+| 2C-11 | Full regression/build/lint/package and actual desktop/mobile browser interaction | See [M2C delivery evidence](MILESTONE_2C.md): 924 backend / 90 frontend tests, real state changes, no horizontal document overflow at tested widths. |

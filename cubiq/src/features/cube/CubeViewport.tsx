@@ -14,8 +14,8 @@ class SceneBoundary extends Component<{ children: ReactNode; onFailure: () => vo
   render() { return this.state.failed ? null : this.props.children }
 }
 
-export default function CubeViewport({ snapshot, active, duration, reducedMotion, onFinish }: {
-  snapshot: CubeSnapshot; active?: ActiveTurn; duration: number; reducedMotion: boolean; onFinish: (id: string) => void
+export default function CubeViewport({ snapshot, active, duration, reducedMotion, onFinish, highlighted = [] }: {
+  snapshot: CubeSnapshot; active?: ActiveTurn; duration: number; reducedMotion: boolean; onFinish: (id: string) => void; highlighted?: string[]
 }) {
   const [failed, setFailed] = useState(() => typeof WebGL2RenderingContext === 'undefined')
   const [command, setCommand] = useState<CameraCommand>({ id: 0, type: 'reset' })
@@ -27,7 +27,8 @@ export default function CubeViewport({ snapshot, active, duration, reducedMotion
   return <div className={`cube-viewport ${failed ? 'graphics-fallback' : ''}`}>
     <div className="viewport-label"><span className="local-dot" />{failed ? '2D FALLBACK' : 'LIVE 3D VIEW'}<span>{snapshot.cubies.length} cubies · 54 stickers</span></div>
     {failed ? <div className="graphics-message"><p role="status">3D graphics are unavailable. The exact 2D view and move controls still work.</p><button className="text-button" onClick={() => setFailed(false)}>Retry 3D</button><FaceletNet snapshot={snapshot} /></div>
-      : <SceneBoundary onFailure={onFailure}><Suspense fallback={<div className="scene-loading" role="status">Preparing your 3D cube…</div>}><Scene snapshot={snapshot} active={reducedMotion ? undefined : active} duration={duration} cameraCommand={command} onFinish={onFinish} onFailure={onFailure} /></Suspense></SceneBoundary>}
+      : <SceneBoundary onFailure={onFailure}><Suspense fallback={<div className="scene-loading" role="status">Preparing your 3D cube…</div>}><Scene snapshot={snapshot} active={reducedMotion ? undefined : active} duration={duration} cameraCommand={command} onFinish={onFinish} onFailure={onFailure} highlighted={highlighted} /></Suspense></SceneBoundary>}
+    {highlighted.length > 0 && <p className="cube-highlight-note" role="status">{highlighted.length} target cubies outlined · orbit to inspect hidden stickers.</p>}
     <div className="viewport-toolbar"><span>{failed ? 'Engine-verified stickers' : 'Drag / arrow keys to orbit · Scroll to zoom'}</span><div>
       <button aria-label="Orbit left" title="Orbit left (cube state unchanged)" onClick={() => camera('left')} disabled={failed}><RotateCcw size={14} /></button>
       <button aria-label="Orbit right" title="Orbit right (cube state unchanged)" onClick={() => camera('right')} disabled={failed}><RotateCw size={14} /></button>

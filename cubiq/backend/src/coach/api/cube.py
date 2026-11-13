@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from coach.cfop.pipeline import recognize
 from coach.cfop.registry import manifest
 from coach.cfop.service import solve_cfop
+from coach.coaching.service import recommend
 from coach.cube import (
     MAX_SEQUENCE_LENGTH,
     CubeError,
@@ -41,6 +42,20 @@ class SequenceInput(BaseModel):
 
 class ApplyInput(StateInput):
     sequence: str = Field(max_length=MAX_SEQUENCE_LENGTH)
+
+
+class HintContinuation(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    start_state: dict[str, Any]
+    candidate_id: str = Field(max_length=64)
+    consumed: int = Field(ge=0, le=128)
+
+
+class CoachingInput(StateInput):
+    mode: Literal["short", "cfop"] = "cfop"
+    ranking: Literal["htm", "ergonomic"] = "ergonomic"
+    allow_rotations: bool = True
+    continuation: HintContinuation | None = None
 
 
 class SequenceInfo(BaseModel):
@@ -176,3 +191,15 @@ def cfop_recognize(request: StateInput):
 def cfop_registry():
     """Versioned cases, setup conventions, sources, and validated insertion macros."""
     return manifest()
+
+
+@router.post("/next", tags=["Coaching"])
+def next_best_move(request: CoachingInput):
+    """State-bound computed alternatives, not a claim of a globally best move."""
+    return recommend(
+        request.to_cube(),
+        request.mode,
+        request.ranking,
+        request.allow_rotations,
+        request.continuation.model_dump() if request.continuation else None,
+    )

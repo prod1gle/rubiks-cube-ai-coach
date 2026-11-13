@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
 import cubeFixtures from '../test/cube-fixtures.json'
 
-const healthy = { status: 'ok', service: 'cubiq-api', version: '0.1.0', milestone: '2B' }
+const healthy = { status: 'ok', service: 'cubiq-api', version: '0.1.0', milestone: '2C' }
 
 function renderPage(path = '/') {
   return render(<MemoryRouter initialEntries={[path]}><App /></MemoryRouter>)

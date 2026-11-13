@@ -1,6 +1,6 @@
 # Implementation roadmap
 
-Status: M0 and checkpoints M1A–M1C and user-requested M2A–M2B (verified short solutions and genuine CFOP) are complete. M1C delivers the interactive 3D Explorer and local playback. Persistent solve events, timing/capture, general public extended notation, and remaining M2–M9 work are still pending. M2B adds exact stage predicates and fixed-white CFOP; the broader M4 gate still includes color-neutral and Next Best Move work. M2A implements part of the original M3 solver scope; it does not imply completion of M2 capture/persistence or M3 exact search/Next Best Move. See the root README and milestone reports for current behavior.
+Status: M0 and user-requested checkpoints M1A–M1C / M2A–M2C are complete. The virtual Explorer has verified short/CFOP solving and exact-state Next Best Move with coded ergonomics, optional rotations, hints and playback. Persistent solve events, practice timing/capture, personalization, general public extended notation, and remaining broader M1–M9 gates are pending. Fixed-white coaching does not complete color-neutral M4; unproven short solutions do not complete M3 optimality search. See the root README and milestone reports for current behavior.
 
 ## Delivery sequence
 
@@ -14,6 +14,7 @@ Status: M0 and checkpoints M1A–M1C and user-requested M2A–M2B (verified shor
 | M2 | Interactive 3D cube, timing, logging, persistent replay | M1 | Medium |
 | M2A | User-requested checkpoint: bounded full-cube solver, engine verification, preview and solution playback | M1C | Implemented; exact proofs, Next Best Move, CFOP remain future work |
 | M2B | User-requested checkpoint: fixed-white Cross, general protected F2L, 57 OLL, 21 PLL, AUF and stage playback | M1C / M2A | Implemented; color neutrality and CFOP Next Best Move remain future work |
+| M2C | User-requested checkpoint: exact-state Next Best Move, three hint levels, protected pair alternatives, coded ergonomics and optional rotations | M2B | Implemented; personalization awaits real practice data |
 | M3 | Verified short-solution solver and minimum-move Next Best Move | M1–M2 | Medium–large; exact-search latency uncertain |
 | M4 | Genuine CFOP and CFOP Next Best Move | M1–M3 | Large; F2L coverage is the main risk |
 | M5 | Stage review, alternatives, parallel replay, case practice | M2–M4 | Large |
@@ -121,3 +122,11 @@ Full-cube two-phase solving is available in the Explorer. Inputs and proposed ou
 ## User-requested M2B — delivered
 
 The independent staged planner implements fixed-white Cross, all target-pair placements with protected slots, full 57 OLL / 21 PLL sets, rotations/setups, AUF, and per-stage animation. Exhaustive projected tests and full scramble regressions pass; no generic full-cube solver is used under the CFOP label. See [CFOP conventions](CFOP_ENGINE.md) and [delivery evidence](MILESTONE_2B.md). This delivers the full requested 2B pipeline within its fixed-cross scope; color neutrality, global pair-order optimization, Next Best Move, trainer/persistence and broader original M4 acceptance remain separate work.
+
+## User-requested M2C — delivered
+
+Exact-state coaching compares verified complete solutions or genuine next CFOP goals, including all remaining F2L pairs and bounded alternative paths/grips. Subtle/Guided/Full hints, real cubie highlights, single-move insertion continuity, manual-move recalculation and verified playback are usable. Coded `comfort-1` costs explicitly penalize rotations and awkward faces; no globally best move or learned personalization is claimed. See [coaching design](COACHING.md) and [delivery evidence](MILESTONE_2C.md).
+
+### Future personalization gate
+
+First implement opt-in real practice capture and local records with timing provenance, exact cases, alternatives/preferences, errors and versioned algorithms. Exclude animation durations and uncertain capture. Then evaluate a regularized preference/cost ranker on held-out sessions against the coded baseline, disclose coverage/sample sizes, and retain a deterministic fallback. Only reorder engine-verified candidates. No automatic training runs in 2C; insufficient data must remain an explicit status. See [the staged plan](COACHING.md#personalization-after-actual-practice-capture).

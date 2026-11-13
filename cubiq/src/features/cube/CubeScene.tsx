@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Group, MeshStandardMaterial, PCFShadowMap, Quaternion, Shape, ShapeGeometry, Spherical, Vector3 } from 'three'
+import { BoxGeometry, EdgesGeometry, Group, LineBasicMaterial, MeshStandardMaterial, PCFShadowMap, Quaternion, Shape, ShapeGeometry, Spherical, Vector3 } from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import type { CubieView, CubeSnapshot } from '../../api/cube'
@@ -11,6 +11,7 @@ const cameraKeys: Record<string, CameraCommand['type']> = { ArrowLeft: 'left', A
 interface Props {
   snapshot: CubeSnapshot; active?: ActiveTurn; duration: number
   cameraCommand: CameraCommand; onFinish: (id: string) => void; onFailure: () => void
+  highlighted?: string[]
 }
 
 function OrbitRig({ command, onFailure }: { command: CameraCommand; onFailure: () => void }) {
@@ -64,9 +65,10 @@ function stickerShape() {
   return shape
 }
 
-function Cubie({ cubie, materials, body, sticker }: { cubie: CubieView; materials: Record<string, MeshStandardMaterial>; body: RoundedBoxGeometry; sticker: ShapeGeometry }) {
+function Cubie({ cubie, materials, body, sticker, outline, outlineMaterial, highlighted }: { cubie: CubieView; materials: Record<string, MeshStandardMaterial>; body: RoundedBoxGeometry; sticker: ShapeGeometry; outline: EdgesGeometry; outlineMaterial: LineBasicMaterial; highlighted: boolean }) {
   return <group position={cubie.position} dispose={null}>
-    <mesh geometry={body} material={materials.body} castShadow receiveShadow />
+    <mesh geometry={body} material={highlighted ? materials.highlight : materials.body} castShadow receiveShadow />
+    {highlighted && <lineSegments geometry={outline} material={outlineMaterial} renderOrder={2} />}
     {cubie.stickers.map(({ normal, color }, index) => <mesh key={index} geometry={sticker}
       position={[normal[0] * 0.483, normal[1] * 0.483, normal[2] * 0.483]}
       quaternion={new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), new Vector3(...normal))}
@@ -74,16 +76,21 @@ function Cubie({ cubie, materials, body, sticker }: { cubie: CubieView; material
   </group>
 }
 
-function Puzzle({ snapshot, active, duration, onFinish }: Pick<Props, 'snapshot' | 'active' | 'duration' | 'onFinish'>) {
+function Puzzle({ snapshot, active, duration, onFinish, highlighted }: Pick<Props, 'snapshot' | 'active' | 'duration' | 'onFinish' | 'highlighted'>) {
   const pivot = useRef<Group>(null)
   const clock = useRef({ id: '', elapsed: 0, duration: 0, done: false })
   const body = useMemo(() => new RoundedBoxGeometry(0.955, 0.955, 0.955, 3, 0.065), [])
   const sticker = useMemo(() => new ShapeGeometry(stickerShape(), 8), [])
+  const outline = useMemo(() => { const box = new BoxGeometry(1.025, 1.025, 1.025); const edges = new EdgesGeometry(box); box.dispose(); return edges }, [])
+  const outlineMaterial = useMemo(() => new LineBasicMaterial({ color: '#d3fa92', depthTest: false, transparent: true, opacity: 0.9 }), [])
+  const targets = useMemo(() => new Set(highlighted ?? []), [highlighted])
   const materials = useMemo(() => ({
     body: new MeshStandardMaterial({ color: '#121813', roughness: 0.3, metalness: 0.1 }),
+    highlight: new MeshStandardMaterial({ color: '#304326', emissive: '#789e49', emissiveIntensity: 0.35, roughness: 0.3 }),
     ...Object.fromEntries(Object.entries(snapshot.palette).map(([color, hex]) => [color, new MeshStandardMaterial({ color: hex, roughness: 0.38, metalness: 0.015 })])),
   }), [snapshot.palette])
   useEffect(() => () => { body.dispose(); sticker.dispose() }, [body, sticker])
+  useEffect(() => () => { outline.dispose(); outlineMaterial.dispose() }, [outline, outlineMaterial])
   useEffect(() => () => Object.values(materials).forEach(material => material.dispose()), [materials])
   const affected = useMemo(() => new Set(active?.animation.affected ?? []), [active])
   const axis = useMemo(() => new Vector3(...(active?.animation.axis ?? [1, 0, 0])), [active])
@@ -97,7 +104,7 @@ function Puzzle({ snapshot, active, duration, onFinish }: Pick<Props, 'snapshot'
     pivot.current.quaternion.setFromAxisAngle(axis, active.animation.quarter_turns * Math.PI / 2 * eased)
     if (progress === 1) { clock.current.done = true; onFinish(active.id) }
   })
-  const cubie = (item: CubieView) => <Cubie key={item.id} cubie={item} materials={materials} body={body} sticker={sticker} />
+  const cubie = (item: CubieView) => <Cubie key={item.id} cubie={item} materials={materials} body={body} sticker={sticker} outline={outline} outlineMaterial={outlineMaterial} highlighted={targets.has(item.id)} />
   return <group>
     {snapshot.cubies.filter(item => !affected.has(item.id)).map(cubie)}
     <group key={active?.id ?? snapshot.state_hash} ref={pivot} dispose={null}>
