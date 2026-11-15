@@ -207,3 +207,17 @@ Delivered fixed-white/exact-state scope; broader color-neutral, optimal-search, 
 | 2C-09 | Full hint playback, solved cube, loading/failure/retry | Exact verified endpoint; solved input has no invented next move; failures retain state and expose retry/replan. |
 | 2C-10 | Inspect policy/personalization UI and records | Fixed versioned heuristic weights, no measured-time/global-best claims; personalization explicitly unavailable until real practice data. No fake training or analytics. |
 | 2C-11 | Full regression/build/lint/package and actual desktop/mobile browser interaction | See [M2C delivery evidence](MILESTONE_2C.md): 924 backend / 90 frontend tests, real state changes, no horizontal document overflow at tested widths. |
+
+## User-requested M2D — exact segment comparison checkpoint
+
+| ID | Action / fixture | Acceptance / evidence |
+| --- | --- | --- |
+| 2D-01 | Complete initial state and record with rotations; select arbitrary valid boundaries | Exact start/end/frame reconstruction in all 24 grips; supplied full-record final hash verified. |
+| 2D-02 | Cross plus one completed F2L pair and a newly completed target | Both branches begin identically and reach the same required slots/Cross; prior slots protected at staged insertion boundaries. Different remaining states explicitly distinguished. |
+| 2D-03 | Actual and candidate words with doubles/rotations/redundancy | Engine HTM/rotation counts and signed differences are exact; no physical-time estimate. All three ranking policies defined and tested. |
+| 2D-04 | Arbitrary non-CFOP segment, no new progress or regressed progress | Compare physical endpoint via verified simplification/bridge; no false CFOP label or hidden tail reuse. |
+| 2D-05 | Paired step/play/pause/reverse/scrub, unequal lengths, duplicate/late callbacks | Shared start and completion barrier, exact engine snapshots, shorter branch holds endpoint; no double commit. |
+| 2D-06 | Show Me Why and Practice This Case after replay has ended | Real annotations/hash evidence; practice begins at original start/grip, accepts any goal-valid retry, reset preserves original record. |
+| 2D-07 | Invalid ranges, oversized/missing moves, illegal initial state, mismatched hash, corrupt reply, cancel/error | Clear refusal; no invented boundary, candidate or adopted late result. |
+| 2D-08 | Explorer export with unapplied preview and direct analysis entry | Only applied prefix transferred with real baseline/final hash; implemented route and honest empty/manual record. |
+| 2D-09 | Regression/build/lint/package and live responsive application | See [M2D report](MILESTONE_2D.md): 975 backend / 105 frontend tests and actual paired playback/practice. Broader persistent M5 gates remain pending. |

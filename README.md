@@ -1,13 +1,14 @@
 # Cubiq — Rubik’s Cube AI Coach
 
-A local workspace for more intentional 3×3 practice. **Milestones 1A–1C and 2A–2C are implemented: scaffolding, the canonical state engine, an interactive 3D Explorer, verified full-cube/CFOP solving, and Next Best Move coaching with coded ergonomic ranking.** Full-solve optimality proofs, timer, analytics, algorithm trainer, persistent solve storage, physical camera tracking, AI, and learned personalization are not implemented yet.
+A local workspace for more intentional 3×3 practice. **Milestones 1A–1C and 2A–2D are implemented: scaffolding, the canonical state engine, an interactive 3D Explorer, verified full-cube/CFOP solving, Next Best Move coaching with coded ergonomic ranking, and exact-segment comparison/practice.** Full-solve optimality proofs, timer, analytics, algorithm trainer, persistent solve storage, physical camera tracking, AI, and learned personalization are not implemented yet.
 
 ## Available now
 
 - React + TypeScript + Vite frontend with Tailwind CSS, a responsive dark layout, keyboard focus styles, reduced-motion support, and skip navigation.
-- Six working routes: Dashboard, Cube Explorer, Live Solve, Solve Analysis, Algorithm Trainer, and History. The four future solve/training/history workflows explicitly say **Not implemented yet**.
+- Six working routes: Dashboard, Cube Explorer, Live Solve, Solve Analysis, Algorithm Trainer, and History. The three future timing/training/history workflows explicitly say **Not implemented yet**.
 - Cube Explorer: Three.js / React Three Fiber rendering of all 26 cubies and 54 stickers, smooth face/grip animations, orbit/zoom, keyboard and button moves, manual algorithms, legal random scrambles, reset, undo/redo, and playback. The 2D state inspector and import/export remain available. The frontend never computes cube permutations.
 - Two independent solving approaches: engine-verified two-phase short solutions, and genuine Cross → four F2L pairs → OLL → PLL → AUF with stage counts and playback. Both label full-solve optimality unproven.
+- Solve Analysis: import applied Explorer history or a complete known move record, select a segment, compare verified alternatives with synchronized 3D replay, inspect exact differences, and retry the original case.
 - Next Best Move: exact-state CFOP progress, remaining-pair alternatives, three hint levels, target cubie highlights, single-move/full-sequence playback, and automatic recalculation after manual moves. Compare HTM or explicit ergonomic costs, with optional working-grip rotations.
 - One immutable Python cubie engine with all face-turn variants, x/y/z grip rotations, complete parsing, serialization, inversion, HTM, and reachability validation. See [the exact cube conventions](docs/CUBE_CONVENTIONS.md).
 - A real API connection check on the Dashboard, with checking, reachable, unavailable, and retry states. No sample solves or fabricated analytics.
@@ -83,7 +84,7 @@ Stop each process with `Ctrl+C`. Both services bind to loopback. Ports are fixed
 `GET /health` returns:
 
 ```json
-{"status":"ok","service":"cubiq-api","version":"0.1.0","milestone":"2C"}
+{"status":"ok","service":"cubiq-api","version":"0.1.0","milestone":"2D"}
 ```
 
 `GET /api/health` is an equivalent alias for the frontend’s `/api` proxy. Both Vite development and preview forward `/api/*` to `http://127.0.0.1:8000`. The health endpoint reports API availability, not readiness of future cube features.
@@ -112,6 +113,8 @@ Open [Cube Explorer](http://127.0.0.1:5173/cube-explorer) after starting both ap
 | `POST /api/cube/solve` | Validate a legal state, run a bounded two-phase search, independently verify its solution, and return metadata plus a playback plan. |
 | `POST /api/cube/cfop` | Generate and independently verify genuine Cross, four pairs, OLL, PLL and AUF stages. |
 | `POST /api/cube/cfop/recognize` | Return exact stage predicates and eligible case recognition in the fixed white-down reference. |
+| `POST /api/cube/analysis` | Reconstruct an exact recorded segment and compare verified alternatives for the same goal. |
+| `POST /api/cube/analysis/practice` | Replay a retry from the original segment start and verify the shared objective. |
 | `POST /api/cube/next` | Exact-state progress, verified CFOP/short-solution candidates, hints, target cubies, explicit ranking metrics, and validated insertion continuation. |
 | `GET /api/cube/cfop/registry` | Versioned 57 OLL / 21 PLL records, source metadata, compiled notation, U setup conventions, and insertion macros. |
 
@@ -187,6 +190,18 @@ Shortest available selects the fewest HTM among computed, engine-verified shallo
 
 Personalization does not train itself today. It is explicitly future work after real, consented practice capture exists: store actual execution timing and preferences with provenance, exclude animation timings, and evaluate a learned ranker on held-out attempts. Learned ranking must only reorder independently engine-verified candidates. There is no fake practice history, trained model, or personalized score. See [the coaching contract and limits](docs/COACHING.md) and [2C delivery evidence](docs/MILESTONE_2C.md).
 
+## What Could I Have Done Instead? (milestone 2D)
+
+Apply moves in Cube Explorer, then use **What could I have done instead?** beneath the move timeline. The link transfers the exact initial state, only the applied history prefix, and its final hash to **Solve Analysis**. You can also open Solve Analysis directly and enter a complete known record plus its initial viewed facelets. A record must contain every action; unknown capture gaps cannot be filled in. The transfer uses browser session storage, not a persistent solve database.
+
+Choose **First action** and **Last action (included)**, including rotations as actions. Select **Fewest Moves**, **CFOP Efficiency**, or **Training Recommendation**, then **Compare this segment**. Automatic recognition selects the actual new CFOP goal; a segment with no new progress or regressed progress compares the exact physical endpoint instead. Explicit shared goals are available and must be achieved by the actual segment. Records are capped at 1,024 actions and individual replay segments at 128.
+
+Both interactive cubes begin at the identical engine-reconstructed state and grip. Shared next/previous, play/pause, slider and start/end controls align action indices; the shorter branch holds its endpoint. Cameras orbit/zoom independently. HTM, rotations and endpoint differences are explicit. **Show Me Why** explains verified counts, protected slots, coded ergonomics, exact hashes, and whether the endpoint is identical or merely satisfies the same goal. A different stage endpoint never inherits the rest of the actual moves unchecked. There is no guessed execution speed or seconds-saved estimate.
+
+**Practice This Case** loads the original segment start, even after comparison playback has reached the end. Enter a retry or use face/grip buttons, apply it, then **Check attempt**. The backend accepts any sequence satisfying the original objective and protected endpoint constraints. **Reset original case** restores the original state/grip and clears only the retry. The recorded sequence remains unchanged.
+
+Fewest Moves ranks the generated valid pool by HTM/rotations. CFOP Efficiency favors protected staged paths, then HTM/rotations. Training Recommendation favors protected staged paths, then the fixed `comfort-1` score; it does not use a trained model. Arbitrary exact endpoints may use a verified bridge through solved, and alternatives may be longer than actual. No distinct alternative found is an honest possible outcome. **Global optimality remains unproven.** See [2D design and verification](docs/MILESTONE_2D.md).
+
 ## Build, lint, and test
 
 From the repository root:
@@ -206,7 +221,7 @@ npm --prefix cubiq test
 .tools/bin/uv build --project cubiq/backend --cache-dir .cache/uv
 ```
 
-Backend pytest covers all move/inverse and fourth-power identities, 32 named oracle states, 1,000 seeded oracle sequences, 128 arbitrary legal-state fixtures, all 24 grips, parser/metric/serialization behavior, impossible states, and the real HTTP API. The committed corpus comes from pinned `cubejs@1.3.2`; pytest requires no Node process or network access. Current verification includes 924 backend tests and 90 frontend tests. The 2B suite exhausts the projected F2L configurations, legal OLL orientations and PLL permutations; checks 78 independent reference labels and all 24 grips; and solves 200 seeded 25-face-turn scrambles plus 30 independently sampled legal cubie states. Frontend tests cover CFOP selection, truthful method labels, stage boundaries, stage-only/full playback, skipped stages, cancellation and failure states. The 2A additions run the real solver on known scrambles, 24 seeded 25-face-turn scrambles, and all 24 grips; inject invalid output, worker failure, timeout, and busy conditions; and verify preview, step/playback, state binding, cancellation, and stale-result rejection in the frontend. The 1C tests cover exact animation endpoints, rapid inputs, duplicate/stale callbacks, reset and disconnect races, undo/redo branching, pause/resume, playback, keyboard editing guards, WebGL fallback, and reduced motion. See [M1C delivery evidence](docs/MILESTONE_1C.md); the [M1B report](docs/MILESTONE_1B.md) records the earlier engine checkpoint.
+Backend pytest covers all move/inverse and fourth-power identities, 32 named oracle states, 1,000 seeded oracle sequences, 128 arbitrary legal-state fixtures, all 24 grips, parser/metric/serialization behavior, impossible states, and the real HTTP API. The committed corpus comes from pinned `cubejs@1.3.2`; pytest requires no Node process or network access. Current verification includes 975 backend tests and 105 frontend tests. The 2B suite exhausts the projected F2L configurations, legal OLL orientations and PLL permutations; checks 78 independent reference labels and all 24 grips; and solves 200 seeded 25-face-turn scrambles plus 30 independently sampled legal cubie states. Frontend tests cover CFOP selection, truthful method labels, stage boundaries, stage-only/full playback, skipped stages, cancellation and failure states. The 2A additions run the real solver on known scrambles, 24 seeded 25-face-turn scrambles, and all 24 grips; inject invalid output, worker failure, timeout, and busy conditions; and verify preview, step/playback, state binding, cancellation, and stale-result rejection in the frontend. The 1C tests cover exact animation endpoints, rapid inputs, duplicate/stale callbacks, reset and disconnect races, undo/redo branching, pause/resume, playback, keyboard editing guards, WebGL fallback, and reduced motion. See [M1C delivery evidence](docs/MILESTONE_1C.md); the [M1B report](docs/MILESTONE_1B.md) records the earlier engine checkpoint.
 
 For frontend test watch mode: `npm --prefix cubiq run test:watch`.
 

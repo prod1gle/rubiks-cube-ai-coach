@@ -5,6 +5,7 @@ from typing import Any, Literal
 from fastapi import APIRouter
 from pydantic import BaseModel, ConfigDict, Field
 
+from coach.analysis.service import compare, practice
 from coach.cfop.pipeline import recognize
 from coach.cfop.registry import manifest
 from coach.cfop.service import solve_cfop
@@ -56,6 +57,18 @@ class CoachingInput(StateInput):
     ranking: Literal["htm", "ergonomic"] = "ergonomic"
     allow_rotations: bool = True
     continuation: HintContinuation | None = None
+
+
+class AnalysisInput(ApplyInput):
+    start: int = Field(ge=0, le=1024)
+    end: int = Field(ge=1, le=1024)
+    objective: Literal["fewest", "cfop", "training"] = "fewest"
+    goal: Literal["auto", "position", "cross", "f2l", "oll", "pll", "solve"] = "auto"
+    expected_end_hash: str | None = Field(default=None, max_length=64)
+
+
+class PracticeInput(AnalysisInput):
+    attempt: str = Field(max_length=MAX_SEQUENCE_LENGTH)
 
 
 class SequenceInfo(BaseModel):
@@ -202,4 +215,32 @@ def next_best_move(request: CoachingInput):
         request.ranking,
         request.allow_rotations,
         request.continuation.model_dump() if request.continuation else None,
+    )
+
+
+@router.post("/analysis", tags=["Solve analysis"])
+def analyze_segment(request: AnalysisInput):
+    """Reconstruct a complete known record and compare one exact segment."""
+    return compare(
+        request.to_cube(),
+        request.sequence,
+        request.start,
+        request.end,
+        request.objective,
+        request.goal,
+        request.expected_end_hash,
+    )
+
+
+@router.post("/analysis/practice", tags=["Solve analysis"])
+def practice_segment(request: PracticeInput):
+    """Retry the original case; accept by verified objective, not token equality."""
+    return practice(
+        request.to_cube(),
+        request.sequence,
+        request.start,
+        request.end,
+        request.attempt,
+        request.goal,
+        request.expected_end_hash,
     )

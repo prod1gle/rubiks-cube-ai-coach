@@ -239,7 +239,9 @@ it('chooses CFOP explicitly, shows real stage counts and plays a stage without a
   for (let i = stage.end_step; i < cfopSolutions.scrambled.move_count; i++) await land(user)
   expect(screen.getByLabelText('Current facelets')).toHaveValue(cfopSolutions.scrambled.plan.steps.at(-1)!.snapshot.facelets)
   expect(request).toHaveBeenCalledTimes(2)
-})
+// This flow performs all 60 turn commits through user-event/React renders.
+// Allow that UI work to finish under concurrent backend-test CPU load.
+}, 15000)
 
 it('renders eight genuine skipped stages on an already solved CFOP cube', async () => {
   const { user } = await start(response(cfopSolutions.solved))

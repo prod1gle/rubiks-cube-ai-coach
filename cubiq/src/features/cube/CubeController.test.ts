@@ -479,3 +479,23 @@ describe('state-bound coaching concurrency', () => {
     expect(c.getSnapshot().history).toHaveLength(1)
   })
 })
+
+describe('review recording and exact case restoration', () => {
+  it('exports only applied history with its true initial state and accepted final hash', async () => {
+    const { controller: c, api } = await setup()
+    api.plan.mockResolvedValue(plans.algorithm); c.enqueue("R U R' U'"); await flush()
+    expect(c.recording()).toBeUndefined()
+    for (const _ of plans.algorithm.steps) { void _; await finish(c) }
+    c.seek(2)
+    expect(c.recording()).toEqual({ facelets: snapshots.solved.facelets, sequence: 'R U', expected_end_hash: plans.algorithm.steps[1].snapshot.state_hash })
+  })
+  it('restores an engine-provided case exactly and invalidates in-flight moves', async () => {
+    const { controller: c, api } = await setup()
+    api.plan.mockResolvedValue(plans.r); c.enqueue('R'); await flush()
+    const stale = c.getSnapshot().active!.id
+    await c.restoreSnapshot(hintFixtures.back.snapshot); c.finish(stale)
+    expect(c.getSnapshot().snapshot).toEqual(hintFixtures.back.snapshot)
+    expect(c.getSnapshot().history).toHaveLength(0)
+    expect(c.recording()?.facelets).toBe(hintFixtures.back.snapshot.facelets)
+  })
+})

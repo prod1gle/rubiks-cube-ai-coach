@@ -1,6 +1,6 @@
 # Implementation roadmap
 
-Status: M0 and user-requested checkpoints M1A–M1C / M2A–M2C are complete. The virtual Explorer has verified short/CFOP solving and exact-state Next Best Move with coded ergonomics, optional rotations, hints and playback. Persistent solve events, practice timing/capture, personalization, general public extended notation, and remaining broader M1–M9 gates are pending. Fixed-white coaching does not complete color-neutral M4; unproven short solutions do not complete M3 optimality search. See the root README and milestone reports for current behavior.
+Status: M0 and user-requested checkpoints M1A–M1C / M2A–M2D are complete. The virtual Explorer has verified short/CFOP solving and exact-state Next Best Move with coded ergonomics, optional rotations, hints and playback. Persistent solve events, practice timing/capture, personalization, general public extended notation, and remaining broader M1–M9 gates are pending. Fixed-white coaching does not complete color-neutral M4; unproven short solutions do not complete M3 optimality search. See the root README and milestone reports for current behavior.
 
 ## Delivery sequence
 
@@ -15,6 +15,7 @@ Status: M0 and user-requested checkpoints M1A–M1C / M2A–M2C are complete. Th
 | M2A | User-requested checkpoint: bounded full-cube solver, engine verification, preview and solution playback | M1C | Implemented; exact proofs, Next Best Move, CFOP remain future work |
 | M2B | User-requested checkpoint: fixed-white Cross, general protected F2L, 57 OLL, 21 PLL, AUF and stage playback | M1C / M2A | Implemented; color neutrality and CFOP Next Best Move remain future work |
 | M2C | User-requested checkpoint: exact-state Next Best Move, three hint levels, protected pair alternatives, coded ergonomics and optional rotations | M2B | Implemented; personalization awaits real practice data |
+| M2D | User-requested checkpoint: exact segment comparison, synchronized replay, explanations and original-case practice | M2C | Implemented for complete known untimed records |
 | M3 | Verified short-solution solver and minimum-move Next Best Move | M1–M2 | Medium–large; exact-search latency uncertain |
 | M4 | Genuine CFOP and CFOP Next Best Move | M1–M3 | Large; F2L coverage is the main risk |
 | M5 | Stage review, alternatives, parallel replay, case practice | M2–M4 | Large |
@@ -130,3 +131,7 @@ Exact-state coaching compares verified complete solutions or genuine next CFOP g
 ### Future personalization gate
 
 First implement opt-in real practice capture and local records with timing provenance, exact cases, alternatives/preferences, errors and versioned algorithms. Exclude animation durations and uncertain capture. Then evaluate a regularized preference/cost ranker on held-out sessions against the coded baseline, disclose coverage/sample sizes, and retain a deterministic fallback. Only reorder engine-verified candidates. No automatic training runs in 2C; insufficient data must remain an explicit status. See [the staged plan](COACHING.md#personalization-after-actual-practice-capture).
+
+## User-requested M2D — delivered
+
+Exact recorded-segment reconstruction, shared-goal alternatives, three ranking objectives, synchronized interactive 3D comparison, verified count explanations and original-case practice are implemented. Explorer applied-prefix transfer and the Solve Analysis route work. See [delivery evidence and limits](MILESTONE_2D.md). Review uses complete known untimed records; persistent sessions, inferred recorded stage/timing boundaries, physical gap handling and broader original M5 release gates remain future work.

@@ -191,3 +191,42 @@ function isCoaching(value: unknown): value is CoachingReply {
 }
 
 export const getCoaching = (state: CanonicalCubeState, settings: HintSettings, signal: AbortSignal, continuation?: HintContinuation) => request('/api/cube/next', signal, isCoaching, { state, ...settings, ...(continuation ? { continuation } : {}) }, 35000)
+
+export interface AnalysisRecord { facelets: string; sequence: string; expected_end_hash?: string }
+export interface AnalysisRequest extends AnalysisRecord { start: number; end: number; objective: 'fewest' | 'cfop' | 'training'; goal: 'auto' | 'position' | 'cross' | 'f2l' | 'oll' | 'pll' | 'solve' }
+export interface ComparisonGoal { kind: string; slots: string[]; protected_slots: string[]; cross_required: boolean; target_position_hash: string | null; description: string }
+export type MoveMetrics = Omit<HintCandidate['metrics'], 'preserved_slots' | 'lost_slots' | 'cross_preserved'>
+export interface ComparisonBranch {
+  id: string; notation: string; source: string; staged: boolean; metrics: MoveMetrics; end: CubeSnapshot; plan: CubePlan
+  goal_verified: true; protected_slots: string[]; same_position: boolean; same_state: boolean; verified: true; optimality: 'unproven'
+  difference?: { htm_saved: number; rotations_saved: number; comfort_points_saved: number }
+}
+export interface ComparisonReply {
+  record: { initial_hash: string; final_hash: string; notation: string; actions: number; start: number; end: number }
+  start: CubeSnapshot; goal: ComparisonGoal; objective: AnalysisRequest['objective']; actual: ComparisonBranch; alternatives: ComparisonBranch[]
+  recommended_id: string | null; annotations: string[]; warnings: string[]; elapsed_ms: number; scope: string; training_policy: string
+}
+export interface PracticeReply { start_hash: string; end: CubeSnapshot; goal: ComparisonGoal; success: boolean; metrics: MoveMetrics; plan: CubePlan; protected_preserved: boolean }
+function isComparison(value: unknown): value is ComparisonReply {
+  const strings = (v: unknown) => Array.isArray(v) && v.every(s => typeof s === 'string')
+  const branch = (v: unknown) => record(v) && ['id', 'notation', 'source'].every(k => typeof v[k] === 'string') &&
+    typeof v.staged === 'boolean' && isSnapshot(v.end) && isPlan(v.plan) && v.goal_verified === true && v.verified === true && v.optimality === 'unproven' &&
+    typeof v.same_position === 'boolean' && typeof v.same_state === 'boolean' && strings(v.protected_slots) && record(v.metrics) &&
+    ['htm', 'rotations', 'comfort_score'].every(k => typeof (v.metrics as Record<string, unknown>)[k] === 'number' && Number.isFinite((v.metrics as Record<string, unknown>)[k]))
+  const valid = record(value) && isSnapshot(value.start) && record(value.record) && ['start', 'end', 'actions'].every(k => Number.isInteger((value.record as Record<string, unknown>)[k])) &&
+    record(value.goal) && typeof value.goal.description === 'string' && typeof value.goal.kind === 'string' && strings(value.goal.slots) && strings(value.goal.protected_slots) &&
+    ['fewest', 'cfop', 'training'].includes(String(value.objective)) && branch(value.actual) && Array.isArray(value.alternatives) && value.alternatives.length <= 6 && value.alternatives.every(branch) &&
+    strings(value.annotations) && strings(value.warnings) && typeof value.scope === 'string' && typeof value.training_policy === 'string' &&
+    (value.recommended_id === null || value.alternatives.some(c => record(c) && c.id === value.recommended_id))
+  if (!valid) return false
+  const reply = value as unknown as ComparisonReply
+  return [reply.actual, ...reply.alternatives].every(c => {
+    let hash = reply.start.state_hash
+    if (c.plan.input_hash !== hash || c.plan.sequence.normalized !== c.notation) return false
+    for (const step of c.plan.steps) { if (step.before_hash !== hash) return false; hash = step.snapshot.state_hash }
+    return hash === c.end.state_hash && c.metrics.htm === c.plan.steps.reduce((n, s) => n + s.htm, 0) && c.metrics.rotations === c.plan.steps.filter(s => s.rotation).length
+  })
+}
+export const compareSegment = (input: AnalysisRequest, signal: AbortSignal) => request('/api/cube/analysis', signal, isComparison, input, 35000)
+export const checkPractice = (input: AnalysisRequest, attempt: string, signal: AbortSignal) => request('/api/cube/analysis/practice', signal,
+  (v): v is PracticeReply => record(v) && typeof v.start_hash === 'string' && isSnapshot(v.end) && isPlan(v.plan) && typeof v.success === 'boolean' && typeof v.protected_preserved === 'boolean' && record(v.metrics) && record(v.goal), { ...input, attempt }, 10000)

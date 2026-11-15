@@ -21,7 +21,7 @@ class HealthResponse(BaseModel):
     status: str = "ok"
     service: str = "cubiq-api"
     version: str = "0.1.0"
-    milestone: str = "2C"
+    milestone: str = "2D"
 
 
 def create_app() -> FastAPI:
@@ -29,7 +29,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Cubiq Local API",
         version="0.1.0",
-        description="Milestone 2C: verified cube solving and exact-state Next Best Move coaching.",
+        description="Milestone 2D: verified solving, coaching and recorded-segment comparison.",
     )
     app.add_middleware(
         CORSMiddleware,

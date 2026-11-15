@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
 import cubeFixtures from '../test/cube-fixtures.json'
 
-const healthy = { status: 'ok', service: 'cubiq-api', version: '0.1.0', milestone: '2C' }
+const healthy = { status: 'ok', service: 'cubiq-api', version: '0.1.0', milestone: '2D' }
 
 function renderPage(path = '/') {
   return render(<MemoryRouter initialEntries={[path]}><App /></MemoryRouter>)
@@ -28,6 +28,7 @@ describe('workspace navigation', () => {
       await user.click(link)
       expect(screen.getByRole('heading', { name: title, level: 1 })).toBeVisible()
       if (title === 'Cube Explorer') expect(await screen.findByText('Solved · in any grip')).toBeVisible()
+      else if (title === 'Solve Analysis') expect(screen.getByRole('heading', { name: 'Choose a recorded segment' })).toBeVisible()
       else expect(screen.getByRole('heading', { name: 'Not implemented yet' })).toBeVisible()
       expect(link).toHaveAttribute('aria-current', 'page')
       expect(document.title).toBe(`${title} · Cubiq`)
@@ -41,7 +42,7 @@ describe('workspace navigation', () => {
 
   it.each([
     ['/live-solve', 'Live Solve'],
-    ['/solve-analysis', 'Solve Analysis'], ['/algorithm-trainer', 'Algorithm Trainer'],
+    ['/algorithm-trainer', 'Algorithm Trainer'],
     ['/history', 'History'],
   ])('supports direct entry at %s without claiming the feature works', async (path, title) => {
     renderPage(path)
@@ -49,6 +50,13 @@ describe('workspace navigation', () => {
     expect(screen.getByText('Not implemented yet')).toBeVisible()
     expect(screen.getByText(/does not process cube states or record practice/)).toBeVisible()
     await screen.findByRole('link', { name: 'Back to Dashboard' })
+  })
+
+  it('opens Solve Analysis directly with an honest empty record', () => {
+    renderPage('/solve-analysis')
+    expect(screen.getByRole('heading', { name: 'Choose a recorded segment' })).toBeVisible()
+    expect(screen.getByLabelText('Recorded move sequence')).toHaveValue('')
+    expect(screen.getByRole('button', { name: 'Compare this segment' })).toBeDisabled()
   })
 
   it('offers recovery for an unknown route', async () => {

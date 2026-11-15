@@ -20,15 +20,6 @@ export const plannedPages = [
     next: '/solve-analysis', nextLabel: 'Visit Solve Analysis',
   },
   {
-    path: '/solve-analysis', title: 'Solve Analysis', icon: ChartNoAxesCombined, category: 'LEARN FROM EACH SOLVE',
-    headline: 'Find the turn that changes things.',
-    description: 'Revisit a solve and compare what happened with verified alternatives from the same starting state.',
-    dependency: 'Analysis requires a trustworthy move history and validated solvers.',
-    capabilities: ['Exact CFOP stage reconstruction', 'Actual and alternative sequences side by side', 'Computed differences and repeat-case practice'],
-    milestone: 'M4 CFOP · M5 review and alternatives',
-    next: '/algorithm-trainer', nextLabel: 'Visit Algorithm Trainer',
-  },
-  {
     path: '/algorithm-trainer', title: 'Algorithm Trainer', icon: Layers, category: 'MAKE IT SECOND NATURE',
     headline: 'Build recognition. Then repetition.',
     description: 'Practice real cases with clear goals and algorithms checked against the cube engine.',

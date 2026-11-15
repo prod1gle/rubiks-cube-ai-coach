@@ -40,7 +40,7 @@ export class CubeController {
   private hintSerial = 0
   private lastHintKey?: string
   private hintContinuation?: HintContinuation
-  constructor(private api: CubeTransport = transport) {}
+  constructor(private api: CubeTransport = transport, private initial?: CubeSnapshot) {}
   getSnapshot = () => this.state
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener) } }
   private publish(patch: Partial<ExplorerState> = {}) {
@@ -55,7 +55,13 @@ export class CubeController {
     this.listeners.forEach(listener => listener())
     if (this.live && next.hintEnabled && !unstable && !next.hintLoading && !next.coaching && !next.hintError) queueMicrotask(() => void this.fetchHint())
   }
-  connect = () => { if (!this.live) { this.live = true; void this.reset() } }
+  connect = () => { if (!this.live) { this.live = true; void (this.initial ? this.restoreSnapshot(this.initial) : this.reset()) } }
+  restoreSnapshot = (snapshot: CubeSnapshot) => this.replace(async () => snapshot)
+  recording = () => this.baseline && this.state.snapshot && this.canSeek() && !this.state.playing ? {
+    facelets: this.baseline.facelets,
+    sequence: this.state.history.slice(0, this.state.cursor).map(step => step.token).join(' '),
+    expected_end_hash: this.state.snapshot.state_hash,
+  } : undefined
   disconnect = () => { this.live = false; this.epoch++; this.abort?.abort(); this.invalidateHint(); this.hintContinuation = undefined; this.commands = []; this.steps = []; this.completion = undefined; this.playUntil = undefined }
   private invalidateHint() { this.hintSerial++; this.hintAbort?.abort(); this.lastHintKey = undefined }
   requestHint = (settings: HintSettings) => {
