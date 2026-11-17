@@ -1,6 +1,7 @@
 """Local application factory: health and the canonical cube-state engine."""
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -21,7 +22,7 @@ class HealthResponse(BaseModel):
     status: str = "ok"
     service: str = "cubiq-api"
     version: str = "0.1.0"
-    milestone: str = "2D"
+    milestone: str = "3"
 
 
 def create_app() -> FastAPI:
@@ -29,7 +30,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Cubiq Local API",
         version="0.1.0",
-        description="Milestone 2D: verified solving, coaching and recorded-segment comparison.",
+        description="Milestone 3: manual timing, validated recordings and state-based analysis.",
     )
     app.add_middleware(
         CORSMiddleware,
@@ -39,6 +40,13 @@ def create_app() -> FastAPI:
         allow_headers=["Accept", "Content-Type"],
     )
     app.include_router(cube_router)
+
+    @app.exception_handler(RequestValidationError)
+    async def invalid_request(_request: Request, error: RequestValidationError) -> JSONResponse:
+        # Non-finite timestamp inputs must produce 422, not fail while FastAPI
+        # tries to echo NaN/Infinity in its own JSON validation response.
+        detail = [{k: item[k] for k in ("loc", "msg", "type")} for item in error.errors()]
+        return JSONResponse(status_code=422, content={"detail": detail})
 
     @app.exception_handler(CubeError)
     async def invalid_cube(_request: Request, error: CubeError) -> JSONResponse:

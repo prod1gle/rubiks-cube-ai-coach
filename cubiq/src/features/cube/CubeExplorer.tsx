@@ -55,7 +55,7 @@ export function CubeExplorer() {
   return <>
     <div className="page-heading explorer-heading flex flex-wrap items-start justify-between gap-4">
       <div><p className="eyebrow">YOUR CUBE. EVERY POSSIBILITY.</p><h1 id="page-title">Cube Explorer</h1><p className="explorer-subtitle">Understand the cube, one turn at a time.</p></div>
-      <span className="outline-badge"><ShieldCheck size={12} className="inline mr-2" aria-hidden="true" />Engine-verified · 2D</span>
+      <span className="outline-badge"><ShieldCheck size={12} className="inline mr-2" aria-hidden="true" />Engine-verified · 3</span>
     </div>
     {error && <div role="alert" className="engine-error">{error} {!snapshot && 'Start the backend and reconnect.'}</div>}
     {!snapshot ? <section className="panel engine-loading"><p role="status">{loading ? 'Connecting to your cube engine…' : 'No validated state is available.'}</p><button className="secondary-button" disabled={loading} onClick={() => void controller.reset()}><RefreshCw size={14} aria-hidden="true" />Reconnect to engine</button></section> : <>

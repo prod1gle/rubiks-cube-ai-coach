@@ -230,3 +230,54 @@ function isComparison(value: unknown): value is ComparisonReply {
 export const compareSegment = (input: AnalysisRequest, signal: AbortSignal) => request('/api/cube/analysis', signal, isComparison, input, 35000)
 export const checkPractice = (input: AnalysisRequest, attempt: string, signal: AbortSignal) => request('/api/cube/analysis/practice', signal,
   (v): v is PracticeReply => record(v) && typeof v.start_hash === 'string' && isSnapshot(v.end) && isPlan(v.plan) && typeof v.success === 'boolean' && typeof v.protected_preserved === 'boolean' && record(v.metrics) && record(v.goal), { ...input, attempt }, 10000)
+
+export interface TimedMove { token: string; at_ms: number; ack_ms: number; before_hash: string; after_hash: string }
+export interface TimedRecording {
+  schema_version: 1; source: 'manual-virtual'; clock_source: 'performance.now'; clock_id: string; started_mono_ms: number
+  initial_state: CanonicalCubeState; events: TimedMove[]; pauses: { start_ms: number; end_ms: number }[]
+  elapsed_ms: number; inspection_ms: number; status: 'complete' | 'stopped' | 'interrupted'; timing_integrity: 'valid' | 'uncertain'
+  integrity_notes: string[]; expected_end_hash: string
+}
+export interface TimedStage {
+  id: string; label: string; goals: string[]; start: number; end: number; start_hash: string; end_hash: string
+  start_ms: number | null; end_ms: number | null; duration_ms: number | null; active_ms: number | null
+  htm: number; rotations: number; notation: string; ambiguous: boolean; attribution: string
+  efficiency: { actual_htm: number; simplified_htm: number; removable_adjacent_htm: number; simplified_notation: string; exact_endpoint_verified: boolean; cross_min_htm: number | null }
+}
+export interface TimedAnalytics {
+  schema_version: 1; analytics_version: string; source: string; status: TimedRecording['status']; timing_available: boolean
+  initial: CubeSnapshot; final: CubeSnapshot; sequence: string; events: (TimedMove & { htm: number; rotation: boolean })[]
+  summary: { elapsed_ms: number | null; observed_elapsed_ms: number; active_ms: number | null; unclassified_ms: number | null; explicit_pause_ms: number | null; htm: number; rotations: number; tps: number | null; active_tps: number | null; moving_tps: null; input_gap_ms: number | null; inspection_ms: number | null; inspection_overrun: boolean | null; simplified_htm: number; metric: string }
+  stages: TimedStage[]; milestones: { id: string; kind: string; index: number | null; at_ms: number | null; status: string; group_id: string | null }[]
+  predicate_events: { id: string; index: number; attained: boolean; at_ms: number | null }[]
+  checkpoints: { index: number; at_ms: number | null; state: CanonicalCubeState; state_hash: string; progress: CoachingReply['progress'] }[]
+  input_gaps: { start_ms: number; end_ms: number; duration_ms: number; kind: string }[] | null; pauses: { start_ms: number; end_ms: number }[]
+  tps_series: { start_ms: number; end_ms: number; htm: number; tps: number }[]; notes: string[]
+}
+function isTimedAnalytics(v: unknown): v is TimedAnalytics {
+  const finite = (n: unknown) => typeof n === 'number' && Number.isFinite(n) && n >= 0
+  const nullable = (n: unknown) => n === null || finite(n)
+  const strings = (a: unknown) => Array.isArray(a) && a.every(s => typeof s === 'string')
+  if (!(record(v) && v.schema_version === 1 && typeof v.analytics_version === 'string' && v.source === 'manual-virtual' &&
+    ['complete', 'stopped', 'interrupted'].includes(String(v.status)) && typeof v.timing_available === 'boolean' &&
+    isSnapshot(v.initial) && isSnapshot(v.final) && typeof v.sequence === 'string' && record(v.summary) &&
+    ['elapsed_ms', 'active_ms', 'unclassified_ms', 'explicit_pause_ms', 'tps', 'active_tps', 'input_gap_ms', 'inspection_ms'].every(k => nullable((v.summary as Record<string, unknown>)[k])) &&
+    ['htm', 'rotations', 'simplified_htm'].every(k => finite((v.summary as Record<string, unknown>)[k])) && v.summary.moving_tps === null && (v.summary.inspection_overrun === null || typeof v.summary.inspection_overrun === 'boolean') &&
+    Array.isArray(v.events) && v.events.length <= 1024 && v.events.every(e => record(e) && typeof e.token === 'string' && finite(e.at_ms) && finite(e.ack_ms) && finite(e.htm) && typeof e.rotation === 'boolean' && typeof e.before_hash === 'string' && typeof e.after_hash === 'string') &&
+    Array.isArray(v.checkpoints) && v.checkpoints.length === v.events.length + 1 && v.checkpoints.every(c => record(c) && record(c.state) && c.state.schema_version === 1 && typeof c.state_hash === 'string' && Number.isInteger(c.index) && nullable(c.at_ms)) &&
+    Array.isArray(v.stages) && v.stages.every(s => record(s) && typeof s.id === 'string' && typeof s.label === 'string' && Number.isInteger(s.start) && Number.isInteger(s.end) && finite(s.htm) && finite(s.rotations) && nullable(s.duration_ms) && nullable(s.active_ms) && typeof s.ambiguous === 'boolean' && record(s.efficiency) && finite(s.efficiency.removable_adjacent_htm) && nullable(s.efficiency.cross_min_htm)) &&
+    Array.isArray(v.milestones) && v.milestones.every(m => record(m) && typeof m.id === 'string' && typeof m.status === 'string' && nullable(m.index)) &&
+    Array.isArray(v.predicate_events) && v.predicate_events.every(e => record(e) && typeof e.id === 'string' && Number.isInteger(e.index) && typeof e.attained === 'boolean' && nullable(e.at_ms)) &&
+    Array.isArray(v.tps_series) && v.tps_series.length <= 600 && v.tps_series.every(b => record(b) && finite(b.start_ms) && finite(b.end_ms) && finite(b.htm) && finite(b.tps)) &&
+    Array.isArray(v.pauses) && (v.input_gaps === null || (Array.isArray(v.input_gaps) && v.input_gaps.every(g => record(g) && finite(g.start_ms) && finite(g.end_ms) && finite(g.duration_ms) && typeof g.kind === 'string'))) && strings(v.notes))) return false
+  const data = v as unknown as TimedAnalytics
+  let hash = data.initial.state_hash
+  if (data.checkpoints[0].state_hash !== hash || data.sequence !== data.events.map(e => e.token).join(' ')) return false
+  for (const [i, e] of data.events.entries()) {
+    if (e.before_hash !== hash || data.checkpoints[i + 1].state_hash !== e.after_hash || data.checkpoints[i + 1].index !== i + 1) return false
+    hash = e.after_hash
+  }
+  return hash === data.final.state_hash && data.summary.htm === data.events.reduce((n, e) => n + e.htm, 0) && data.summary.rotations === data.events.filter(e => e.rotation).length &&
+    data.stages.every(s => s.start >= 0 && s.end > s.start && s.end <= data.events.length && s.start_hash === data.checkpoints[s.start].state_hash && s.end_hash === data.checkpoints[s.end].state_hash)
+}
+export const analyzeTimedRecording = (input: TimedRecording, signal: AbortSignal) => request('/api/cube/recordings/analyze', signal, isTimedAnalytics, input, 15000)

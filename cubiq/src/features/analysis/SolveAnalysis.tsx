@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import type { AnalysisRequest, ComparisonReply } from '../../api/cube'
+import { Link, useLocation } from 'react-router-dom'
+import type { AnalysisRequest, ComparisonReply, TimedRecording } from '../../api/cube'
 import { compareSegment, getCube } from '../../api/cube'
 import { readRecording } from './recording'
 import { ComparisonReplay } from './ComparisonReplay'
+import { readTimedRecording } from '../timer/recording'
+import { TimedSolveReport } from './TimedSolveReport'
 import { CasePractice } from './CasePractice'
 
 const difference = (n: number, unit: string) => n > 0 ? `${n} fewer ${unit}` : n < 0 ? `${-n} more ${unit}` : `Same ${unit}`
 export function SolveAnalysis() {
+  const { search } = useLocation()
   const [source] = useState(readRecording)
+  const [timed, setTimed] = useState<TimedRecording | undefined>(() => new URLSearchParams(search).get('timed') === 'latest' ? readTimedRecording() : undefined)
   const [input, setInput] = useState<AnalysisRequest>(() => ({ facelets: source?.facelets ?? '', sequence: source?.sequence ?? '', expected_end_hash: source?.expected_end_hash, start: 0, end: source?.sequence.trim() ? source.sequence.trim().split(/\s+/).length : 1, objective: 'cfop', goal: 'auto' }))
   const [reply, setReply] = useState<ComparisonReply>(), [submitted, setSubmitted] = useState<AnalysisRequest>(), [selected, setSelected] = useState(''), [why, setWhy] = useState(false), [practice, setPractice] = useState(false)
   const [loading, setLoading] = useState(false), [error, setError] = useState('')
@@ -21,21 +25,23 @@ export function SolveAnalysis() {
   }, [source])
   useEffect(() => () => abort.current?.abort(), [])
   const change = (patch: Partial<AnalysisRequest>, recordEdit = false) => { setInput(v => ({ ...v, ...patch, ...(recordEdit ? { expected_end_hash: undefined } : {}) })); setReply(undefined); setPractice(false); setError('') }
-  const run = async () => {
+  const run = async (body: AnalysisRequest = input) => {
     abort.current?.abort(); const task = new AbortController(); abort.current = task
     setLoading(true); setError(''); setReply(undefined); setPractice(false); setWhy(false)
     try {
-      const result = await compareSegment(input, task.signal)
+      const result = await compareSegment(body, task.signal)
       if (task.signal.aborted) return
-      if (result.record.start !== input.start || result.record.end !== input.end || result.objective !== input.objective || (input.expected_end_hash && result.record.final_hash !== input.expected_end_hash)) throw new Error('The comparison does not match the selected record.')
-      setSubmitted({ ...input }); setReply(result); setSelected(result.recommended_id ?? '')
+      if (result.record.start !== body.start || result.record.end !== body.end || result.objective !== body.objective || (body.expected_end_hash && result.record.final_hash !== body.expected_end_hash)) throw new Error('The comparison does not match the selected record.')
+      setSubmitted({ ...body }); setReply(result); setSelected(result.recommended_id ?? '')
     } catch (e) { if (!task.signal.aborted) setError(e instanceof Error ? e.message : 'Comparison unavailable.') }
     finally { if (!task.signal.aborted) setLoading(false) }
   }
   const candidate = reply?.alternatives.find(c => c.id === selected)
   return <>
     <div className="page-heading"><p className="eyebrow">SAME CASE. A DIFFERENT PATH.</p><h1 id="page-title">Solve Analysis</h1><p className="explorer-subtitle">What could I have done instead?</p></div>
-    <section className="panel analysis-record" aria-labelledby="record-title"><h2 id="record-title">Choose a recorded segment</h2><p className="analysis-help">{source ? 'Loaded your applied Cube Explorer history. Unplayed preview moves are excluded.' : 'Bring a sequence from Cube Explorer, or enter a complete known move record and its exact initial state.'} This is untimed review; persistent solve storage and physical move capture are not implemented.</p><Link className="text-button" to="/cube-explorer">Open Cube Explorer</Link>
+    {!timed && <button className="secondary-button latest-timed-button" onClick={() => { const value = readTimedRecording(); if (value) setTimed(value); else setError('No timed manual recording is available in this browser session. Capture a run in Live Solve first.') }}>Load latest timed recording</button>}
+    {timed && <TimedSolveReport key={`${timed.clock_id}:${timed.status}:${timed.events.length}`} recording={timed} onReview={body => { setInput(body); void run(body); document.getElementById('record-title')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }) }} />}
+    <section className="panel analysis-record" aria-labelledby="record-title"><h2 id="record-title">Choose a recorded segment</h2><p className="analysis-help">{source ? 'Loaded your applied Cube Explorer history. Unplayed preview moves are excluded.' : 'Bring a sequence from Cube Explorer, or enter a complete known move record and its exact initial state.'} This segment comparison uses exact move states. Timed manual recordings are analyzed above; persistent solve storage and physical move capture are not implemented.</p><Link className="text-button" to="/cube-explorer">Open Cube Explorer</Link>
       <form onSubmit={e => { e.preventDefault(); void run() }}><fieldset disabled={loading}>
         <details><summary>Initial cube state · exact viewed facelets</summary><label>Initial facelets<textarea value={input.facelets} maxLength={10000} rows={2} onChange={e => change({ facelets: e.target.value }, true)} spellCheck={false} /></label><p className="analysis-help">Imported Explorer records retain their initial state and grip. For manual records, enter all 54 URFDLB color identities. Unknown moves or capture gaps cannot be reconstructed.</p></details>
         <label>Recorded move sequence<textarea value={input.sequence} maxLength={10000} rows={3} onChange={e => change({ sequence: e.target.value }, true)} spellCheck={false} placeholder="Enter the actual recorded moves" /></label>

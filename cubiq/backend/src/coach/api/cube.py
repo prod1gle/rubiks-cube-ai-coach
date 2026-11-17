@@ -244,3 +244,44 @@ def practice_segment(request: PracticeInput):
         request.goal,
         request.expected_end_hash,
     )
+
+
+class TimedMove(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    token: str = Field(max_length=16)
+    at_ms: float = Field(ge=0, le=86_400_000, allow_inf_nan=False)
+    ack_ms: float = Field(ge=0, le=86_400_000, allow_inf_nan=False)
+    before_hash: str = Field(min_length=64, max_length=64)
+    after_hash: str = Field(min_length=64, max_length=64)
+
+
+class PracticePause(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    start_ms: float = Field(ge=0, le=86_400_000, allow_inf_nan=False)
+    end_ms: float = Field(ge=0, le=86_400_000, allow_inf_nan=False)
+
+
+class TimedRecording(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    schema_version: Literal[1]
+    source: Literal["manual-virtual"]
+    clock_source: Literal["performance.now"]
+    clock_id: str = Field(min_length=1, max_length=128)
+    started_mono_ms: float = Field(ge=0, allow_inf_nan=False)
+    initial_state: dict[str, Any]
+    events: list[TimedMove] = Field(max_length=1024)
+    pauses: list[PracticePause] = Field(max_length=1024)
+    elapsed_ms: float = Field(ge=0, le=86_400_000, allow_inf_nan=False)
+    inspection_ms: float = Field(ge=0, le=86_400_000, allow_inf_nan=False)
+    status: Literal["complete", "stopped", "interrupted"]
+    timing_integrity: Literal["valid", "uncertain"]
+    integrity_notes: list[str] = Field(max_length=64)
+    expected_end_hash: str = Field(min_length=64, max_length=64)
+
+
+@router.post("/recordings/analyze", tags=["Timed manual recordings"])
+def analyze_recording(request: TimedRecording):
+    """Replay every accepted move before calculating deterministic timing/stages."""
+    from coach.recordings.analytics import analyze
+
+    return analyze(request.model_dump())

@@ -221,3 +221,16 @@ Delivered fixed-white/exact-state scope; broader color-neutral, optimal-search, 
 | 2D-07 | Invalid ranges, oversized/missing moves, illegal initial state, mismatched hash, corrupt reply, cancel/error | Clear refusal; no invented boundary, candidate or adopted late result. |
 | 2D-08 | Explorer export with unapplied preview and direct analysis entry | Only applied prefix transferred with real baseline/final hash; implemented route and honest empty/manual record. |
 | 2D-09 | Regression/build/lint/package and live responsive application | See [M2D report](MILESTONE_2D.md): 975 backend / 105 frontend tests and actual paired playback/practice. Broader persistent M5 gates remain pending. |
+
+## User-requested milestone 3 — manual timer and analysis checkpoint
+
+| ID | Fixture / action | Acceptance / evidence |
+| --- | --- | --- |
+| U3-01 | Inject monotonic clocks, inspection, delayed acknowledgements and rapid face/rotation inputs | Input timestamps retain original order; state chains are engine-derived; elapsed derives from clock origins, not ticks or animation. |
+| U3-02 | Unsolved/solved preparations, manual Stop, first solved endpoint, pending moves and Pause | Solved start refused; stop waits for submitted inputs; complete ends at first solving input time; late/duplicate/stale adoption cannot add moves. |
+| U3-03 | Explicit pauses, zero/tiny duration, known HTM/rotation timestamps and inactivity | Independent arithmetic matches; total/active denominators differ explicitly; final-bin inputs counted once; no non-finite rates. Physical moving TPS stays unavailable. |
+| U3-04 | Cross, one solved pair, combined goals, initial/skipped goals, AUF and full synthetic CFOP records | Exact checkpoint states/indices, protected prerequisite slots, shared combined durations, no invented pair order or recognition times; raw predicate losses retained. |
+| U3-05 | Hidden page, inspection/run clock drift, invalid clock, failed input, reload/navigation | Draft/interrupted or uncertain status; validated states retained; timing/rates withheld, including uncertain inspection. |
+| U3-06 | Invalid timed schema, tokens, hashes, monotonic times, pauses and claimed solvedness | 422; NaN/Infinity cannot crash the validation response; incomplete histories are never filled in. |
+| U3-07 | Live Solve keyboard/buttons/focus, exact timeline/chart selection and stage action | Correct input guards; backend checkpoint snapshots; stage-to-retrospective original-state/index handoff; no physical speed estimates. |
+| U3-08 | Synthetic test-data inventory and full regressions | Fixtures explicitly marked synthetic; runtime imports none. See [M3 report](MILESTONE_3.md): 1,028 backend and 128 frontend tests, build/lint/format/package checks and real manual-virtual browser flow. |

@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
 import cubeFixtures from '../test/cube-fixtures.json'
 
-const healthy = { status: 'ok', service: 'cubiq-api', version: '0.1.0', milestone: '2D' }
+const healthy = { status: 'ok', service: 'cubiq-api', version: '0.1.0', milestone: '3' }
 
 function renderPage(path = '/') {
   return render(<MemoryRouter initialEntries={[path]}><App /></MemoryRouter>)
@@ -28,6 +28,7 @@ describe('workspace navigation', () => {
       await user.click(link)
       expect(screen.getByRole('heading', { name: title, level: 1 })).toBeVisible()
       if (title === 'Cube Explorer') expect(await screen.findByText('Solved · in any grip')).toBeVisible()
+      else if (title === 'Live Solve') expect(screen.getByRole('region', { name: 'Manual solve timer' })).toBeVisible()
       else if (title === 'Solve Analysis') expect(screen.getByRole('heading', { name: 'Choose a recorded segment' })).toBeVisible()
       else expect(screen.getByRole('heading', { name: 'Not implemented yet' })).toBeVisible()
       expect(link).toHaveAttribute('aria-current', 'page')
@@ -41,7 +42,6 @@ describe('workspace navigation', () => {
   })
 
   it.each([
-    ['/live-solve', 'Live Solve'],
     ['/algorithm-trainer', 'Algorithm Trainer'],
     ['/history', 'History'],
   ])('supports direct entry at %s without claiming the feature works', async (path, title) => {

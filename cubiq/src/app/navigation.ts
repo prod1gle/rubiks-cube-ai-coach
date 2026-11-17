@@ -11,15 +11,6 @@ export const navigation = [
 
 export const plannedPages = [
   {
-    path: '/live-solve', title: 'Live Solve', icon: Timer, category: 'FIND YOUR FLOW',
-    headline: 'Give your practice a rhythm.',
-    description: 'A focused place to capture a solve, from the first turn to the last layer.',
-    dependency: 'Timing and move capture are planned for milestone M2.',
-    capabilities: ['Live timer with explicit practice pauses', 'Engine-backed move logging and HTM/TPS', 'Later: confidence-aware physical cube capture'],
-    milestone: 'M2 capture · M7 scan · M8 tracking',
-    next: '/solve-analysis', nextLabel: 'Visit Solve Analysis',
-  },
-  {
     path: '/algorithm-trainer', title: 'Algorithm Trainer', icon: Layers, category: 'MAKE IT SECOND NATURE',
     headline: 'Build recognition. Then repetition.',
     description: 'Practice real cases with clear goals and algorithms checked against the cube engine.',
