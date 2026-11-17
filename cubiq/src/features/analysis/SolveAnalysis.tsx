@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import type { AnalysisRequest, ComparisonReply, TimedRecording } from '../../api/cube'
 import { compareSegment, getCube } from '../../api/cube'
+import { library, saveSolve } from '../../api/library'
+import type { SavedSolve } from '../../api/library'
 import { readRecording } from './recording'
 import { ComparisonReplay } from './ComparisonReplay'
 import { readTimedRecording } from '../timer/recording'
@@ -11,6 +13,8 @@ import { CasePractice } from './CasePractice'
 const difference = (n: number, unit: string) => n > 0 ? `${n} fewer ${unit}` : n < 0 ? `${-n} more ${unit}` : `Same ${unit}`
 export function SolveAnalysis() {
   const { search } = useLocation()
+  const savedId = new URLSearchParams(search).get('solve')
+  const [saved, setSaved] = useState<SavedSolve>()
   const [source] = useState(readRecording)
   const [timed, setTimed] = useState<TimedRecording | undefined>(() => new URLSearchParams(search).get('timed') === 'latest' ? readTimedRecording() : undefined)
   const [input, setInput] = useState<AnalysisRequest>(() => ({ facelets: source?.facelets ?? '', sequence: source?.sequence ?? '', expected_end_hash: source?.expected_end_hash, start: 0, end: source?.sequence.trim() ? source.sequence.trim().split(/\s+/).length : 1, objective: 'cfop', goal: 'auto' }))
@@ -24,6 +28,12 @@ export function SolveAnalysis() {
     return () => task.abort()
   }, [source])
   useEffect(() => () => abort.current?.abort(), [])
+  useEffect(() => {
+    if (!savedId) return
+    const task = new AbortController()
+    void library<SavedSolve>(`/solves/${savedId}`, undefined, 'GET', task.signal).then(v => { setSaved(v); setTimed(v.recording) }).catch(e => { if (!task.signal.aborted) setError(e.message) })
+    return () => task.abort()
+  }, [savedId])
   const change = (patch: Partial<AnalysisRequest>, recordEdit = false) => { setInput(v => ({ ...v, ...patch, ...(recordEdit ? { expected_end_hash: undefined } : {}) })); setReply(undefined); setPractice(false); setError('') }
   const run = async (body: AnalysisRequest = input) => {
     abort.current?.abort(); const task = new AbortController(); abort.current = task
@@ -36,12 +46,16 @@ export function SolveAnalysis() {
     } catch (e) { if (!task.signal.aborted) setError(e instanceof Error ? e.message : 'Comparison unavailable.') }
     finally { if (!task.signal.aborted) setLoading(false) }
   }
+  const visibleTimed = savedId && saved?.id !== savedId ? undefined : timed
   const candidate = reply?.alternatives.find(c => c.id === selected)
   return <>
     <div className="page-heading"><p className="eyebrow">SAME CASE. A DIFFERENT PATH.</p><h1 id="page-title">Solve Analysis</h1><p className="explorer-subtitle">What could I have done instead?</p></div>
-    {!timed && <button className="secondary-button latest-timed-button" onClick={() => { const value = readTimedRecording(); if (value) setTimed(value); else setError('No timed manual recording is available in this browser session. Capture a run in Live Solve first.') }}>Load latest timed recording</button>}
-    {timed && <TimedSolveReport key={`${timed.clock_id}:${timed.status}:${timed.events.length}`} recording={timed} onReview={body => { setInput(body); void run(body); document.getElementById('record-title')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }) }} />}
-    <section className="panel analysis-record" aria-labelledby="record-title"><h2 id="record-title">Choose a recorded segment</h2><p className="analysis-help">{source ? 'Loaded your applied Cube Explorer history. Unplayed preview moves are excluded.' : 'Bring a sequence from Cube Explorer, or enter a complete known move record and its exact initial state.'} This segment comparison uses exact move states. Timed manual recordings are analyzed above; persistent solve storage and physical move capture are not implemented.</p><Link className="text-button" to="/cube-explorer">Open Cube Explorer</Link>
+    {saved && (!savedId || saved.id === savedId) && <section className="panel library-panel"><p>Saved {new Date(saved.created_at).toLocaleString()} · Analysis {saved.analysis_version}</p><button onClick={() => { void library<SavedSolve>(`/solves/${saved.id}/reanalyze`, {}).then(v => { setSaved(v); setTimed({ ...v.recording }) }).catch(e => setError(e.message)) }}>Reanalyze original recording</button><p className="analysis-help">{saved.versions.length} retained analysis version(s). Original states and events remain immutable.</p></section>}
+    {!savedId && !timed && <button className="secondary-button latest-timed-button" onClick={() => { const value = readTimedRecording(); if (value) setTimed(value); else setError('No timed manual recording is available in this browser session. Capture a run in Live Solve first.') }}>Load latest timed recording</button>}
+    {visibleTimed && !saved && <button className="secondary-button" onClick={() => { void saveSolve(visibleTimed).then(v => setSaved(v)).catch(e => setError(e.message)) }}>Save this recording to History</button>}
+    {savedId && !visibleTimed && <p role="status">Loading saved solve…</p>}
+    {visibleTimed && <TimedSolveReport key={`${visibleTimed.clock_id}:${visibleTimed.status}:${visibleTimed.events.length}`} recording={visibleTimed} onReview={body => { setInput(body); void run(body); document.getElementById('record-title')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }) }} />}
+    <section className="panel analysis-record" aria-labelledby="record-title"><h2 id="record-title">Choose a recorded segment</h2><p className="analysis-help">{source ? 'Loaded your applied Cube Explorer history. Unplayed preview moves are excluded.' : 'Bring a sequence from Cube Explorer, or enter a complete known move record and its exact initial state.'} This segment comparison uses exact move states. Timed manual recordings are analyzed above; saved recordings are available in History. Physical move capture is separate from manual input.</p><Link className="text-button" to="/cube-explorer">Open Cube Explorer</Link>
       <form onSubmit={e => { e.preventDefault(); void run() }}><fieldset disabled={loading}>
         <details><summary>Initial cube state · exact viewed facelets</summary><label>Initial facelets<textarea value={input.facelets} maxLength={10000} rows={2} onChange={e => change({ facelets: e.target.value }, true)} spellCheck={false} /></label><p className="analysis-help">Imported Explorer records retain their initial state and grip. For manual records, enter all 54 URFDLB color identities. Unknown moves or capture gaps cannot be reconstructed.</p></details>
         <label>Recorded move sequence<textarea value={input.sequence} maxLength={10000} rows={3} onChange={e => change({ sequence: e.target.value }, true)} spellCheck={false} placeholder="Enter the actual recorded moves" /></label>

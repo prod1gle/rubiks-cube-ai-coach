@@ -74,7 +74,7 @@ function record(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-function isSnapshot(value: unknown): value is CubeSnapshot {
+export function isSnapshot(value: unknown): value is CubeSnapshot {
   // Check the protocol shape, not cube mathematics. Legality is the API's job.
   return record(value) && typeof value.engine_version === 'string' &&
     record(value.state) && value.state.schema_version === 1 &&
@@ -91,7 +91,7 @@ function isSnapshot(value: unknown): value is CubeSnapshot {
     typeof value.sequence.metric === 'string'
 }
 
-function isPlan(value: unknown): value is CubePlan {
+export function isPlan(value: unknown): value is CubePlan {
   const vector = (v: unknown) => Array.isArray(v) && v.length === 3 && v.every(n => typeof n === 'number' && Number.isFinite(n))
   const animation = (v: unknown) => record(v) && vector(v.axis) && typeof v.quarter_turns === 'number' && Array.isArray(v.affected) && v.affected.every(id => typeof id === 'string')
   return record(value) && typeof value.input_hash === 'string' && record(value.sequence) &&

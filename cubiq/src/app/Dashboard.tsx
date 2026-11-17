@@ -1,4 +1,5 @@
-import { ArrowRight, ArrowUpRight, Box, Check, ChartNoAxesCombined, CircleDashed, Timer } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Box, Check, ChartNoAxesCombined, Timer } from 'lucide-react'
+import { Progress } from '../features/library/Progress'
 import { Link } from 'react-router-dom'
 import { ConnectionCard } from '../components/ConnectionCard'
 import type { ConnectionState } from '../api/useHealth'
@@ -17,6 +18,7 @@ export function Dashboard({ connection, retry }: { connection: ConnectionState; 
         <span className="outline-badge">Verified solver <span>3</span></span>
       </div>
 
+      <Progress />
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero-copy">
           <div className="hero-kicker"><span /> A BETTER WAY TO PRACTICE</div>
@@ -44,7 +46,7 @@ export function Dashboard({ connection, retry }: { connection: ConnectionState; 
             <Link to={to} className="workflow-card" key={to} aria-label={`Open ${label}`}>
               <div className="flex items-start justify-between"><span className={`icon-tile ${className}`}><Icon size={22} strokeWidth={1.5} /></span><ArrowUpRight size={17} className="card-arrow" aria-hidden="true" /></div>
               <h3>{title}</h3><p>{text}</p>
-              <div className="workflow-bottom"><span>{label}</span><span className="planned-label">{to === '/cube-explorer' ? '3D available' : 'Planned'}</span></div>
+              <div className="workflow-bottom"><span>{label}</span><span className="planned-label">{to === '/cube-explorer' ? '3D available' : 'Available'}</span></div>
             </Link>
           ))}
         </div>
@@ -53,16 +55,16 @@ export function Dashboard({ connection, retry }: { connection: ConnectionState; 
       <div className="dashboard-bottom">
         <ConnectionCard connection={connection} retry={retry} />
         <section className="panel readiness-card" aria-labelledby="readiness-title">
-          <div className="flex items-center justify-between"><span className="eyebrow">BUILT WITH INTENTION</span><span className="muted text-xs">MILESTONE 3</span></div>
+          <div className="flex items-center justify-between"><span className="eyebrow">BUILT WITH INTENTION</span><span className="muted text-xs">MILESTONE 4</span></div>
           <h2 id="readiness-title">First, a reliable foundation.</h2>
           <ul className="readiness-list">
             <li><span className="ready-icon"><Check size={13} /></span><span>Local application & navigation</span><span className="readiness-status">Available</span></li>
             <li><span className="ready-icon"><Check size={13} /></span><span>Backend health checks</span><span className="readiness-status">Available</span></li>
             <li><span className="ready-icon"><Check size={13} /></span><span>Cube engine & verified moves</span><span className="readiness-status">Available</span></li>
             <li><span className="ready-icon"><Check size={13} /></span><span>Manual timer & stage analysis</span><span className="readiness-status">Available</span></li>
-            <li><span className="muted"><CircleDashed size={15} /></span><span>Persistent history & progress trends</span><span className="muted text-xs">Planned</span></li>
+            <li><span className="ready-icon"><Check size={13} /></span><span>Persistent history & progress trends</span><span className="readiness-status">Available</span></li>
           </ul>
-          <div className="honesty-note"><span className="note-mark">↗</span><p>Progress will come from your actual solves.<br />Manual timing and analysis are available. History trends remain planned.</p></div>
+          <div className="honesty-note"><span className="note-mark">↗</span><p>Progress will come from your actual solves.<br />Manual timing and analysis are available. History trends use your saved recordings.</p></div>
         </section>
       </div>
     </>

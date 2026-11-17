@@ -142,3 +142,11 @@ Exact recorded-segment reconstruction, shared-goal alternatives, three ranking o
 Implemented optional practice inspection, monotonic single-move capture, keyboard/buttons, explicit pause/resume, engine-based completion, latest-record session transfer, validated CFOP checkpoint reconstruction, deterministic timing/count/TPS/inactivity/efficiency functions, interactive timeline/chart, stage cards and retrospective-coach handoff. Synthetic test recordings are explicitly test-only. See [delivery evidence](MILESTONE_3.md).
 
 This is the user's new timer/analysis checkpoint, not completion of the original roadmap M3 optimal-search gate. Durable history, physical capture/timing, competition certification, measured moving TPS and learned personalization remain future work.
+
+## User-requested persistence checkpoint (milestone 4)
+
+Implemented SQLite migrations, immutable saved recordings and moves, versioned reanalysis,
+real dashboard/history, and engine-verified Algorithm Trainer (57 OLL, 21 PLL, 24 F2L
+insertion cases). This checkpoint supersedes older planned-history/trainer notes in the
+original delivery sequence. See MILESTONE_4.md. The original broader M4 color-neutral
+planning requirement remains separate from the user's milestone numbering.

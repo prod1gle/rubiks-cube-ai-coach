@@ -1,5 +1,8 @@
 """Local application factory: health and the canonical cube-state engine."""
 
+import os
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,8 +10,10 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from coach.api.cube import router as cube_router
+from coach.api.persistence import router as persistence_router
 from coach.cube import CubeError
 from coach.solvers.runtime import SolverError
+from coach.storage.database import Database
 
 LOCAL_ORIGINS = [
     "http://localhost:5173",
@@ -22,24 +27,29 @@ class HealthResponse(BaseModel):
     status: str = "ok"
     service: str = "cubiq-api"
     version: str = "0.1.0"
-    milestone: str = "3"
+    milestone: str = "4"
 
 
-def create_app() -> FastAPI:
+def create_app(database_path: str | Path | None = None) -> FastAPI:
     """Create an isolated application; the solver starts only on explicit requests."""
     app = FastAPI(
         title="Cubiq Local API",
         version="0.1.0",
-        description="Milestone 3: manual timing, validated recordings and state-based analysis.",
+        description="Milestone 4: persistent recordings, analytics and verified training.",
     )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=LOCAL_ORIGINS,
         allow_credentials=False,
-        allow_methods=["GET", "POST"],
+        allow_methods=["GET", "POST", "DELETE"],
         allow_headers=["Accept", "Content-Type"],
     )
+    app.state.database = Database(
+        database_path
+        or os.environ.get("CUBIQ_DB_PATH", Path(__file__).parents[2] / ".data/cubiq.sqlite3")
+    )
     app.include_router(cube_router)
+    app.include_router(persistence_router)
 
     @app.exception_handler(RequestValidationError)
     async def invalid_request(_request: Request, error: RequestValidationError) -> JSONResponse:

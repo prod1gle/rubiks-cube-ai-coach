@@ -20,7 +20,7 @@ def test_health_contract(client, path):
         "status": "ok",
         "service": "cubiq-api",
         "version": "0.1.0",
-        "milestone": "3",
+        "milestone": "4",
     }
 
 
@@ -51,5 +51,5 @@ def test_simple_local_request_has_cors_header(client):
 
 
 def test_future_session_and_solve_routes_remain_unavailable(client):
-    assert client.get("/api/solves").status_code == 404
+    assert client.get("/api/solves").status_code == 200
     assert client.get("/api/states").status_code == 404

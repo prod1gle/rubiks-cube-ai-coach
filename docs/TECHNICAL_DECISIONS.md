@@ -124,3 +124,12 @@ User milestone 3 captures monotonic submission times before asynchronous engine 
 Version `manual-checkpoints-1` infers prerequisite Cross/pair/OLL/PLL/AUF state checkpoints and protects prior slots at eligible boundaries. Concurrent pair goals share a single interval, initial/skipped/pending goals receive no invented duration, and raw predicate losses stay visible without automatic human-stage restarts. Local simplification is verified at identical endpoints; an exact Cross distance is explicitly stage-scoped. Stage cards pass the exact original record to milestone 2D comparison.
 
 Latest-record session storage is an explicit limited transfer mechanism. Drafts/clock interruptions never become trusted completed timing; uncertain analytics retain state/count facts and withhold durations/rates. Synthetic clock fixtures are confined to automated tests and identified as test data. No background model training or fabricated performance history is introduced. See [contracts and evidence](MILESTONE_3.md).
+
+## User milestone 4: immutable records and versioned derived data
+
+Use Python's SQLite driver with SQL migration resources, foreign keys, request-local
+connections and WAL. UUID saves use content hashes to be idempotent without overwriting
+recordings; conflicting concurrent writes are serialized and rejected. Store engine/catalog/
+analytics version tuples alongside complete analysis JSON, retaining old versions. The
+server owns legal-state/outcome validation. Dashboard aggregates completed manual virtual
+runs and shows timing eligibility; algorithm demonstrations never count as practice.

@@ -4,8 +4,9 @@ import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { CubeMark } from '../components/CubeMark'
 import { useHealth } from '../api/useHealth'
 import { Dashboard } from './Dashboard'
-import { navigation, plannedPages } from './navigation'
-import { PlannedPage } from './PlannedPage'
+import { navigation } from './navigation'
+import { AlgorithmTrainer } from '../features/library/AlgorithmTrainer'
+import { History } from '../features/library/History'
 import { LiveSolve } from '../features/timer/LiveSolve'
 import { SolveAnalysis } from '../features/analysis/SolveAnalysis'
 import { CubeExplorer } from '../features/cube/CubeExplorer'
@@ -31,7 +32,7 @@ export function App() {
           {navigation.map(({ path, title, icon: Icon }) => <NavLink to={path} end={path === '/'} key={path} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Icon size={18} strokeWidth={1.7} aria-hidden="true" /><span>{title}</span>{path === '/' && <span className="nav-active-dot" />}</NavLink>)}
         </nav>
         <div className="sidebar-bottom">
-          <div className="sidebar-note"><span className="tiny-label">A WORKSPACE IN THE MAKING</span><p>Good practice starts<br />with a solid foundation.</p><span className="sidebar-release">Milestone 3 <ArrowUpRight size={13} aria-hidden="true" /></span></div>
+          <div className="sidebar-note"><span className="tiny-label">A WORKSPACE IN THE MAKING</span><p>Good practice starts<br />with a solid foundation.</p><span className="sidebar-release">Milestone 4 <ArrowUpRight size={13} aria-hidden="true" /></span></div>
           <div className="local-label"><LockKeyhole size={12} aria-hidden="true" /><span>Local-first. Yours to explore.</span></div>
         </div>
       </aside>
@@ -44,7 +45,7 @@ export function App() {
             <Route path="/cube-explorer" element={<CubeExplorer />} />
             <Route path="/solve-analysis" element={<SolveAnalysis />} />
             <Route path="/live-solve" element={<LiveSolve />} />
-            {plannedPages.map((page) => <Route path={page.path} element={<PlannedPage page={page} />} key={page.path} />)}
+            <Route path="/algorithm-trainer" element={<AlgorithmTrainer />} /><Route path="/history" element={<History />} />
             <Route path="*" element={<section className="not-found panel"><p className="eyebrow">PAGE NOT FOUND</p><h1 id="page-title">A turn off the beaten path.</h1><p>This workspace page doesn’t exist.</p><Link to="/" className="primary-button"><ArrowLeft size={16} aria-hidden="true" /> Return to Dashboard</Link></section>} />
           </Routes>
         </main>

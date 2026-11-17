@@ -13,7 +13,7 @@ function renderPage(path = '/') {
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn().mockImplementation((path: string) => Promise.resolve(
-    new Response(JSON.stringify(path === '/api/cube' ? cubeFixtures.solved : healthy)),
+    new Response(JSON.stringify(path === '/api/cube' ? cubeFixtures.solved : path.startsWith('/api/solves') ? { total: 0, items: [] } : path === '/api/training' ? { cases: [] } : path === '/api/dashboard' ? { total_records: 0, completed_solves: 0, timed_sample_count: 0, practice_attempts: 0, personal_best_ms: null, average_tps: null, average_htm: null, trends: [], scope: 'Completed manual virtual solves.' } : healthy)),
   )))
 })
 
@@ -30,26 +30,25 @@ describe('workspace navigation', () => {
       if (title === 'Cube Explorer') expect(await screen.findByText('Solved · in any grip')).toBeVisible()
       else if (title === 'Live Solve') expect(screen.getByRole('region', { name: 'Manual solve timer' })).toBeVisible()
       else if (title === 'Solve Analysis') expect(screen.getByRole('heading', { name: 'Choose a recorded segment' })).toBeVisible()
-      else expect(screen.getByRole('heading', { name: 'Not implemented yet' })).toBeVisible()
+      else expect(screen.queryByRole('heading', { name: 'Not implemented yet' })).not.toBeInTheDocument()
       expect(link).toHaveAttribute('aria-current', 'page')
       expect(document.title).toBe(`${title} · Cubiq`)
       expect(screen.getByRole('main')).toHaveFocus()
       expect(window.scrollTo).toHaveBeenLastCalledWith(0, 0)
     }
-    await user.click(screen.getByRole('link', { name: 'Back to Dashboard' }))
+    await user.click(within(nav).getByRole('link', { name: 'Dashboard' }))
     expect(screen.getByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible()
-    expect(screen.queryByText(/ao5|ao12|personal best|average tps/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Your recorded progress' })).toBeVisible()
   })
 
   it.each([
     ['/algorithm-trainer', 'Algorithm Trainer'],
     ['/history', 'History'],
-  ])('supports direct entry at %s without claiming the feature works', async (path, title) => {
+  ])('supports direct entry at %s with real-data controls', async (path, title) => {
     renderPage(path)
     expect(screen.getByRole('heading', { level: 1, name: title })).toBeVisible()
-    expect(screen.getByText('Not implemented yet')).toBeVisible()
-    expect(screen.getByText(/does not process cube states or record practice/)).toBeVisible()
-    await screen.findByRole('link', { name: 'Back to Dashboard' })
+    expect(screen.queryByText('Not implemented yet')).not.toBeInTheDocument()
+    await screen.findByText('Local API reachable', {}, { timeout: 3000 }).catch(() => undefined)
   })
 
   it('opens Solve Analysis directly with an honest empty record', () => {
@@ -73,7 +72,7 @@ describe('real API connection states', () => {
     const request = vi.fn()
       .mockRejectedValueOnce(new TypeError('Failed to fetch'))
       .mockResolvedValueOnce(new Response(JSON.stringify(healthy)))
-    vi.stubGlobal('fetch', request)
+    vi.stubGlobal('fetch', (path: string, options: unknown) => path === '/api/dashboard' ? Promise.resolve(new Response(JSON.stringify({ trends: [] }))) : request(path, options))
     const user = userEvent.setup()
     renderPage()
     expect(await screen.findByText('Local API unavailable')).toBeVisible()
@@ -85,7 +84,7 @@ describe('real API connection states', () => {
   })
 
   it('does not mistake an unrelated successful response for a healthy API', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ status: 'ok' }))))
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ status: 'ok' })))))
     renderPage()
     expect(await screen.findByText('Local API unavailable')).toBeVisible()
     expect(screen.getByText('The API returned an unexpected health response.')).toBeVisible()

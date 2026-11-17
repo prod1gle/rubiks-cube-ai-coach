@@ -67,7 +67,7 @@ it('practice starts from the original boundary, verifies retry by goal and reset
   }
   await user.click(screen.getByRole('button', { name: 'Check attempt' }))
   expect(await screen.findByText(/Objective achieved/)).toBeVisible()
-  expect(JSON.parse(request.mock.calls[2][1].body).attempt).toBe(fixtures.reply.alternatives[0].notation)
+  expect(JSON.parse(request.mock.calls[2][1].body).input.attempt).toBe(fixtures.reply.alternatives[0].notation)
   await user.click(screen.getByRole('button', { name: 'Reset original case' }))
   await waitFor(() => expect(screen.getByTestId('practice-hash')).toHaveTextContent(fixtures.reply.start.state_hash))
   expect(screen.getByLabelText('Recorded move sequence')).toHaveValue(fixtures.input.sequence)

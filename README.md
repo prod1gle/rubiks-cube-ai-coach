@@ -1,11 +1,11 @@
 # Cubiq — Rubik’s Cube AI Coach
 
-A local workspace for more intentional 3×3 practice. **Milestones 1A–1C, 2A–2D and user-requested milestone 3 are implemented:** canonical cube states, interactive 3D, verified full-cube/CFOP solving, Next Best Move, retrospective comparison/practice, and manual virtual timing with deterministic solve analysis. Full-solve optimality proofs, progress trends, the algorithm trainer, persistent solve storage, physical camera tracking, AI and learned personalization remain future work.
+A local workspace for more intentional 3×3 practice. **Milestones 1A–1C, 2A–2D and user-requested milestones 3–4 are implemented:** canonical cube states, interactive 3D, verified full-cube/CFOP solving, Next Best Move, retrospective comparison/practice, and manual virtual timing with deterministic solve analysis. SQLite solve history, genuine progress trends and verified F2L/OLL/PLL training are available. Full-solve optimality proofs, physical camera tracking, AI and learned personalization remain future work.
 
 ## Available now
 
 - React + TypeScript + Vite frontend with Tailwind CSS, a responsive dark layout, keyboard focus styles, reduced-motion support, and skip navigation.
-- Six working routes: Dashboard, Cube Explorer, Live Solve, Solve Analysis, Algorithm Trainer, and History. The two future trainer/history workflows explicitly say **Not implemented yet**.
+- Six working routes: Dashboard, Cube Explorer, Live Solve, Solve Analysis, Algorithm Trainer, and History. Trainer and History use real engine-validated cases and local saved data.
 - Cube Explorer: Three.js / React Three Fiber rendering of all 26 cubies and 54 stickers, smooth face/grip animations, orbit/zoom, keyboard and button moves, manual algorithms, legal random scrambles, reset, undo/redo, and playback. The 2D state inspector and import/export remain available. The frontend never computes cube permutations.
 - Two independent solving approaches: engine-verified two-phase short solutions, and genuine Cross → four F2L pairs → OLL → PLL → AUF with stage counts and playback. Both label full-solve optimality unproven.
 - Live Solve: optional 15-second practice inspection, Space/face-key/button controls, explicit pauses, monotonic input capture and engine-confirmed completion. Manual virtual timing is separate from animation and physical turning.
@@ -86,12 +86,12 @@ Stop each process with `Ctrl+C`. Both services bind to loopback. Ports are fixed
 `GET /health` returns:
 
 ```json
-{"status":"ok","service":"cubiq-api","version":"0.1.0","milestone":"3"}
+{"status":"ok","service":"cubiq-api","version":"0.1.0","milestone":"4"}
 ```
 
 `GET /api/health` is an equivalent alias for the frontend’s `/api` proxy. Both Vite development and preview forward `/api/*` to `http://127.0.0.1:8000`. The health endpoint reports API availability, not readiness of future cube features.
 
-Allowed browser origins are explicitly limited to `http://localhost:5173`, `http://127.0.0.1:5173`, and their preview equivalents on port `4173`. GET and POST are allowed; credentials are disabled. CORS controls browser cross-origin access and is not an authentication layer. Cube endpoints are stateless calculations and do not store a shared session.
+Allowed browser origins are explicitly limited to `http://localhost:5173`, `http://127.0.0.1:5173`, and their preview equivalents on port `4173`. GET, POST and DELETE are allowed; credentials are disabled. CORS controls browser cross-origin access and is not an authentication layer. Cube endpoints are stateless calculations and do not store a shared session.
 
 Check the direct and proxied endpoints:
 
@@ -102,7 +102,7 @@ curl --fail http://127.0.0.1:5173/api/health
 
 ## Cube engine API
 
-Open [Cube Explorer](http://127.0.0.1:5173/cube-explorer) after starting both applications. Until an engine snapshot arrives, no cube is displayed. Invalid notation/imports retain the last accepted snapshot and show the backend's validation error. Counts describe the current local history prefix; they are not a recorded speedsolve. A page reload starts a new solved workspace; persistent history is not implemented.
+Open [Cube Explorer](http://127.0.0.1:5173/cube-explorer) after starting both applications. Until an engine snapshot arrives, no cube is displayed. Invalid notation/imports retain the last accepted snapshot and show the backend's validation error. Counts describe the current local history prefix; they are not a recorded speedsolve. A page reload starts a new solved workspace; saved timed recordings persist in SQLite; Explorer scratch work remains transient.
 
 | Endpoint | Behavior |
 | --- | --- |
@@ -295,3 +295,13 @@ The requested [SolveTheCube CFOP reference](https://solvethecube.com/algorithms)
 ## Stopping point
 
 Milestone **2B ends here**. Genuine CFOP plans and per-stage playback join the verified short-solution solver. See the [2B delivery report](docs/MILESTONE_2B.md), [2A report](docs/MILESTONE_2A.md), and earlier [1C report](docs/MILESTONE_1C.md). Persistent solve sessions/event logs, color-neutral solving, exact full-solve optimality search, timing, and physical tracking remain future work. Earlier reports preserve the [1B engine](docs/MILESTONE_1B.md) and [1A scaffold](docs/MILESTONE_1A.md) checkpoints.
+
+## Persistence and training (milestone 4)
+
+Finalized Live Solve runs save automatically; a visible error and retry appear if the save fails. History supports exact record viewing and permanent deletion with a confirmation. Interrupted session-local JSON can be analyzed and saved separately. There are no seeded runtime solves. Dashboard means are arithmetic per-solve values: completed manual virtual runs contribute HTM, while only positive valid timings contribute personal best and TPS. No physical speed or competition averages are inferred.
+
+The default database is `cubiq/backend/.data/cubiq.sqlite3` (ignored by Git). Set `CUBIQ_DB_PATH=/absolute/path/practice.sqlite3` before the backend command to choose another local database. Migrations run transactionally on startup. Keep the database and its `-wal`/`-shm` companions together while running; stop the API before copying a backup. Raw solve data is immutable, UUID saves are idempotent, and analysis versions are retained. Use **Reanalyze original recording** on a saved analysis page to compute the current version.
+
+The Algorithm Trainer provides 57 OLL, 21 PLL, and 24 coordinate-identified F2L insertion cases, all recognized and verified against the engine. F2L training is a documented subset, not the complete conventional case catalog. Repeat restores the same starting state; playback is excluded from saved practice attempts. Manual retry checks are persisted with server-verified outcomes. No execution speed is estimated from pasted algorithms. Retrospective practice checks are also saved.
+
+Endpoints: `GET/POST /api/solves`, `GET/DELETE /api/solves/{uuid}`, `POST /api/solves/{uuid}/reanalyze`, `GET /api/dashboard`, `GET /api/training`, `GET /api/training/{case}`, `POST /api/practice`, `POST /api/practice/segment`. Schema and acceptance evidence: [milestone 4](docs/MILESTONE_4.md).
