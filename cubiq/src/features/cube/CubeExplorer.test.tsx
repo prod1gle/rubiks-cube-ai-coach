@@ -1,3 +1,4 @@
+import { MemoryRouter } from 'react-router-dom'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
@@ -13,7 +14,7 @@ async function start(...results: Response[]) {
   results.forEach(result => request.mockResolvedValueOnce(result))
   vi.stubGlobal('fetch', request)
   const user = userEvent.setup()
-  render(<CubeExplorer />)
+  render(<MemoryRouter><CubeExplorer /></MemoryRouter>)
   await screen.findByText('Solved · in any grip')
   return { request, user }
 }
@@ -129,7 +130,7 @@ it('invalid algorithms retain state, report the error and do not animate a prefi
 it('unavailable or malformed initial engine responses never fabricate a cube', async () => {
   vi.stubGlobal('fetch', vi.fn().mockRejectedValueOnce(new Error('Network unavailable')).mockResolvedValueOnce(response(snapshots.solved)))
   const user = userEvent.setup()
-  render(<CubeExplorer />)
+  render(<MemoryRouter><CubeExplorer /></MemoryRouter>)
   expect(await screen.findByRole('alert')).toHaveTextContent('Network unavailable')
   expect(screen.queryByTestId('viewport')).not.toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Reconnect to engine' }))
@@ -220,7 +221,7 @@ it('chooses CFOP explicitly, shows real stage counts and plays a stage without a
   const request = vi.fn().mockResolvedValueOnce(response(snapshots.cfopScrambled)).mockResolvedValueOnce(response(cfopSolutions.scrambled))
   vi.stubGlobal('fetch', request)
   const user = userEvent.setup()
-  render(<CubeExplorer />)
+  render(<MemoryRouter><CubeExplorer /></MemoryRouter>)
   await screen.findByText('Legal scrambled state')
   await user.click(screen.getByRole('button', { name: 'CFOP' }))
   await user.click(screen.getByRole('button', { name: 'Solve cube' }))

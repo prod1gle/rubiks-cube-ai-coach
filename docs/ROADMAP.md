@@ -150,3 +150,11 @@ real dashboard/history, and engine-verified Algorithm Trainer (57 OLL, 21 PLL, 2
 insertion cases). This checkpoint supersedes older planned-history/trainer notes in the
 original delivery sequence. See MILESTONE_4.md. The original broader M4 color-neutral
 planning requirement remains separate from the user's milestone numbering.
+
+## User-requested guided scanning checkpoint (5A)
+
+Six-face capture, local OpenCV sampling/calibration, explicit sticker review/correction,
+canonical reachability validation and Explorer import are implemented and covered by
+controlled-image/integration tests. Physical six-face validation has been requested from
+the user and is tracked separately; no physical accuracy is claimed from synthetic images.
+Continuous assisted tracking is the next checkpoint, not part of 5A completeness.

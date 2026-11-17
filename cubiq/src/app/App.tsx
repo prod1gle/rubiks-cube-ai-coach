@@ -6,6 +6,7 @@ import { useHealth } from '../api/useHealth'
 import { Dashboard } from './Dashboard'
 import { navigation } from './navigation'
 import { AlgorithmTrainer } from '../features/library/AlgorithmTrainer'
+import { GuidedScan } from '../features/vision/GuidedScan'
 import { History } from '../features/library/History'
 import { LiveSolve } from '../features/timer/LiveSolve'
 import { SolveAnalysis } from '../features/analysis/SolveAnalysis'
@@ -14,7 +15,7 @@ import { CubeExplorer } from '../features/cube/CubeExplorer'
 export function App() {
   const { pathname } = useLocation()
   const { connection, retry } = useHealth()
-  const currentTitle = navigation.find((item) => item.path === pathname)?.title ?? 'Page not found'
+  const currentTitle = navigation.find((item) => item.path === pathname)?.title ?? (pathname === '/scan' ? 'Guided Scan' : 'Page not found')
 
   useEffect(() => {
     document.title = `${currentTitle} · Cubiq`
@@ -42,6 +43,7 @@ export function App() {
         <main id="main-content" className="page-content" tabIndex={-1}>
           <Routes>
             <Route path="/" element={<Dashboard connection={connection} retry={retry} />} />
+            <Route path="/scan" element={<GuidedScan />} />
             <Route path="/cube-explorer" element={<CubeExplorer />} />
             <Route path="/solve-analysis" element={<SolveAnalysis />} />
             <Route path="/live-solve" element={<LiveSolve />} />

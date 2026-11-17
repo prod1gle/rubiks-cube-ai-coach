@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from coach.api.cube import router as cube_router
 from coach.api.persistence import router as persistence_router
+from coach.api.vision import router as vision_router
 from coach.cube import CubeError
 from coach.solvers.runtime import SolverError
 from coach.storage.database import Database
@@ -50,6 +51,7 @@ def create_app(database_path: str | Path | None = None) -> FastAPI:
     )
     app.include_router(cube_router)
     app.include_router(persistence_router)
+    app.include_router(vision_router)
 
     @app.exception_handler(RequestValidationError)
     async def invalid_request(_request: Request, error: RequestValidationError) -> JSONResponse:

@@ -1,3 +1,4 @@
+import { MemoryRouter } from 'react-router-dom'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
@@ -14,7 +15,7 @@ async function start(partial = false, ...results: Response[]) {
   results.forEach(result => request.mockResolvedValueOnce(result))
   vi.stubGlobal('fetch', request)
   const user = userEvent.setup()
-  const mounted = render(<CubeExplorer />)
+  const mounted = render(<MemoryRouter><CubeExplorer /></MemoryRouter>)
   await screen.findByText('Legal scrambled state')
   expect(request).toHaveBeenCalledTimes(1)
   await user.click(panel().getByRole('button', { name: 'Get a hint' }))
@@ -124,7 +125,7 @@ it('switches ranking and mode with explicit transport settings and no fake perso
 it('retains the cube and exposes a retry after a failed hint request', async () => {
   const request = vi.fn().mockResolvedValueOnce(response(fixtures.back.snapshot)).mockResolvedValueOnce(response({ detail: { message: 'Hint unavailable.' } }, 503))
   vi.stubGlobal('fetch', request)
-  const user = userEvent.setup(); render(<CubeExplorer />)
+  const user = userEvent.setup(); render(<MemoryRouter><CubeExplorer /></MemoryRouter>)
   await screen.findByText('Legal scrambled state')
   await user.click(panel().getByRole('button', { name: 'Get a hint' }))
   expect(await panel().findByRole('alert')).toHaveTextContent('Hint unavailable')

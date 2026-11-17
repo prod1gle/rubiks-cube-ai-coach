@@ -383,3 +383,21 @@ button, input { font: inherit; }
 .trend-list { display: grid; gap: 12px; margin: 20px 0; max-height: 420px; overflow: auto; }
 .trend-list a { display: grid; gap: 6px; font-size: 12px; }
 .trend-bar { display: block; height: 5px; border-radius: 4px; background: #a8c5ad; }
+
+.scan-entry { margin-bottom: 22px; }
+.scan-workspace { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,1fr); gap: 24px; }
+.scan-preview { position: relative; aspect-ratio: 1; background: #0a0d0c; border-radius: 14px; overflow: hidden; }
+.scan-preview video { width: 100%; height: 100%; object-fit: cover; }
+.scan-grid { pointer-events: none; position: absolute; inset: 14%; display: grid; grid-template-columns: repeat(3,1fr); grid-template-rows: repeat(3,1fr); border: 2px solid #d6f5de; box-shadow: 0 0 0 999px #0003; }
+.scan-grid span { border: 1px solid #d6f5de88; position: relative; }
+.scan-grid span::after { content: ''; position: absolute; width: 30%; height: 30%; inset: 35%; border: 1px solid #d6f5deaa; }
+.scan-instruction { line-height: 1.8; margin: 20px 0; }
+.scan-face-nav { display: flex; gap: 6px; flex-wrap: wrap; margin: 20px 0; }
+.scan-face-nav button { padding: 8px 12px; border: 1px solid #46564c; border-radius: 8px; }
+.scan-face-nav [aria-pressed=true] { background: #a8c5ad; color: #122018; }
+.scan-capture { display: block; width: 160px; border-radius: 10px; margin-top: 16px; }
+.scan-review { display: grid; grid-template-columns: repeat(auto-fit,minmax(245px,1fr)); gap: 24px; margin: 28px 0; }
+.scan-review fieldset > div { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 5px; margin-top: 10px; }
+.scan-review label { margin: 0; padding: 6px; border-radius: 6px; color: #131b16; font-size: 10px; gap: 3px; }
+.scan-review select { font-size: 11px; padding: 4px; margin: 0; border: 0; color: #111b14; background: #ffffffa0; }
+@media (max-width: 900px) { .scan-workspace { grid-template-columns: 1fr; gap: 0; } }

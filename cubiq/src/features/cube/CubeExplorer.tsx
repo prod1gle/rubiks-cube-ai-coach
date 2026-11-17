@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { readScan } from '../vision/scanTransfer'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, Box, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Pause, Play, Redo2, RefreshCw, ShieldCheck, Shuffle, Undo2 } from 'lucide-react'
 import { useCube } from './useCube'
 import CubeViewport from './CubeViewport'
@@ -10,7 +12,10 @@ import { saveRecording } from '../analysis/recording'
 const faceLabels: Record<string, string> = { U: 'Up', R: 'Right', F: 'Front', D: 'Down', L: 'Left', B: 'Back' }
 
 export function CubeExplorer() {
+  const { search } = useLocation()
+  const [scan] = useState(() => new URLSearchParams(search).get('scan') === 'latest' ? readScan() : undefined)
   const view = useCube()
+  const scanAdopted = useRef(false)
   const { snapshot, active, loading, planning, pending, history, cursor, paused, playing, error, lastAlgorithm, solving, controller } = view
   const [notation, setNotation] = useState('')
   const [facelets, setFacelets] = useState('')
@@ -23,6 +28,11 @@ export function CubeExplorer() {
   const moveCount = history.slice(0, cursor).reduce((sum, step) => sum + step.htm, 0)
   const rotations = history.slice(0, cursor).filter(step => step.rotation).length
   const highlighted = view.coaching?.input_hash === snapshot?.state_hash ? view.coaching?.candidates.find(c => c.id === view.hintSelectedId)?.highlight_ids : undefined
+  useEffect(() => {
+    if (!scan || scanAdopted.current || loading || !snapshot) return
+    scanAdopted.current = true
+    void controller.importFacelets(scan.snapshot.facelets)
+  }, [scan, loading, snapshot, controller])
   useEffect(() => {
     const media = window.matchMedia?.('(prefers-reduced-motion: reduce)')
     const update = () => setReducedMotion(media?.matches ?? false)
@@ -57,6 +67,8 @@ export function CubeExplorer() {
       <div><p className="eyebrow">YOUR CUBE. EVERY POSSIBILITY.</p><h1 id="page-title">Cube Explorer</h1><p className="explorer-subtitle">Understand the cube, one turn at a time.</p></div>
       <span className="outline-badge"><ShieldCheck size={12} className="inline mr-2" aria-hidden="true" />Engine-verified · 3</span>
     </div>
+    <Link className="secondary-button scan-entry" to="/scan">Scan a physical cube →</Link>
+    {scan && <p className="analysis-help">Scanned facelets sent to the canonical engine for validation and adoption.</p>}
     {error && <div role="alert" className="engine-error">{error} {!snapshot && 'Start the backend and reconnect.'}</div>}
     {!snapshot ? <section className="panel engine-loading"><p role="status">{loading ? 'Connecting to your cube engine…' : 'No validated state is available.'}</p><button className="secondary-button" disabled={loading} onClick={() => void controller.reset()}><RefreshCw size={14} aria-hidden="true" />Reconnect to engine</button></section> : <>
       <div className="explorer-stage">
