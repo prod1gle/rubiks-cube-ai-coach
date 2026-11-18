@@ -5,9 +5,9 @@ import { ConnectionCard } from '../components/ConnectionCard'
 import type { ConnectionState } from '../api/useHealth'
 
 const workflows = [
-  { title: 'Understand every turn', text: 'Explore the cube and the ideas behind a solution.', to: '/cube-explorer', label: 'Cube Explorer', icon: Box, className: 'sage' },
-  { title: 'Find your rhythm', text: 'A focused workspace for the solves ahead.', to: '/live-solve', label: 'Live Solve', icon: Timer, className: 'sand' },
-  { title: 'See what could change', text: 'Revisit each stage. Make your next solve more intentional.', to: '/solve-analysis', label: 'Solve Analysis', icon: ChartNoAxesCombined, className: 'lavender' },
+  { title: 'Understand every turn', text: 'Explore the cube and the ideas behind a solution.', to: '/cube-explorer', label: 'Cube Explorer', icon: Box, className: 'blue' },
+  { title: 'Find your rhythm', text: 'A focused workspace for the solves ahead.', to: '/live-solve', label: 'Live Solve', icon: Timer, className: 'orange' },
+  { title: 'See what could change', text: 'Revisit each stage. Make your next solve more intentional.', to: '/solve-analysis', label: 'Solve Analysis', icon: ChartNoAxesCombined, className: 'sky' },
 ]
 
 export function Dashboard({ connection, retry }: { connection: ConnectionState; retry: () => void }) {

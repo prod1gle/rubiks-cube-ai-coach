@@ -82,11 +82,11 @@ function Puzzle({ snapshot, active, duration, onFinish, highlighted }: Pick<Prop
   const body = useMemo(() => new RoundedBoxGeometry(0.955, 0.955, 0.955, 3, 0.065), [])
   const sticker = useMemo(() => new ShapeGeometry(stickerShape(), 8), [])
   const outline = useMemo(() => { const box = new BoxGeometry(1.025, 1.025, 1.025); const edges = new EdgesGeometry(box); box.dispose(); return edges }, [])
-  const outlineMaterial = useMemo(() => new LineBasicMaterial({ color: '#d3fa92', depthTest: false, transparent: true, opacity: 0.9 }), [])
+  const outlineMaterial = useMemo(() => new LineBasicMaterial({ color: '#ffb77f', depthTest: false, transparent: true, opacity: 0.9 }), [])
   const targets = useMemo(() => new Set(highlighted ?? []), [highlighted])
   const materials = useMemo(() => ({
-    body: new MeshStandardMaterial({ color: '#121813', roughness: 0.3, metalness: 0.1 }),
-    highlight: new MeshStandardMaterial({ color: '#304326', emissive: '#789e49', emissiveIntensity: 0.35, roughness: 0.3 }),
+    body: new MeshStandardMaterial({ color: '#121a28', roughness: 0.3, metalness: 0.1 }),
+    highlight: new MeshStandardMaterial({ color: '#4c3526', emissive: '#e79a56', emissiveIntensity: 0.35, roughness: 0.3 }),
     ...Object.fromEntries(Object.entries(snapshot.palette).map(([color, hex]) => [color, new MeshStandardMaterial({ color: hex, roughness: 0.38, metalness: 0.015 })])),
   }), [snapshot.palette])
   useEffect(() => () => { body.dispose(); sticker.dispose() }, [body, sticker])
@@ -117,7 +117,7 @@ export default function CubeScene(props: Props) {
   return <Canvas shadows={{ type: PCFShadowMap }} dpr={[1, 2]} camera={{ position: [5, 3.8, 6.2], fov: 40 }} gl={{ antialias: true, alpha: true }}
     aria-label="Interactive 3D Rubik's Cube. Drag to orbit; scroll or pinch to zoom.">
     <ambientLight intensity={0.75} />
-    <hemisphereLight args={['#f8ffe8', '#29372a', 1.8]} />
+    <hemisphereLight args={['#f0f6ff', '#263650', 1.8]} />
     <directionalLight position={[-4, 8, 5]} intensity={3.2} castShadow shadow-mapSize={[1024, 1024]} shadow-bias={-0.001} />
     <directionalLight position={[5, 2, -4]} color="#bfd3e8" intensity={1.7} />
     <Puzzle {...props} />
