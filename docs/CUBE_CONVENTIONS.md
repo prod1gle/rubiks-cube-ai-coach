@@ -1,6 +1,6 @@
 # Cube engine v1 conventions
 
-Implemented in **`cubiq/backend/src/coach/cube.py`**, the only production implementation of cube rules. This document fixes the state/schema, notation, metric, and geometry for milestone 1B. HTTP adapters and React must call the engine rather than maintain another move model.
+Implemented in **`cubecue/backend/src/coach/cube.py`**, the only production implementation of cube rules. This document fixes the state/schema, notation, metric, and geometry for milestone 1B. HTTP adapters and React must call the engine rather than maintain another move model.
 
 ## Scope and canonical representation
 
@@ -181,13 +181,13 @@ Snapshots now also derive 26 visible cubie slots and 54 sticker normals/colors f
 
 ## Independent verification and fixture regeneration
 
-Pytest runs without Node or external solver dependencies. The committed corpus `cubiq/backend/tests/fixtures/cubejs-1.3.2.json` contains outputs from pinned MIT-licensed [cubejs](https://github.com/ldez/cubejs): 32 named cases, 1,000 deterministic sequences (500 face-only and 500 allowing rotations), and 128 directly sampled legal cubie states with continuations. No solver is initialized. `cubejs` is installed only into ignored local tooling for regeneration and is not a runtime dependency.
+Pytest runs without Node or external solver dependencies. The committed corpus `cubecue/backend/tests/fixtures/cubejs-1.3.2.json` contains outputs from pinned MIT-licensed [cubejs](https://github.com/ldez/cubejs): 32 named cases, 1,000 deterministic sequences (500 face-only and 500 allowing rotations), and 128 directly sampled legal cubie states with continuations. No solver is initialized. `cubejs` is installed only into ignored local tooling for regeneration and is not a runtime dependency.
 
 Regenerate from the repository root:
 
 ```sh
 npm install --prefix .tools/cube-oracle --no-save --ignore-scripts cubejs@1.3.2
-node cubiq/scripts/generate-cube-fixtures.cjs
+node cubecue/scripts/generate-cube-fixtures.cjs
 ```
 
 The generator uses an independent fixed-seed PRNG and imports no application engine code. Tests also freeze a published R-turn cubie state and all sticker index tuples, exercise all 27 move variants and all 24 frames, and check inverses, fourth powers, composition, parser errors, reachability rejection, immutable serialization, and API behavior. The small frontend fixture file is captured from engine snapshots and tests transport/rendering only; it is not an independent mathematical oracle.

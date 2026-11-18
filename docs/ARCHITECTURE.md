@@ -33,7 +33,7 @@ The renderer interpolates between acknowledged snapshots. Camera orbit is visual
 
 ## Proposed repository structure
 
-Keep the existing `cubiq/` directory as the application workspace. Introduce backend and feature modules incrementally; do not create empty modules to imply implemented features.
+Keep the existing `cubecue/` directory as the application workspace. Introduce backend and feature modules incrementally; do not create empty modules to imply implemented features.
 
 ```text
 /
@@ -44,7 +44,7 @@ Keep the existing `cubiq/` directory as the application workspace. Introduce bac
 │   ├── ROADMAP.md
 │   ├── ACCEPTANCE_TESTS.md
 │   └── RISKS.md
-└── cubiq/
+└── cubecue/
     ├── package.json                  # existing; tooling changes in M1
     ├── package-lock.json             # planned reproducible frontend install
     ├── vite.config.ts

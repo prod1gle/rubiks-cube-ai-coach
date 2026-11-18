@@ -1,6 +1,6 @@
 # Milestone 4 — persistence and training
 
-SQLite lives at `cubiq/backend/.data/cubiq.sqlite3`, overridable with CUBIQ_DB_PATH. No runtime fixtures or training performance records are inserted. All write endpoints validate legal cube states and recompute outcomes server-side.
+SQLite lives at `cubecue/backend/.data/cubecue.sqlite3`, overridable with CUBECUE_DB_PATH. No runtime fixtures or training performance records are inserted. All write endpoints validate legal cube states and recompute outcomes server-side.
 
 Schema migration 001: immutable `solves` (raw recording, initial state, capture source/status, server save time, content hash); ordered `moves` (monotonic input/ack times, engine before/after hashes, nullable confidence); `analyses` (engine/catalog/analytics version tuple, original raw data retained); `practice_attempts` (initial state, notation, case/version, verified outcome, source). Foreign keys cascade solve deletion. Missing confidence means unmeasured, never 100%. `schema_migrations` records successful transactional migrations. Connections are request-local with foreign keys and a busy timeout; WAL supports concurrent readers. Local single-user service, not a remote authenticated deployment.
 

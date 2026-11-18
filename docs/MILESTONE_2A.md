@@ -42,7 +42,7 @@ Live browser checks used the running Vite/FastAPI applications and actual Three.
 
 ## Initialization and limitations
 
-No additional setup command is required beyond the README's locked backend install. The first unsolved request builds local tables in `cubiq/backend/.cache/rubik-solver-py-0.1.1/`. Subsequent worker processes load them. Override with a writable absolute `CUBIQ_SOLVER_CACHE_DIR` before backend startup. Installation requires network; table generation and solving do not.
+No additional setup command is required beyond the README's locked backend install. The first unsolved request builds local tables in `cubecue/backend/.cache/rubik-solver-py-0.1.1/`. Subsequent worker processes load them. Override with a writable absolute `CUBECUE_SOLVER_CACHE_DIR` before backend startup. Installation requires network; table generation and solving do not.
 
 A fresh-cache adapter check on this machine for `R U2 F' L D B2` measured **6,832.965 ms cold** and **90.163 ms warm**; both returned independently verified 13 HTM solutions. The generated cache occupied about **8.4 MiB**. These two observations are not latency guarantees or percentile benchmarks. Initialization and search share the 30-second budget; slower hardware or an interrupted cache can time out and require rebuilding.
 
@@ -62,11 +62,11 @@ Client cancellation immediately prevents adoption and aborts its HTTP wait. The 
 From the repository root, use two terminals (full install/test commands are in the [README](../README.md)):
 
 ```sh
-.tools/bin/uv run --locked --project cubiq/backend --cache-dir .cache/uv uvicorn coach.main:app --host 127.0.0.1 --port 8000 --reload
+.tools/bin/uv run --locked --project cubecue/backend --cache-dir .cache/uv uvicorn coach.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 ```sh
-npm --prefix cubiq run dev
+npm --prefix cubecue run dev
 ```
 
 Open [Cube Explorer](http://127.0.0.1:5173/cube-explorer), scramble or import a valid state, wait for pending turns, and click **Solve cube**. Inspect the returned plan, then step or play it. Both existing local development servers are left running.

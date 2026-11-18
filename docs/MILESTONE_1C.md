@@ -38,17 +38,17 @@ Rapid inputs enter a bounded queue. A failure clears pending inputs and retains 
 Run from the repository root:
 
 ```sh
-npm --prefix cubiq ci
-npm --prefix cubiq run build
-npm --prefix cubiq run lint
-npm --prefix cubiq test
-.tools/bin/uv run --locked --project cubiq/backend --cache-dir .cache/uv pytest cubiq/backend/tests -q
-.tools/bin/uv run --locked --project cubiq/backend --cache-dir .cache/uv ruff check cubiq/backend
-.tools/bin/uv run --locked --project cubiq/backend --cache-dir .cache/uv ruff format --check cubiq/backend
-.tools/bin/uv build --project cubiq/backend --cache-dir .cache/uv --offline
+npm --prefix cubecue ci
+npm --prefix cubecue run build
+npm --prefix cubecue run lint
+npm --prefix cubecue test
+.tools/bin/uv run --locked --project cubecue/backend --cache-dir .cache/uv pytest cubecue/backend/tests -q
+.tools/bin/uv run --locked --project cubecue/backend --cache-dir .cache/uv ruff check cubecue/backend
+.tools/bin/uv run --locked --project cubecue/backend --cache-dir .cache/uv ruff format --check cubecue/backend
+.tools/bin/uv build --project cubecue/backend --cache-dir .cache/uv --offline
 ```
 
-Frontend test snapshots/plans are captured from the actual Python engine, not a second JavaScript model. Regenerate with `cubiq/backend/.venv/bin/python cubiq/scripts/generate-ui-fixtures.py`. CPU tests mock or fall back from WebGL; actual rendering is verified separately in the browser.
+Frontend test snapshots/plans are captured from the actual Python engine, not a second JavaScript model. Regenerate with `cubecue/backend/.venv/bin/python cubecue/scripts/generate-ui-fixtures.py`. CPU tests mock or fall back from WebGL; actual rendering is verified separately in the browser.
 
 ## Main files
 

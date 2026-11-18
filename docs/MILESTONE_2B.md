@@ -52,7 +52,7 @@ Used the running Vite/FastAPI applications and actual Three.js cube, without moc
 4. Played Cross alone; it stopped at solution step 5. The actual displayed facelets independently satisfied the engine's white-Cross predicate.
 5. Played the BL pair stage from its saved start; it stopped at step 18. The actual displayed state had the Cross, FR pair, and BL pair solved, with FR protected.
 6. Continued full animation through OLL and PLL to solution step 60/60, solved. The grip stayed `FRDBLU`; viewed solved facelets were `FFFFFFFFFRRRRRRRRRDDDDDDDDDBBBBBBBBBLLLLLLLLLUUUUUUUUU`.
-7. Inspected the stage controls at 1280px desktop and 390px mobile widths: eight readable stage rows, no horizontal document overflow, and no browser warning/error logs. A desktop screenshot was saved to `/private/tmp/cubiq-milestone-2b.png`.
+7. Inspected the stage controls at 1280px desktop and 390px mobile widths: eight readable stage rows, no horizontal document overflow, and no browser warning/error logs. A desktop screenshot was saved to `/private/tmp/cubecue-milestone-2b.png`.
 
 The 853 ms observation is one measured request, not a latency percentile or cross-platform guarantee. Core table derivation uses only installed local code/data and no network. The worker budget can still expire on slow or overloaded machines.
 
@@ -75,7 +75,7 @@ These are explicit limitations:
 
 | Area | Files |
 | --- | --- |
-| Canonical rules helpers | `cubiq/backend/src/coach/cube.py` |
+| Canonical rules helpers | `cubecue/backend/src/coach/cube.py` |
 | CFOP planner | `coach/cfop/{search,registry,pipeline,worker,service}.py`, package init, `data/last_layer.json`, `data/CFOP_TRACKER_LICENSE.txt` |
 | Shared worker runtime | `coach/solvers/runtime.py`; two-phase adapter reuses its gate/error type |
 | HTTP and metadata | `coach/api/cube.py`, `coach/main.py`, health tests |

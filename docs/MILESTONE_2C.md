@@ -51,7 +51,7 @@ Used the real local Vite/FastAPI services and Three.js scene, without mocked res
 3. Reset and applied `z2 R U R' L U2 L' B U B'`: Cross and exactly FL solved. Coaching compared 36 generated candidates and displayed 12 alternatives across FR, BL and BR. Selecting BR changed notation/highlights without changing the cube.
 4. Applied an ordinary `U`. Coaching automatically recomputed from that new accepted state, still reporting Cross / F2L 1 of 4. The recommended BL sequence changed to `U L U' L'` and protected FL.
 5. Switched to Shortest available. Actual computed alternatives were two-phase **21 HTM** and CFOP **48 HTM**, both verified and unproven. Full playback reached solved.
-6. Checked 1280×900 desktop and 390×844 mobile layouts: readable controls, target outlines, all hint levels and no horizontal document overflow. Temporary viewport overrides were reset. Desktop proof saved at `/private/tmp/cubiq-milestone-2c.png`.
+6. Checked 1280×900 desktop and 390×844 mobile layouts: readable controls, target outlines, all hint levels and no horizontal document overflow. Temporary viewport overrides were reset. Desktop proof saved at `/private/tmp/cubecue-milestone-2c.png`.
 
 An already-open pre-upgrade Vite tab initially retained an older controller instance through hot reload; refreshing loaded the updated class and resolved that development-only error. The documented fresh-load flows produced no further browser warnings/errors. Keep this distinction explicit rather than hiding the recorded initial log.
 
@@ -59,11 +59,11 @@ An already-open pre-upgrade Vite tab initially retained an older controller inst
 
 | Area | Main files |
 | --- | --- |
-| Canonical helpers | `cubiq/backend/src/coach/cube.py` |
-| Coaching | `cubiq/backend/src/coach/coaching/{__init__,ergonomics,service}.py` |
-| HTTP / metadata | `cubiq/backend/src/coach/api/cube.py`, `coach/main.py`, health tests |
-| Backend coverage | `cubiq/backend/tests/test_coaching.py` |
-| Typed client and synchronization | `cubiq/src/api/cube.ts`, `features/cube/CubeController.ts` |
+| Canonical helpers | `cubecue/backend/src/coach/cube.py` |
+| Coaching | `cubecue/backend/src/coach/coaching/{__init__,ergonomics,service}.py` |
+| HTTP / metadata | `cubecue/backend/src/coach/api/cube.py`, `coach/main.py`, health tests |
+| Backend coverage | `cubecue/backend/tests/test_coaching.py` |
+| Typed client and synchronization | `cubecue/src/api/cube.ts`, `features/cube/CubeController.ts` |
 | Controls / scene / styling | `CoachPanel.tsx`, `CubeExplorer.tsx`, `CubeViewport.tsx`, `CubeScene.tsx`, `src/styles/index.css` |
 | UI tests / fixtures | `Coaching.test.tsx`, controller/viewport tests, `src/test/cube-coaching.json`, `cube-data.ts`, fixture generator |
 | Milestone availability | App/dashboard text and health fixtures/tests |

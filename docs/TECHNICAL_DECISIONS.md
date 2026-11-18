@@ -18,7 +18,7 @@ Status: architecture decisions, November 12, 2026. M1A implements the applicatio
 
 **Reason:** there is one local user, CPU-intensive work, and persistent personal solve data. Processes isolate blocking solver/OpenCV work from command handling. FastAPI has [documented WebSocket support](https://fastapi.tiangolo.com/advanced/websockets/); job durability, session ownership, and backpressure remain application responsibilities.
 
-**Tradeoff:** this is not a static-only website. The existing hosting configuration cannot provide backend services. LAN access, cloud deployment, multi-user accounts, and mobile installation are later architecture work. Retain `cubiq/` rather than migrating the scaffold without a functional reason.
+**Tradeoff:** this is not a static-only website. The existing hosting configuration cannot provide backend services. LAN access, cloud deployment, multi-user accounts, and mobile installation are later architecture work. Retain `cubecue/` rather than migrating the scaffold without a functional reason.
 
 ## TD-03 — Notation, rotations, and move counting
 

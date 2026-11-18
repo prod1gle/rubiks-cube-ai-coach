@@ -106,8 +106,8 @@ Optional regeneration from the repository root, after downloading the requested 
 ```sh
 # The pinned oracle is optional tooling, not an application dependency.
 npm install --prefix .tools/cube-oracle --no-save --ignore-scripts cubejs@1.3.2
-cubiq/backend/.venv/bin/python cubiq/scripts/generate-cfop-reference.py
-node cubiq/scripts/generate-cfop-reference.cjs
+cubecue/backend/.venv/bin/python cubecue/scripts/generate-cfop-reference.py
+node cubecue/scripts/generate-cfop-reference.cjs
 ```
 
 The HTML parser extracts notation as data and never executes page scripts. The CJS tool imports only the pinned independent oracle, not the application engine or production registry. Runtime checks also reject overlapping/incomplete case maps and algorithms that disturb required lower layers.

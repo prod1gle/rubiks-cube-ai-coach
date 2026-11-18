@@ -70,7 +70,7 @@ The 53 new backend tests use explicitly synthetic test clocks around real engine
 
 Frontend tests inject clocks and delayed acknowledgements to verify original timestamps, rapid queue order, solved detection after Pause, Stop with pending input, inspection/overtime and inspection uncertainty, clock/background failure (including inspection and preservation after completion), stale/unmounted replies, strict engine-chain checks, keyboard focus/variants, explicit pauses, exact source recording, chart/timeline selection, unavailable physical moving TPS and direct stage-to-retrospective handoff. Navigation tests now verify Live Solve. Earlier canonical engine, full solving, CFOP, coaching and comparison regressions remain included.
 
-`cubiq/src/test/timed-recording.json` is labeled `test_data: true`, describes synthetic timestamps, and uses `SYNTHETIC-TEST-CLOCK`. Its generator is `cubiq/scripts/generate-timed-fixtures.py`. Neither test fixture nor generator is imported by runtime code. No synthetic recording is loaded as a user demo or performance history.
+`cubecue/src/test/timed-recording.json` is labeled `test_data: true`, describes synthetic timestamps, and uses `SYNTHETIC-TEST-CLOCK`. Its generator is `cubecue/scripts/generate-timed-fixtures.py`. Neither test fixture nor generator is imported by runtime code. No synthetic recording is loaded as a user demo or performance history.
 
 ## Running-app evidence
 
@@ -81,7 +81,7 @@ Used actual browser controls, real monotonic timestamps, local HTTP and the actu
 - The explicit pause ran from **850.9 to 8,784.5 ms**, totaling **7,933.6 ms**. Analysis showed **9.63 s elapsed**, **1.70 s active**, **3 HTM**, **one rotation**, **0.31 overall input TPS**, **1.76 active input TPS**, and unavailable physical moving TPS. These are automated virtual UI QA observations, not a human speedcubing result or performance claim.
 - Analysis recognized initial Cross / FR / FL / BL, the BR pair interval and OLL/PLL/AUF skips at its endpoint. The timeline loaded the exact rotated state after `y`.
 - The BR stage action opened the retrospective coach with original hash `5cf980e9ef2251ee3d36bb237e744130ab2e740ac88c00b529a1acaf02115bcc`, indices 0–4 and the actual timed sequence. It offered verified `B U B'` versus actual `y R U R'`: equal HTM and one fewer rotation, with no invented execution speed.
-- Checked Live Solve and timed analysis at 1280×900 desktop and 390×844 mobile widths without horizontal document overflow. Chart selection loaded the exact state after the second input. Browser warning/error logs were empty, the temporary viewport override was reset, and desktop evidence was saved at `/private/tmp/cubiq-milestone-3.png`. The latest recording was reanalyzed after refresh; no continuing clock was invented across reload.
+- Checked Live Solve and timed analysis at 1280×900 desktop and 390×844 mobile widths without horizontal document overflow. Chart selection loaded the exact state after the second input. Browser warning/error logs were empty, the temporary viewport override was reset, and desktop evidence was saved at `/private/tmp/cubecue-milestone-3.png`. The latest recording was reanalyzed after refresh; no continuing clock was invented across reload.
 
 ## Files and stopping scope
 

@@ -1,4 +1,4 @@
-# Cubiq — Rubik’s Cube AI Coach
+# CubeCue — Rubik’s Cube AI Coach
 
 A local workspace for more intentional 3×3 practice. **Milestones 1A–1C, 2A–2D and user-requested milestones 3–4 are implemented:** canonical cube states, interactive 3D, verified full-cube/CFOP solving, Next Best Move, retrospective comparison/practice, and manual virtual timing with deterministic solve analysis. SQLite solve history, genuine progress trends and verified F2L/OLL/PLL training are available. Full-solve optimality proofs, Reliable arbitrary-speed physical tracking, AI and learned personalization remain future work. Guided scanning and conservative experimental camera assistance are available; physical acceptance measurements are pending.
 
@@ -47,10 +47,10 @@ python3.12 -m venv .tools
 .tools/bin/python -m pip install uv==0.13.7
 
 # Frontend: install exactly the versions in package-lock.json.
-npm --prefix cubiq ci
+npm --prefix cubecue ci
 
-# Backend: create cubiq/backend/.venv and install uv.lock, including dev tools.
-.tools/bin/uv sync --locked --project cubiq/backend --python python3.12 --cache-dir .cache/uv
+# Backend: create cubecue/backend/.venv and install uv.lock, including dev tools.
+.tools/bin/uv sync --locked --project cubecue/backend --python python3.12 --cache-dir .cache/uv
 ```
 
 Initial installation needs Internet access. `.tools/`, `.cache/`, `node_modules/`, `.venv/`, and generated builds are ignored by Git. uv manages the backend environment; there is no need to activate it. Subsequent core operation uses only local assets and services.
@@ -63,17 +63,17 @@ Use two terminal windows.
 
 ```sh
 cd "/Users/paartharora/Documents/ChatGPT/rubiks cube ai coach"
-.tools/bin/uv run --locked --project cubiq/backend --cache-dir .cache/uv uvicorn coach.main:app --host 127.0.0.1 --port 8000 --reload
+.tools/bin/uv run --locked --project cubecue/backend --cache-dir .cache/uv uvicorn coach.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 **Terminal 2 — frontend**:
 
 ```sh
 cd "/Users/paartharora/Documents/ChatGPT/rubiks cube ai coach"
-npm --prefix cubiq run dev
+npm --prefix cubecue run dev
 ```
 
-Open [Cubiq](http://127.0.0.1:5173). The Dashboard checks the running backend; start it and click **Check connection** if it was unavailable when the page loaded. Status is the result of the last check, with its timestamp, rather than continuous monitoring. All navigation destinations support direct entry, refresh, and browser back/forward through Vite’s SPA fallback.
+Open [CubeCue](http://127.0.0.1:5173). The Dashboard checks the running backend; start it and click **Check connection** if it was unavailable when the page loaded. Status is the result of the last check, with its timestamp, rather than continuous monitoring. All navigation destinations support direct entry, refresh, and browser back/forward through Vite’s SPA fallback.
 
 - [Health endpoint](http://127.0.0.1:8000/health)
 - [Interactive API docs](http://127.0.0.1:8000/docs)
@@ -86,7 +86,7 @@ Stop each process with `Ctrl+C`. Both services bind to loopback. Ports are fixed
 `GET /health` returns:
 
 ```json
-{"status":"ok","service":"cubiq-api","version":"0.1.0","milestone":"5B-experimental"}
+{"status":"ok","service":"cubecue-api","version":"0.1.0","milestone":"5B-experimental"}
 ```
 
 `GET /api/health` is an equivalent alias for the frontend’s `/api` proxy. Both Vite development and preview forward `/api/*` to `http://127.0.0.1:8000`. The health endpoint reports API availability, not readiness of future cube features.
@@ -161,7 +161,7 @@ curl --fail -H 'Content-Type: application/json' \
 
 One worker is allowed per API process. The worker has a **30-second wall-clock budget**, including initialization, and a **24 HTM candidate limit**. HTTP 422 rejects invalid states; 502 rejects malformed or incorrect solver output; 503 reports busy/unavailable/no result; 504 reports timeout. Failures return no solution moves and preserve the displayed cube. The frontend waits up to 35 seconds and rejects late responses after reset, cancellation, import, or unmount. Cancel stops waiting/adoption immediately; a disconnected request's worker can continue until completion or its 30-second limit. A new solve may report busy during that interval. Run one FastAPI worker locally.
 
-The first unsolved request creates versioned NumPy tables in **`cubiq/backend/.cache/rubik-solver-py-0.1.1/`**. This ignored cache is local derived data, requires a writable directory, and needs no network. Subsequent subprocesses reload it. For a different cache location, set `CUBIQ_SOLVER_CACHE_DIR` to a writable absolute path before starting the backend. No additional install or warmup command is required. Measured cold/warm evidence and known limits are recorded in [the 2A report](docs/MILESTONE_2A.md). This is a small, single-maintainer upstream dependency; the adapter is isolated, pinned, and regression-tested so it can be replaced.
+The first unsolved request creates versioned NumPy tables in **`cubecue/backend/.cache/rubik-solver-py-0.1.1/`**. This ignored cache is local derived data, requires a writable directory, and needs no network. Subsequent subprocesses reload it. For a different cache location, set `CUBECUE_SOLVER_CACHE_DIR` to a writable absolute path before starting the backend. No additional install or warmup command is required. Measured cold/warm evidence and known limits are recorded in [the 2A report](docs/MILESTONE_2A.md). This is a small, single-maintainer upstream dependency; the adapter is isolated, pinned, and regression-tested so it can be replaced.
 
 ## Genuine CFOP solving (milestone 2B)
 
@@ -230,35 +230,35 @@ From the repository root:
 cd "/Users/paartharora/Documents/ChatGPT/rubiks cube ai coach"
 
 # Frontend production bundle, strict TypeScript checking, ESLint, and Vitest.
-npm --prefix cubiq run build
-npm --prefix cubiq run lint
-npm --prefix cubiq test
+npm --prefix cubecue run build
+npm --prefix cubecue run lint
+npm --prefix cubecue test
 
 # Backend tests, lint, formatting verification, and distributable build.
-.tools/bin/uv run --locked --project cubiq/backend --cache-dir .cache/uv pytest cubiq/backend/tests
-.tools/bin/uv run --locked --project cubiq/backend --cache-dir .cache/uv ruff check cubiq/backend
-.tools/bin/uv run --locked --project cubiq/backend --cache-dir .cache/uv ruff format --check cubiq/backend
-.tools/bin/uv build --project cubiq/backend --cache-dir .cache/uv
+.tools/bin/uv run --locked --project cubecue/backend --cache-dir .cache/uv pytest cubecue/backend/tests
+.tools/bin/uv run --locked --project cubecue/backend --cache-dir .cache/uv ruff check cubecue/backend
+.tools/bin/uv run --locked --project cubecue/backend --cache-dir .cache/uv ruff format --check cubecue/backend
+.tools/bin/uv build --project cubecue/backend --cache-dir .cache/uv
 ```
 
 Backend pytest covers all move/inverse and fourth-power identities, 32 named oracle states, 1,000 seeded oracle sequences, 128 arbitrary legal-state fixtures, all 24 grips, parser/metric/serialization behavior, impossible states, and the real HTTP API. The committed corpus comes from pinned `cubejs@1.3.2`; pytest requires no Node process or network access. Current verification includes 1028 backend tests and 128 frontend tests. The 2B suite exhausts the projected F2L configurations, legal OLL orientations and PLL permutations; checks 78 independent reference labels and all 24 grips; and solves 200 seeded 25-face-turn scrambles plus 30 independently sampled legal cubie states. Frontend tests cover CFOP selection, truthful method labels, stage boundaries, stage-only/full playback, skipped stages, cancellation and failure states. The 2A additions run the real solver on known scrambles, 24 seeded 25-face-turn scrambles, and all 24 grips; inject invalid output, worker failure, timeout, and busy conditions; and verify preview, step/playback, state binding, cancellation, and stale-result rejection in the frontend. The 1C tests cover exact animation endpoints, rapid inputs, duplicate/stale callbacks, reset and disconnect races, undo/redo branching, pause/resume, playback, keyboard editing guards, WebGL fallback, and reduced motion. See [M1C delivery evidence](docs/MILESTONE_1C.md); the [M1B report](docs/MILESTONE_1B.md) records the earlier engine checkpoint.
 
-For frontend test watch mode: `npm --prefix cubiq run test:watch`.
+For frontend test watch mode: `npm --prefix cubecue run test:watch`.
 
 To inspect the built frontend locally, keep the backend running and use:
 
 ```sh
-npm --prefix cubiq run preview
+npm --prefix cubecue run preview
 ```
 
-Open [the built frontend](http://127.0.0.1:4173). Build output is in `cubiq/dist/`; the backend wheel/source distribution is in `cubiq/backend/dist/`. Serving the built frontend directly from FastAPI is planned later. The preserved static hosting configuration does not deploy a Python backend; no publication was performed.
+Open [the built frontend](http://127.0.0.1:4173). Build output is in `cubecue/dist/`; the backend wheel/source distribution is in `cubecue/backend/dist/`. Serving the built frontend directly from FastAPI is planned later. The preserved static hosting configuration does not deploy a Python backend; no publication was performed.
 
 ## Structure and design baseline
 
 ```text
 README.md                      # current setup, behavior, and limitations
 .nvmrc / .gitignore             # runtime selection and local/generated exclusions
-cubiq/
+cubecue/
   src/app/                     # layout, routes, dashboard, planned workflow pages
   src/api/                     # typed health client and cancellable connection check
   src/components/              # brand mark and connection status panel
@@ -300,7 +300,7 @@ Milestone **2B ends here**. Genuine CFOP plans and per-stage playback join the v
 
 Finalized Live Solve runs save automatically; a visible error and retry appear if the save fails. History supports exact record viewing and permanent deletion with a confirmation. Interrupted session-local JSON can be analyzed and saved separately. There are no seeded runtime solves. Dashboard means are arithmetic per-solve values: completed manual virtual runs contribute HTM, while only positive valid timings contribute personal best and TPS. No physical speed or competition averages are inferred.
 
-The default database is `cubiq/backend/.data/cubiq.sqlite3` (ignored by Git). Set `CUBIQ_DB_PATH=/absolute/path/practice.sqlite3` before the backend command to choose another local database. Migrations run transactionally on startup. Keep the database and its `-wal`/`-shm` companions together while running; stop the API before copying a backup. Raw solve data is immutable, UUID saves are idempotent, and analysis versions are retained. Use **Reanalyze original recording** on a saved analysis page to compute the current version.
+The default database is `cubecue/backend/.data/cubecue.sqlite3` (ignored by Git). Set `CUBECUE_DB_PATH=/absolute/path/practice.sqlite3` before the backend command to choose another local database. Migrations run transactionally on startup. Keep the database and its `-wal`/`-shm` companions together while running; stop the API before copying a backup. Raw solve data is immutable, UUID saves are idempotent, and analysis versions are retained. Use **Reanalyze original recording** on a saved analysis page to compute the current version.
 
 The Algorithm Trainer provides 57 OLL, 21 PLL, and 24 coordinate-identified F2L insertion cases, all recognized and verified against the engine. F2L training is a documented subset, not the complete conventional case catalog. Repeat restores the same starting state; playback is excluded from saved practice attempts. Manual retry checks are persisted with server-verified outcomes. No execution speed is estimated from pasted algorithms. Retrospective practice checks are also saved.
 
@@ -321,7 +321,7 @@ This is a restricted, slow, frontal-face coaching aid. It does not reconstruct a
 Physical camera accuracy, false-suggestion rates and turn latency **have not been measured in this checkout**. For genuine measurements, use **Begin measurement burst**, capture a known action, independently label the actual action, and export the real frames. Exports are explicit local downloads; normal operation does not persist photos. Then evaluate the exported JSON (substitute its actual path):
 
 ```sh
-.tools/bin/uv run --locked --project cubiq/backend --cache-dir .cache/uv python cubiq/scripts/evaluate-camera.py /absolute/path/cubiq-camera-evaluation.json
+.tools/bin/uv run --locked --project cubecue/backend --cache-dir .cache/uv python cubecue/scripts/evaluate-camera.py /absolute/path/cubecue-camera-evaluation.json
 ```
 
 The evaluator retains early wrong suggestions, distinguishes abstentions, and reports measured processing time. Physical turn latency needs independently annotated `annotated_turn_complete_ms` in the same clock as captured frame timestamps; it is unavailable by default. Ground truth/provenance are operator supplied. Controlled tests cannot be passed off as physical evidence. See [5B acceptance status and limitations](docs/MILESTONE_5B.md).

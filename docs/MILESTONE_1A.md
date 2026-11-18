@@ -18,33 +18,33 @@ Paths below are relative to the repository root. Existing planning documents and
 .gitignore
 .nvmrc
 README.md
-cubiq/package.json
-cubiq/package-lock.json
-cubiq/index.html
-cubiq/public/favicon.svg
-cubiq/vite.config.ts
-cubiq/eslint.config.js
-cubiq/tsconfig.json
-cubiq/tsconfig.app.json
-cubiq/tsconfig.node.json
-cubiq/src/main.tsx
-cubiq/src/app/App.tsx
-cubiq/src/app/App.test.tsx
-cubiq/src/app/Dashboard.tsx
-cubiq/src/app/PlannedPage.tsx
-cubiq/src/app/navigation.ts
-cubiq/src/api/health.ts
-cubiq/src/api/useHealth.ts
-cubiq/src/components/CubeMark.tsx
-cubiq/src/components/ConnectionCard.tsx
-cubiq/src/styles/index.css
-cubiq/src/test/setup.ts
-cubiq/backend/.python-version
-cubiq/backend/pyproject.toml
-cubiq/backend/uv.lock
-cubiq/backend/src/coach/__init__.py
-cubiq/backend/src/coach/main.py
-cubiq/backend/tests/test_health.py
+cubecue/package.json
+cubecue/package-lock.json
+cubecue/index.html
+cubecue/public/favicon.svg
+cubecue/vite.config.ts
+cubecue/eslint.config.js
+cubecue/tsconfig.json
+cubecue/tsconfig.app.json
+cubecue/tsconfig.node.json
+cubecue/src/main.tsx
+cubecue/src/app/App.tsx
+cubecue/src/app/App.test.tsx
+cubecue/src/app/Dashboard.tsx
+cubecue/src/app/PlannedPage.tsx
+cubecue/src/app/navigation.ts
+cubecue/src/api/health.ts
+cubecue/src/api/useHealth.ts
+cubecue/src/components/CubeMark.tsx
+cubecue/src/components/ConnectionCard.tsx
+cubecue/src/styles/index.css
+cubecue/src/test/setup.ts
+cubecue/backend/.python-version
+cubecue/backend/pyproject.toml
+cubecue/backend/uv.lock
+cubecue/backend/src/coach/__init__.py
+cubecue/backend/src/coach/main.py
+cubecue/backend/tests/test_health.py
 docs/ARCHITECTURE.md
 docs/TECHNICAL_DECISIONS.md
 docs/ROADMAP.md
@@ -52,7 +52,7 @@ docs/ACCEPTANCE_TESTS.md
 docs/MILESTONE_1A.md
 ```
 
-The existing `cubiq/.openai/hosting.json` and `docs/RISKS.md` are unchanged. Environments, caches, dependency directories, and build outputs are local/ignored. The unused original `cubejs` runtime dependency was removed; no solver library was adopted.
+The existing `cubecue/.openai/hosting.json` and `docs/RISKS.md` are unchanged. Environments, caches, dependency directories, and build outputs are local/ignored. The unused original `cubejs` runtime dependency was removed; no solver library was adopted.
 
 ## Verification results
 
@@ -60,13 +60,13 @@ The existing `cubiq/.openai/hosting.json` and `docs/RISKS.md` are unchanged. Env
 | --- | --- |
 | `npm ci` | Passed with synchronized lockfile; installer audit reports 0 vulnerabilities. |
 | `uv sync --locked` (managed environment, then offline verification) | Passed. |
-| `npm --prefix cubiq run build` | Passed strict TypeScript project build and Vite production bundle. |
-| `npm --prefix cubiq run lint` | Passed ESLint with zero allowed warnings. |
-| `npm --prefix cubiq test` | 10 frontend tests passed. |
-| `uv run … pytest cubiq/backend/tests` | 9 backend tests passed, no warnings. |
-| `uv run … ruff check cubiq/backend` | Passed. |
-| `uv run … ruff format --check cubiq/backend` | All 3 Python files passed. |
-| `uv build --project cubiq/backend … --offline` | Wheel and source distribution built successfully. |
+| `npm --prefix cubecue run build` | Passed strict TypeScript project build and Vite production bundle. |
+| `npm --prefix cubecue run lint` | Passed ESLint with zero allowed warnings. |
+| `npm --prefix cubecue test` | 10 frontend tests passed. |
+| `uv run … pytest cubecue/backend/tests` | 9 backend tests passed, no warnings. |
+| `uv run … ruff check cubecue/backend` | Passed. |
+| `uv run … ruff format --check cubecue/backend` | All 3 Python files passed. |
+| `uv build --project cubecue/backend … --offline` | Wheel and source distribution built successfully. |
 | Live `/health` and Vite `/api/health` requests | Both returned the documented real health response. |
 | Browser navigation | All six destinations, direct refresh, back/forward, and unknown-route recovery verified through browser checks and component tests. |
 | Responsive browser checks | 1440 px desktop and 390 px mobile layouts inspected; document width matched viewport width. |
