@@ -95,7 +95,7 @@ def solve_cube(state: CubeState) -> dict:
         canonical_word = "" if state.is_solved else _candidate(state.to_facelets(canonical=True))
         try:
             moves = parse_sequence(canonical_word)
-            if len(moves) > MAX_DEPTH or any(move.is_rotation for move in moves):
+            if len(moves) > MAX_DEPTH or any(move.face not in FACES for move in moves):
                 raise ValueError("Only bounded outer face turns are allowed")
             # A library face names a canonical color. Translate it to the face in
             # the current grip. Rotations never count as physical solution turns.

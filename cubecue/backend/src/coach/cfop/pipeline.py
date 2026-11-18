@@ -95,7 +95,7 @@ def verify_candidate(initial: CubeState, rows: list[dict]) -> tuple[str, list[di
         if not isinstance(row, dict) or row.get("kind") != kind:
             raise ValueError("CFOP stage order mismatch")
         word = format_sequence(row["notation"])
-        if any(move.is_rotation for move in parse_sequence(word)):
+        if any(move.face not in "URFDLB" for move in parse_sequence(word)):
             raise ValueError("CFOP stages require fixed-reference outer turns")
         before = reference.layer_progress()
         protected = [slot for slot in SLOTS if before["pairs"][slot]]

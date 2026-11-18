@@ -1,6 +1,6 @@
-# Cube engine v1 conventions
+# Cube engine conventions
 
-Implemented in **`cubecue/backend/src/coach/cube.py`**, the only production implementation of cube rules. This document fixes the state/schema, notation, metric, and geometry for milestone 1B. HTTP adapters and React must call the engine rather than maintain another move model.
+Implemented in **`cubecue/backend/src/coach/cube.py`**, the only production implementation of cube rules. The canonical state schema remains version 1; engine `cube-v2` adds the keyboard-requested public wide/slice grammar to the original milestone-1B rules. HTTP adapters and React must call the engine rather than maintain another move model.
 
 ## Scope and canonical representation
 
@@ -116,9 +116,9 @@ For a face-turn table with source position `src` at destination `i`, permutation
 
 ## Notation, frame changes, and HTM
 
-Supported base tokens: `U D L R F B x y z`. A bare token is a clockwise quarter turn; `'` is the inverse quarter turn; `2` is a half turn. Moves apply **left to right**. Concatenation (`RUR'U'`) and whitespace-separated input are both accepted. Typographic primes `’`, `‘`, and `′` normalize to ASCII `'`; `R2'` normalizes to `R2`. Parentheses group without implicit repetition; `()` is the identity.
+Supported base tokens: `U D L R F B x y z`, plus engine-v2 wide and slice actions listed below. A bare token is a clockwise quarter turn; `'` is the inverse quarter turn; `2` is a half turn. Moves apply **left to right**. Concatenation (`RUR'U'`) and whitespace-separated input are both accepted. Typographic primes `’`, `‘`, and `′` normalize to ASCII `'`; `R2'` normalizes to `R2`. Parentheses group without implicit repetition; `()` is the identity.
 
-The parser consumes the entire input before applying anything. Examples of rejected syntax are `R3`, `R'2`, `R''`, `r`, `Rw`, `M`, uppercase `X`, commas, comments, commutators, and `(R U)3`. Wide/slice moves remain planned scope, even though future CFOP catalog imports will need them. Input is limited to 10,000 characters, 2,048 move actions, and 16 nested groups. Errors include a code, readable explanation, and zero-based character offset when applicable. Offsets refer to the original text.
+The parser consumes the entire input before applying anything. Examples of rejected syntax are `R3`, `R'2`, `R''`, uppercase `X`, commas, comments, commutators, and `(R U)3`. Engine v2 accepts wide and slice actions as specified below. Input is limited to 10,000 characters, 2,048 move actions, and 16 nested groups. Errors include a code, readable explanation, and zero-based character offset when applicable. Offsets refer to the original text.
 
 Whole-cube rotations change the grip: `x` follows R, `y` follows U, and `z` follows F. Their prime/double variants behave identically to the corresponding inverse/double rotations. A rotation changes `frame` and the displayed facelets, **not canonical cubie arrays**. The default-frame mappings after one rotation are:
 
@@ -194,8 +194,22 @@ The generator uses an independent fixed-seed PRNG and imports no application eng
 
 ## M2B staged-planning extension
 
-The canonical representation, sticker/frame conventions, public parser, metric and existing hashes remain unchanged. New engine helpers implement exact layer predicates, temporary reference rebasing, fixed-grip outer-turn translation, projected piece-transition maps, and registry-only slice/wide compilation. All CFOP search transitions are derived from these helpers and every final stage is verified with full `CubeState` objects. Public manual entry still rejects slices/wide turns. See [CFOP engine v1](CFOP_ENGINE.md) for the white-down reference, precise predicates, case identifiers and counting semantics.
+The canonical representation, sticker/frame conventions, public parser, metric and existing hashes remain unchanged. New engine helpers implement exact layer predicates, temporary reference rebasing, fixed-grip outer-turn translation, projected piece-transition maps, and registry-only slice/wide compilation. All CFOP search transitions are derived from these helpers and every final stage is verified with full `CubeState` objects. The original 2B checkpoint kept these catalog-only; engine v2 now exposes wide/slice actions as described below. See [CFOP engine v1](CFOP_ENGINE.md) for the white-down reference, precise predicates, case identifiers and counting semantics.
 
 ## M2C targeting and grip helpers
 
 Canonical serialization, indices, colors, HTM and hash semantics are unchanged. `reference_piece_views` maps reference piece identities through the engine's frame/color conventions to their actual viewer cubie IDs, positions and physical color identities. `rotation_sequence` searches the 24 valid frames for explicit shortest x/y/z rotation actions; it never changes physical cubie coordinates. These helpers drive coaching highlights and grip prefixes without competing frontend move logic. See [coaching conventions](COACHING.md).
+
+## Engine v2: public wide/slice actions and reference keyboard
+
+Public notation additionally accepts `Rw Lw Uw Dw Fw Bw` and `M E S`, with prime/double variants. Lowercase `r l u d f b` normalize to the corresponding wide token. Each is one history/animation action; expansions never become extra keyboard events. All rules remain inside `coach/cube.py`.
+
+Wide turns rotate two layers clockwise looking at their named face. M follows L, E follows D, S follows F. The canonical implementation reuses outer/frame rules: `Rw=x L`, `Lw=x' R`, `Uw=y D`, `Dw=y' U`, `Fw=z B`, `Bw=z' F`; `M=x' R L'`, `E=y' U D'`, `S=z F' B`. These identities retain the resulting center frame, unlike the registry compiler which deliberately discards final grip when emitting fixed-frame outer algorithms. A slice changes center orientation without rotating every cubie; only explicit x/y/z count as whole-cube rotations.
+
+The canonical representation, schema-1 serialization and hashes are unchanged. Engine version is `cube-v2`, so newly saved derived analysis receives a distinct engine version; previous recordings remain reconstructible. `HTM-outer-v1` retains its outer-equivalent interpretation: an outer or wide action costs 1; M/E/S costs 2 (two outer turns modulo whole-grip changes); primes and doubles cost the same as their quarter-turn counterparts; x/y/z cost 0. `face_turns` is the legacy count of non-whole-grip input actions, not the HTM weight. Ergonomic face penalties still describe explicit outer face tokens; no execution-speed model for wide/slice fingertricks is claimed.
+
+Renderer descriptors rotate 9 visible cubies for an outer face, 17 for a wide turn, 8 for a middle slice, or all 26 for x/y/z. Independent sticker-matrix tests check exact forward/inverse endpoints for every extended token in all 24 grips; React only animates those descriptors and adopts the supplied snapshot once.
+
+The Explorer defaults to the user-supplied physical-QWERTY layout. Shift does not modify its explicit mappings, and the face-button suffix selector is independent. 3/4 decrease/increase left-side layer width; 7/8 increase/decrease right-side width, bounded to 1–2 for 3×3. The affected side keys and displayed labels update together; Space resets widths. These `<`/`>` selectors adjust layers, not camera or playback. Their meaning was checked against the [upstream virtual key-map implementation](https://github.com/cs0x7f/cstimer/blob/master/src/js/twisty/twistynnn.js); binding data comes from the user's image, and no upstream implementation code is incorporated. Face-letter shortcuts remain an explicit alternative.
+
+Shortcuts ignore text/select/contenteditable fields, IME composition, held-key repeats and browser modifier combinations. Ctrl/Command Z and redo work outside editing fields. Physical key positions take precedence over translated characters. Keyboard opt-out does not disable clickable move controls. Layer-selection refs update synchronously before queued key moves; all actual transformations still come from the backend.

@@ -7,6 +7,7 @@ import CubeViewport from './CubeViewport'
 import { FaceletNet } from './FaceletNet'
 import { SolutionPanel } from './SolutionPanel'
 import { CoachPanel } from './CoachPanel'
+import { KeyboardControls } from './KeyboardControls'
 import { saveRecording } from '../analysis/recording'
 
 const faceLabels: Record<string, string> = { U: 'Up', R: 'Right', F: 'Front', D: 'Down', L: 'Left', B: 'Back' }
@@ -39,24 +40,6 @@ export function CubeExplorer() {
     media?.addEventListener('change', update)
     return () => media?.removeEventListener('change', update)
   }, [])
-  useEffect(() => {
-    const keyboard = (event: KeyboardEvent) => {
-      if (loading || solving || !snapshot || event.repeat || event.defaultPrevented) return
-      if (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable="true"]')) return
-      const key = event.key.toLowerCase()
-      if ((event.metaKey || event.ctrlKey) && key === 'z') {
-        event.preventDefault(); if (event.shiftKey) controller.forward(); else controller.back(); return
-      }
-      if ((event.metaKey || event.ctrlKey) && key === 'y') { event.preventDefault(); controller.forward(); return }
-      if (event.metaKey || event.ctrlKey || event.altKey) return
-      if (['u', 'd', 'l', 'r', 'f', 'b', 'x', 'y', 'z'].includes(key)) {
-        event.preventDefault()
-        controller.enqueue((['x', 'y', 'z'].includes(key) ? key : key.toUpperCase()) + (event.shiftKey ? "'" : suffix))
-      }
-    }
-    window.addEventListener('keydown', keyboard)
-    return () => window.removeEventListener('keydown', keyboard)
-  }, [controller, suffix, loading, solving, snapshot])
   const togglePlayback = () => {
     if (paused) controller.resume()
     else if (working || playing) controller.pause()
@@ -84,10 +67,11 @@ export function CubeExplorer() {
           <div className="grip-heading"><span>Rotate the grip</span><small>0 HTM</small></div>
           <div className="grip-controls">{['x', 'y', 'z'].map(axis => <button key={axis} aria-label={`Rotate ${axis}${suffix}`} disabled={loading || solving} onClick={() => controller.enqueue(axis + suffix)}>{axis}{suffix}</button>)}</div>
           <div className="workspace-actions"><button className="primary-button" disabled={loading || solving} title="20 random legal face turns from the current state; not a WCA random-state scramble" onClick={controller.scramble}><Shuffle size={15} aria-hidden="true" />Scramble</button><button className="secondary-button" disabled={loading} title="Reset cube and clear history and pending inputs" onClick={() => void controller.reset()}><RefreshCw size={14} aria-hidden="true" />Reset cube</button></div>
-          <p className="keyboard-note"><kbd>R</kbd> face keys · <kbd>⇧</kbd> inverse<br />X / Y / Z rotate the grip. Shortcuts pause while typing.</p>
+          <p className="keyboard-note">Use the reference key map below.<br />I / K turn R / R′ · J / F turn U / U′.</p>
         </section>
       </div>
 
+      <KeyboardControls disabled={loading || solving || !snapshot} suffix={suffix} onMove={controller.enqueue} onUndo={controller.back} onRedo={controller.forward} />
       <CoachPanel view={view} />
       <SolutionPanel view={view} />
 
@@ -100,7 +84,7 @@ export function CubeExplorer() {
         {transferError && <p role="alert">{transferError}</p>}
       </section>
 
-      <section className="panel algorithm-panel" aria-labelledby="notation-title"><div className="algorithm-copy"><p className="eyebrow">TRY SOMETHING NEW</p><h2 id="notation-title">Run an algorithm.</h2><p>Paste a sequence, or build it one move at a time. Every turn is checked before it reaches your cube.</p><label className="speed-label" htmlFor="turn-speed">Animation speed<select id="turn-speed" value={duration} onChange={event => setDuration(Number(event.target.value))}><option value={0.16}>Quick · 0.16 s</option><option value={0.28}>Smooth · 0.28 s</option><option value={0.5}>Study · 0.5 s</option></select></label>{reducedMotion && <p className="reduced-note">Reduced motion is on. States update without turn animations.</p>}</div><div className="algorithm-entry"><form onSubmit={event => { event.preventDefault(); controller.enqueue(notation) }}><label htmlFor="cube-notation" className="engine-label">Move sequence</label><textarea id="cube-notation" value={notation} onChange={event => setNotation(event.target.value)} placeholder="R U R' U'" autoComplete="off" spellCheck={false} rows={2} disabled={loading || solving} maxLength={10000} /><div className="algorithm-submit"><span>Face turns · primes · doubles · x y z</span><button type="submit" className="primary-button" disabled={loading || solving || !notation.trim()}>Run algorithm <ArrowRight size={15} aria-hidden="true" /></button></div></form>{lastAlgorithm && <p className="last-algorithm">Last planned <code>{lastAlgorithm}</code></p>}</div></section>
+      <section className="panel algorithm-panel" aria-labelledby="notation-title"><div className="algorithm-copy"><p className="eyebrow">TRY SOMETHING NEW</p><h2 id="notation-title">Run an algorithm.</h2><p>Paste a sequence, or build it one move at a time. Every turn is checked before it reaches your cube.</p><label className="speed-label" htmlFor="turn-speed">Animation speed<select id="turn-speed" value={duration} onChange={event => setDuration(Number(event.target.value))}><option value={0.16}>Quick · 0.16 s</option><option value={0.28}>Smooth · 0.28 s</option><option value={0.5}>Study · 0.5 s</option></select></label>{reducedMotion && <p className="reduced-note">Reduced motion is on. States update without turn animations.</p>}</div><div className="algorithm-entry"><form onSubmit={event => { event.preventDefault(); controller.enqueue(notation) }}><label htmlFor="cube-notation" className="engine-label">Move sequence</label><textarea id="cube-notation" value={notation} onChange={event => setNotation(event.target.value)} placeholder="R U R' U'" autoComplete="off" spellCheck={false} rows={2} disabled={loading || solving} maxLength={10000} /><div className="algorithm-submit"><span>Face / wide / slice turns · primes · doubles · x y z</span><button type="submit" className="primary-button" disabled={loading || solving || !notation.trim()}>Run algorithm <ArrowRight size={15} aria-hidden="true" /></button></div></form>{lastAlgorithm && <p className="last-algorithm">Last planned <code>{lastAlgorithm}</code></p>}</div></section>
 
       <details className="panel engine-more"><summary>State inspector, import & export <span>Exact engine data</span></summary><div className="engine-more-body"><FaceletNet snapshot={snapshot} /><p className="engine-help">Faces are viewed from outside in U R F D L B order. Importing a state starts a new local history.</p><form onSubmit={event => { event.preventDefault(); void controller.importFacelets(facelets) }}><label className="engine-label" htmlFor="cube-import">Facelet string</label><textarea id="cube-import" value={facelets} onChange={event => setFacelets(event.target.value)} spellCheck={false} maxLength={10000} rows={2} disabled={blocked} /><button className="secondary-button mt-3" type="submit" disabled={blocked || !facelets.trim()}>Validate and load</button></form><label className="engine-label" htmlFor="cube-facelets">Current facelets</label><textarea id="cube-facelets" data-testid="current-facelets" readOnly value={snapshot.facelets} rows={2} /><label className="engine-label" htmlFor="cube-json">Canonical serialized state</label><textarea id="cube-json" readOnly value={JSON.stringify(snapshot.state, null, 2)} rows={6} /><p className="engine-hash">State hash: {snapshot.state_hash}</p></div></details>
     </>}

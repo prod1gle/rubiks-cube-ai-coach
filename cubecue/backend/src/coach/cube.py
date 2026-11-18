@@ -16,8 +16,21 @@ from typing import Any
 
 FACES = "URFDLB"
 ROTATIONS = "xyz"
+# Public wide/slice actions reduce to the existing canonical outer/frame rules.
+# Their animation remains one physical, simultaneous layer action.
+EXTENDED_EXPANSIONS = {
+    "Rw": "x L",
+    "Lw": "x' R",
+    "Uw": "y D",
+    "Dw": "y' U",
+    "Fw": "z B",
+    "Bw": "z' F",
+    "M": "x' R L'",
+    "E": "y' U D'",
+    "S": "z F' B",
+}
 SCHEMA_VERSION = 1
-ENGINE_VERSION = "cube-v1"
+ENGINE_VERSION = "cube-v2"
 METRIC = "HTM-outer-v1"
 MAX_SEQUENCE_LENGTH = 10_000
 MAX_MOVES = 2_048
@@ -238,8 +251,12 @@ class Move:
     turns: int = 1
 
     def __post_init__(self):
-        if not isinstance(self.face, str) or self.face not in (*FACES, *ROTATIONS):
-            raise CubeError("move", "Moves must be U, D, L, R, F, B, x, y, or z.")
+        if not isinstance(self.face, str) or self.face not in (
+            *FACES,
+            *ROTATIONS,
+            *EXTENDED_EXPANSIONS,
+        ):
+            raise CubeError("move", "Use outer turns, Rw/Lw/Uw/Dw/Fw/Bw, M/E/S, or x/y/z.")
         if type(self.turns) is not int or self.turns not in (1, 2, 3):
             raise CubeError("move", "Quarter-turn amount must be 1, 2, or 3.")
 
@@ -281,14 +298,17 @@ def parse_sequence(text: str) -> tuple[Move, ...]:
             stack[-1][1].extend(group)
             i += 1
             continue
-        if char not in (*FACES, *ROTATIONS):
+        if char not in (*FACES, *ROTATIONS, *"MES", *"urfdlb"):
             raise CubeError(
                 "notation_token",
                 f"Unsupported notation {text[i]!r} at character {i + 1}. "
-                "Use U D L R F B or x y z with optional prime or 2.",
+                "Use face turns, wide turns (Rw), M E S, or x y z with optional prime or 2.",
                 i,
             )
         i += 1
+        face = char.upper() + "w" if char in "urfdlb" else char
+        if char in FACES and i < len(normalized) and normalized[i] == "w":
+            face, i = char + "w", i + 1
         turns = 1
         if i < len(normalized) and normalized[i] == "2":
             turns, i = 2, i + 1
@@ -296,7 +316,7 @@ def parse_sequence(text: str) -> tuple[Move, ...]:
                 i += 1  # R2' and R2 have exactly the same effect.
         elif i < len(normalized) and normalized[i] == "'":
             turns, i = 3, i + 1
-        stack[-1][1].append(Move(char, turns))
+        stack[-1][1].append(Move(face, turns))
         count += 1
         if count > MAX_MOVES:
             raise CubeError("notation_limit", f"At most {MAX_MOVES} moves are allowed.", i)
@@ -326,8 +346,8 @@ def inverse_sequence(sequence: str | Sequence[Move]) -> str:
 
 
 def htm_count(sequence: str | Sequence[Move]) -> int:
-    """Executed HTM: each face action costs one, including a double; rotations cost zero."""
-    return sum(not move.is_rotation for move in _moves(sequence))
+    """Outer-equivalent HTM: outer/wide=1, slice=2, whole grip=0; doubles same cost."""
+    return sum(0 if m.is_rotation else 2 if m.face in "MES" else 1 for m in _moves(sequence))
 
 
 def sequence_info(sequence: str | Sequence[Move]) -> dict[str, Any]:
@@ -346,23 +366,15 @@ def sequence_info(sequence: str | Sequence[Move]) -> dict[str, Any]:
 def compile_catalog_algorithm(text: str) -> str:
     """Compile registry-only wide/slice notation to fixed-frame outer turns.
 
-    This does not expand the public input grammar. Slice/wide turns include a
-    center-frame rotation; the final grip is discarded deliberately, while the
+    Public input retains slice/wide actions and their resulting center frame.
+    Here the final grip is discarded deliberately, while the
     complete center-relative cubie transformation is preserved. Catalog moves
     are counted in their compiled HTM, not by the original token count.
     """
     import re
 
-    expansions = {
-        "r": "x L",
-        "l": "x' R",
-        "u": "y D",
-        "d": "y' U",
-        "f": "z B",
-        "b": "z' F",
-        "M": "x' R L'",
-        "E": "y' U D'",
-        "S": "z F' B",
+    expansions = {f.lower(): EXTENDED_EXPANSIONS[f + "w"] for f in FACES} | {
+        f: EXTENDED_EXPANSIONS[f] for f in "MES"
     }
     cleaned = text.replace("(", " ").replace(")", " ").replace("’", "'").replace("′", "'")
     tokens = re.findall(r"[URFDLBMESxyzurfdlb](?:w)?(?:2'|2|')?", cleaned)
@@ -395,7 +407,7 @@ def reference_sequence(sequence: str, reference_frame: str, output_frame: str) -
     if reference_frame not in VALID_FRAMES or output_frame not in VALID_FRAMES:
         raise CubeError("center_orientation", "Invalid reference frame.")
     moves = parse_sequence(sequence)
-    if any(move.is_rotation for move in moves):
+    if any(move.face not in FACES for move in moves):
         raise CubeError("reference_notation", "Reference sequences require outer turns.")
     return format_sequence(
         tuple(
@@ -444,7 +456,13 @@ class CubeState:
         moves = _moves(sequence)  # Parse all input before applying any part of it.
         state = self
         for move in moves:
-            if move.is_rotation:
+            if move.face in EXTENDED_EXPANSIONS:
+                quarter = parse_sequence(EXTENDED_EXPANSIONS[move.face])
+                # The parser stays atomic; expansion never escapes the canonical
+                # module or becomes separate user history/animation actions.
+                word = tuple(m.inverse() for m in reversed(quarter)) if move.turns == 3 else quarter
+                state = state.apply(word * (2 if move.turns == 2 else 1))
+            elif move.is_rotation:
                 frame = state.frame
                 for _ in range(move.turns):
                     frame = _rotate_frame(frame, move.face)
@@ -719,11 +737,19 @@ def plan_sequence(state: CubeState, sequence: str) -> dict[str, Any]:
         raise CubeError("plan_limit", "Animate at most 128 moves per algorithm.")
     steps, initial_hash = [], state.state_hash
     for move in moves:
-        axis = _NORMALS["RUF"[ROTATIONS.index(move.face)] if move.is_rotation else move.face]
+        face = (
+            "RUF"[ROTATIONS.index(move.face)]
+            if move.is_rotation
+            else {"M": "L", "E": "D", "S": "F"}.get(move.face, move.face[0])
+        )
+        axis = _NORMALS[face]
         affected = [
             cubie["id"]
             for cubie in scene_cubies(state.to_facelets())
-            if move.is_rotation or _dot(tuple(cubie["position"]), axis) == 1
+            if move.is_rotation
+            or (move.face.endswith("w") and _dot(tuple(cubie["position"]), axis) >= 0)
+            or (move.face in "MES" and _dot(tuple(cubie["position"]), axis) == 0)
+            or (move.face in FACES and _dot(tuple(cubie["position"]), axis) == 1)
         ]
         # Prime turns take the short +90-degree path, not a -270-degree spin.
         quarters = 1 if move.turns == 3 else -move.turns

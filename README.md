@@ -130,12 +130,12 @@ curl --fail -H 'Content-Type: application/json' \
   http://127.0.0.1:8000/api/cube/apply
 ```
 
-Responses contain a canonical schema-1 state, current-view and canonical facelets, display faces, solvedness, hashes, and sequence metadata. Subsequent requests may send the returned `state` object unchanged. Engine validation failures return HTTP 422 with a stable error code, message, and optional notation position. The [conventions document](docs/CUBE_CONVENTIONS.md) specifies every sticker index, corner/edge orientation, frame mapping, and validation condition. Slice/wide notation remains unsupported and is explicitly rejected in 1B.
+Responses contain a canonical schema-1 state, current-view and canonical facelets, display faces, solvedness, hashes, and sequence metadata. Subsequent requests may send the returned `state` object unchanged. Engine validation failures return HTTP 422 with a stable error code, message, and optional notation position. The [conventions document](docs/CUBE_CONVENTIONS.md) specifies every sticker index, corner/edge orientation, frame mapping, and validation condition. Engine v2 additionally accepts wide/slice notation; see the reference keyboard map below.
 
 ## Interactive Cube Explorer controls
 
 - Drag / one-finger touch to orbit; scroll / pinch to zoom. Camera buttons and focused-canvas arrow keys provide keyboard alternatives. Plus/minus zoom the focused canvas. Orbiting never changes cube state or notation frame.
-- Use U/R/F/D/L/B and x/y/z buttons or keys. Choose Quarter, Inverse, or Double; Shift always selects a prime turn. Shortcuts are disabled in text/editing fields. Ctrl/Command Z undoes; Ctrl/Command Shift Z or Ctrl Y redoes.
+- Face buttons use Quarter/Inverse/Double. Keyboard input defaults to the pictured reference layout below (I/K → R/R′, J/F → U/U′), with clickable key tiles and layer selectors. Choose Face-letter shortcuts for the previous U/R/F… keys and Shift-prime behavior. Shortcuts pause in editing fields. Ctrl/Command Z undoes; Ctrl/Command Shift Z or Ctrl Y redoes.
 - **Run algorithm** validates the entire input before starting. Rapid inputs queue in order; they do not overlap or use stale states. The queue accepts 64 pending requests, algorithms up to 128 actions, and local history up to 1,024 turns. Limits produce visible errors.
 - **Undo/Redo** and **Step backward/forward** animate saved engine-verified transitions. The slider and start/end controls jump to saved states. Play replays from the cursor, or from the initial state when already at the end. Replay never appends duplicate moves.
 - **Pause** lands the current turn before stopping. Resume continues pending moves or replay. Reset interrupts the queue, invalidates stale callbacks, and starts a new solved history after a successful engine response.
@@ -175,7 +175,7 @@ There is no known missing F2L placement subset within this fixed-reference legal
 
 Both approaches share a single worker-admission slot per API process and a 30-second worker budget. CFOP derives its search tables locally in memory; it needs no downloaded tables, external solver service, API key, or extra startup command. Every stage's goals, registry identity, protected endpoints, hashes and complete notation are rechecked by the canonical engine before a result is returned. Failures return no candidate moves. The current plan cap is 128 outer-turn actions.
 
-Registry slice/wide notation is privately compiled through the canonical engine into outer turns; the public manual-entry grammar still supports only face turns and x/y/z. Counts are the actual emitted outer HTM actions, not original source token counts or reduced move counts. Production last-layer notation is sourced from an MIT-licensed registry with its notice packaged. All 78 case labels are independently checked against the requested SolveTheCube reference using committed cubejs oracle states. See [the complete design and provenance](docs/CFOP_ENGINE.md) and [2B delivery evidence](docs/MILESTONE_2B.md).
+Registry slice/wide notation is privately compiled through the canonical engine into outer turns; the current public grammar also supports explicit wide/slice input; generated CFOP plans remain fixed-frame outer turns. Counts are the actual emitted outer HTM actions, not original source token counts or reduced move counts. Production last-layer notation is sourced from an MIT-licensed registry with its notice packaged. All 78 case labels are independently checked against the requested SolveTheCube reference using committed cubejs oracle states. See [the complete design and provenance](docs/CFOP_ENGINE.md) and [2B delivery evidence](docs/MILESTONE_2B.md).
 
 ## Next Best Move (milestone 2C)
 
@@ -241,7 +241,7 @@ npm --prefix cubecue test
 .tools/bin/uv build --project cubecue/backend --cache-dir .cache/uv
 ```
 
-Backend pytest covers all move/inverse and fourth-power identities, 32 named oracle states, 1,000 seeded oracle sequences, 128 arbitrary legal-state fixtures, all 24 grips, parser/metric/serialization behavior, impossible states, and the real HTTP API. The committed corpus comes from pinned `cubejs@1.3.2`; pytest requires no Node process or network access. Current verification includes 1028 backend tests and 128 frontend tests. The 2B suite exhausts the projected F2L configurations, legal OLL orientations and PLL permutations; checks 78 independent reference labels and all 24 grips; and solves 200 seeded 25-face-turn scrambles plus 30 independently sampled legal cubie states. Frontend tests cover CFOP selection, truthful method labels, stage boundaries, stage-only/full playback, skipped stages, cancellation and failure states. The 2A additions run the real solver on known scrambles, 24 seeded 25-face-turn scrambles, and all 24 grips; inject invalid output, worker failure, timeout, and busy conditions; and verify preview, step/playback, state binding, cancellation, and stale-result rejection in the frontend. The 1C tests cover exact animation endpoints, rapid inputs, duplicate/stale callbacks, reset and disconnect races, undo/redo branching, pause/resume, playback, keyboard editing guards, WebGL fallback, and reduced motion. See [M1C delivery evidence](docs/MILESTONE_1C.md); the [M1B report](docs/MILESTONE_1B.md) records the earlier engine checkpoint.
+Backend pytest covers all move/inverse and fourth-power identities, 32 named oracle states, 1,000 seeded oracle sequences, 128 arbitrary legal-state fixtures, all 24 grips, parser/metric/serialization behavior, impossible states, and the real HTTP API. The committed corpus comes from pinned `cubejs@1.3.2`; pytest requires no Node process or network access. See the latest checkpoint documents for test counts; the reference-keyboard addition extends the suites with wide/slice physics and input-synchronization checks. The 2B suite exhausts the projected F2L configurations, legal OLL orientations and PLL permutations; checks 78 independent reference labels and all 24 grips; and solves 200 seeded 25-face-turn scrambles plus 30 independently sampled legal cubie states. Frontend tests cover CFOP selection, truthful method labels, stage boundaries, stage-only/full playback, skipped stages, cancellation and failure states. The 2A additions run the real solver on known scrambles, 24 seeded 25-face-turn scrambles, and all 24 grips; inject invalid output, worker failure, timeout, and busy conditions; and verify preview, step/playback, state binding, cancellation, and stale-result rejection in the frontend. The 1C tests cover exact animation endpoints, rapid inputs, duplicate/stale callbacks, reset and disconnect races, undo/redo branching, pause/resume, playback, keyboard editing guards, WebGL fallback, and reduced motion. See [M1C delivery evidence](docs/MILESTONE_1C.md); the [M1B report](docs/MILESTONE_1B.md) records the earlier engine checkpoint.
 
 For frontend test watch mode: `npm --prefix cubecue run test:watch`.
 
@@ -325,3 +325,18 @@ Physical camera accuracy, false-suggestion rates and turn latency **have not bee
 ```
 
 The evaluator retains early wrong suggestions, distinguishes abstentions, and reports measured processing time. Physical turn latency needs independently annotated `annotated_turn_complete_ms` in the same clock as captured frame timestamps; it is unavailable by default. Ground truth/provenance are operator supplied. Controlled tests cannot be passed off as physical evidence. See [5B acceptance status and limitations](docs/MILESTONE_5B.md).
+
+## Cube Explorer reference keyboard
+
+The default **Reference layout** matches the supplied Virtual Cube Key Map. The visible, clickable key grid shows each binding and updates its labels when layer widths change. **Face-letter shortcuts** in the layout selector retain the previous U/R/F… bindings. Live Solve's manual timer keys are unchanged.
+
+| Keys | Moves |
+| --- | --- |
+| `1 2 5 6 9 0` | `S' E M M E' S` |
+| `Q W E R T Y U I O P` | `z' B L' Lw' x x Rw R B' z` |
+| `A S D F G H J K L ;` | `y' D L U' F' F U R' D' y` |
+| `Z X C V B N M , . /` | `Dw M' Uw' Lw x' x' Rw' Uw M' Dw'` |
+
+3/4 select fewer/more left-side layers; 7/8 select more/fewer right-side layers. Space resets both widths to one. These selectors do not perform cube moves. The displayed map is the source for the currently selected widths. Reference bindings use physical QWERTY positions; Shift and button turn variants do not alter their explicit notation. Shortcuts pause in editing fields and during engine loading/solving; held keys do not repeat turns.
+
+Public manual notation now supports all six wide turns and M/E/S, including prime and double variants, through the same canonical backend. HTM is 1 for outer/wide actions, 2 for slice actions, and 0 for whole-cube rotations. Each key action has one verified animation/history event; rapid input stays queued against exact accepted states. See [engine v2 conventions](docs/CUBE_CONVENTIONS.md).

@@ -23,7 +23,7 @@ def test_initial_snapshot_and_facelets_are_derived_from_the_engine(client):
     assert data["facelets"] == SOLVED_FACELETS
     assert data["is_solved"] is True
     assert data["sequence"]["htm"] == 0
-    assert data["engine_version"] == "cube-v1"
+    assert data["engine_version"] == "cube-v2"
     assert "".join(face["stickers"] for face in data["faces"]) == data["facelets"]
 
 
