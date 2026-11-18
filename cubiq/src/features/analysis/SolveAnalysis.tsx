@@ -4,6 +4,7 @@ import type { AnalysisRequest, ComparisonReply, TimedRecording } from '../../api
 import { compareSegment, getCube } from '../../api/cube'
 import { library, saveSolve } from '../../api/library'
 import type { SavedSolve } from '../../api/library'
+import { CameraReport } from '../vision/CameraReport'
 import { readRecording } from './recording'
 import { ComparisonReplay } from './ComparisonReplay'
 import { readTimedRecording } from '../timer/recording'
@@ -13,6 +14,7 @@ import { CasePractice } from './CasePractice'
 const difference = (n: number, unit: string) => n > 0 ? `${n} fewer ${unit}` : n < 0 ? `${-n} more ${unit}` : `Same ${unit}`
 export function SolveAnalysis() {
   const { search } = useLocation()
+  const cameraId = new URLSearchParams(search).get('camera')
   const savedId = new URLSearchParams(search).get('solve')
   const [saved, setSaved] = useState<SavedSolve>()
   const [source] = useState(readRecording)
@@ -50,6 +52,7 @@ export function SolveAnalysis() {
   const candidate = reply?.alternatives.find(c => c.id === selected)
   return <>
     <div className="page-heading"><p className="eyebrow">SAME CASE. A DIFFERENT PATH.</p><h1 id="page-title">Solve Analysis</h1><p className="explorer-subtitle">What could I have done instead?</p></div>
+    {cameraId && <CameraReport key={cameraId} id={cameraId} onReview={body => { setInput(body); void run(body) }} />}
     {saved && (!savedId || saved.id === savedId) && <section className="panel library-panel"><p>Saved {new Date(saved.created_at).toLocaleString()} · Analysis {saved.analysis_version}</p><button onClick={() => { void library<SavedSolve>(`/solves/${saved.id}/reanalyze`, {}).then(v => { setSaved(v); setTimed({ ...v.recording }) }).catch(e => setError(e.message)) }}>Reanalyze original recording</button><p className="analysis-help">{saved.versions.length} retained analysis version(s). Original states and events remain immutable.</p></section>}
     {!savedId && !timed && <button className="secondary-button latest-timed-button" onClick={() => { const value = readTimedRecording(); if (value) setTimed(value); else setError('No timed manual recording is available in this browser session. Capture a run in Live Solve first.') }}>Load latest timed recording</button>}
     {visibleTimed && !saved && <button className="secondary-button" onClick={() => { void saveSolve(visibleTimed).then(v => setSaved(v)).catch(e => setError(e.message)) }}>Save this recording to History</button>}

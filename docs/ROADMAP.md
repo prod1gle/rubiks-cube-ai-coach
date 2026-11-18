@@ -158,3 +158,11 @@ canonical reachability validation and Explorer import are implemented and covere
 controlled-image/integration tests. Physical six-face validation has been requested from
 the user and is tracked separately; no physical accuracy is claimed from synthetic images.
 Continuous assisted tracking is the next checkpoint, not part of 5A completeness.
+
+## User-requested camera assistance checkpoint (5B)
+
+Restricted frontend/API integration, legal-state candidates, explicit operator confirmation,
+confidence/abstention, persisted gaps/resync, history and confirmed-segment analysis are
+implemented experimentally. Annotated export/evaluation supports genuine physical tests.
+**Acceptance remains pending real-camera datasets and measured reliability/latency**;
+controlled fixtures are not evidence for arbitrary fast-solve reconstruction.

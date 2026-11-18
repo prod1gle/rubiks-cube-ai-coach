@@ -33,7 +33,7 @@ export function App() {
           {navigation.map(({ path, title, icon: Icon }) => <NavLink to={path} end={path === '/'} key={path} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Icon size={18} strokeWidth={1.7} aria-hidden="true" /><span>{title}</span>{path === '/' && <span className="nav-active-dot" />}</NavLink>)}
         </nav>
         <div className="sidebar-bottom">
-          <div className="sidebar-note"><span className="tiny-label">A WORKSPACE IN THE MAKING</span><p>Good practice starts<br />with a solid foundation.</p><span className="sidebar-release">Milestone 4 <ArrowUpRight size={13} aria-hidden="true" /></span></div>
+          <div className="sidebar-note"><span className="tiny-label">A WORKSPACE IN THE MAKING</span><p>Good practice starts<br />with a solid foundation.</p><span className="sidebar-release">5B · experimental camera assistance <ArrowUpRight size={13} aria-hidden="true" /></span></div>
           <div className="local-label"><LockKeyhole size={12} aria-hidden="true" /><span>Local-first. Yours to explore.</span></div>
         </div>
       </aside>

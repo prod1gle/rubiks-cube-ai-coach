@@ -16,7 +16,7 @@ it('shows honest empty progress and unavailable timing', async () => {
 })
 it('lists stored solves, links exact analysis and deletes only after confirmation', async () => {
   const request = vi.fn().mockResolvedValueOnce(response({ total: 1, items: [{ id: 'saved-id', created_at: '2026-11-16T12:00:00Z', source: 'manual-virtual', status: 'complete', summary: { htm: 23, elapsed_ms: null } }] })).mockResolvedValueOnce(response({ deleted: 'saved-id' })).mockResolvedValueOnce(response({ total: 0, items: [] }))
-  vi.stubGlobal('fetch', request)
+  vi.stubGlobal('fetch', (path: string, options: unknown) => path === '/api/tracking' ? Promise.resolve(response({ items: [] })) : request(path, options))
   const user = userEvent.setup(); render(<MemoryRouter><History /></MemoryRouter>)
   expect(await screen.findByText(/23 HTM/)).toHaveTextContent('Timing unavailable')
   expect(screen.getByRole('link', { name: /2026/ })).toHaveAttribute('href', '/solve-analysis?solve=saved-id')
@@ -34,6 +34,6 @@ it('reports persistence failures without claiming success', async () => {
 it('surfaces history errors with retry', async () => {
   vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Backend offline')))
   render(<MemoryRouter><History /></MemoryRouter>)
-  expect(await screen.findByRole('alert')).toHaveTextContent('Backend offline')
+  expect((await screen.findAllByRole('alert')).every(v => v.textContent?.includes('Backend offline'))).toBe(true)
   expect(screen.getByRole('button', { name: 'Retry history' })).toBeVisible()
 })

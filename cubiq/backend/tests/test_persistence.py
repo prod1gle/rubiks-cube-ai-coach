@@ -40,7 +40,7 @@ def test_restart_and_reanalysis(tmp_path):
         assert c.get("/api/solves").json()["total"] == 1
     db = Database(path)
     with db.connect() as conn:
-        assert conn.execute("SELECT count(*) FROM schema_migrations").fetchone()[0] == 1
+        assert conn.execute("SELECT count(*) FROM schema_migrations").fetchone()[0] == 2
         assert conn.execute("SELECT confidence FROM moves").fetchone()[0] is None
 
 

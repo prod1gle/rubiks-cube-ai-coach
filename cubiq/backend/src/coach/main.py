@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from coach.api.cube import router as cube_router
 from coach.api.persistence import router as persistence_router
+from coach.api.tracking import router as tracking_router
 from coach.api.vision import router as vision_router
 from coach.cube import CubeError
 from coach.solvers.runtime import SolverError
@@ -28,7 +29,7 @@ class HealthResponse(BaseModel):
     status: str = "ok"
     service: str = "cubiq-api"
     version: str = "0.1.0"
-    milestone: str = "4"
+    milestone: str = "5B-experimental"
 
 
 def create_app(database_path: str | Path | None = None) -> FastAPI:
@@ -36,7 +37,7 @@ def create_app(database_path: str | Path | None = None) -> FastAPI:
     app = FastAPI(
         title="Cubiq Local API",
         version="0.1.0",
-        description="Milestone 4: persistent recordings, analytics and verified training.",
+        description="Persistent training, guided scanning and experimental camera assistance.",
     )
     app.add_middleware(
         CORSMiddleware,
@@ -52,6 +53,7 @@ def create_app(database_path: str | Path | None = None) -> FastAPI:
     app.include_router(cube_router)
     app.include_router(persistence_router)
     app.include_router(vision_router)
+    app.include_router(tracking_router)
 
     @app.exception_handler(RequestValidationError)
     async def invalid_request(_request: Request, error: RequestValidationError) -> JSONResponse:

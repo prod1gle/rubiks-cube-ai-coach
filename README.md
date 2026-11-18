@@ -1,6 +1,6 @@
 # Cubiq — Rubik’s Cube AI Coach
 
-A local workspace for more intentional 3×3 practice. **Milestones 1A–1C, 2A–2D and user-requested milestones 3–4 are implemented:** canonical cube states, interactive 3D, verified full-cube/CFOP solving, Next Best Move, retrospective comparison/practice, and manual virtual timing with deterministic solve analysis. SQLite solve history, genuine progress trends and verified F2L/OLL/PLL training are available. Full-solve optimality proofs, physical camera tracking, AI and learned personalization remain future work.
+A local workspace for more intentional 3×3 practice. **Milestones 1A–1C, 2A–2D and user-requested milestones 3–4 are implemented:** canonical cube states, interactive 3D, verified full-cube/CFOP solving, Next Best Move, retrospective comparison/practice, and manual virtual timing with deterministic solve analysis. SQLite solve history, genuine progress trends and verified F2L/OLL/PLL training are available. Full-solve optimality proofs, Reliable arbitrary-speed physical tracking, AI and learned personalization remain future work. Guided scanning and conservative experimental camera assistance are available; physical acceptance measurements are pending.
 
 ## Available now
 
@@ -86,7 +86,7 @@ Stop each process with `Ctrl+C`. Both services bind to loopback. Ports are fixed
 `GET /health` returns:
 
 ```json
-{"status":"ok","service":"cubiq-api","version":"0.1.0","milestone":"4"}
+{"status":"ok","service":"cubiq-api","version":"0.1.0","milestone":"5B-experimental"}
 ```
 
 `GET /api/health` is an equivalent alias for the frontend’s `/api` proxy. Both Vite development and preview forward `/api/*` to `http://127.0.0.1:8000`. The health endpoint reports API availability, not readiness of future cube features.
@@ -311,3 +311,17 @@ Endpoints: `GET/POST /api/solves`, `GET/DELETE /api/solves/{uuid}`, `POST /api/s
 Open [Guided Scan](http://127.0.0.1:5173/scan), also linked from Cube Explorer. Start the camera explicitly and permit video in the browser if prompted. Use current Chrome/Edge/Firefox/Safari on localhost, with a connected webcam and diffuse light. Follow each face's center/top/right instructions; rotate the entire cube without turning layers, align to the square grid, capture six faces, then calibrate. Review/correct every sticker, acknowledge the orientation check, and validate before loading Explorer. A legal-state rejection includes correction guidance. Stop the camera when finished; it also stops on exit or a hidden page. Camera/audio permissions are not simulated (audio is never requested).
 
 The backend now installs locked headless OpenCV and Pillow through the existing `uv sync --locked` command. No extra runtime commands or remote service are required. Frames are sampled only on capture and go to the loopback API. Classification confidences are heuristic; legal reachability is checked by the canonical engine. This is guided scanning, not continuous tracking. See [5A scope and tests](docs/MILESTONE_5A.md).
+
+## Experimental camera assistance (5B implementation; physical acceptance pending)
+
+In Live Solve select **Experimental camera assistance** after completing a reviewed scan. Confirm physical alignment, start video, select the visible face, and follow its adjacent-center orientation instructions. Observe a stable view (three consistent frames; optional sampling up to 2 FPS). Review candidate actions and explicitly confirm the single action that actually occurred. Observations alone never change the canonical state. Use recovery/manual alignment or a fresh guided scan whenever evidence is missing.
+
+This is a restricted, slow, frontal-face coaching aid. It does not reconstruct arbitrary fast solves, automatically observe hidden turns, or provide trustworthy physical TPS. Pose uses a sticker-envelope plane and approximate camera intrinsics; cube axes are user locked. Session evidence, confidence, confirmations, uncertain gaps and resync states persist in SQLite migration 002. History links camera sessions separately from manual performance averages. Analysis reconstructs only contiguous confirmed segments and keeps physical timing unavailable.
+
+Physical camera accuracy, false-suggestion rates and turn latency **have not been measured in this checkout**. For genuine measurements, use **Begin measurement burst**, capture a known action, independently label the actual action, and export the real frames. Exports are explicit local downloads; normal operation does not persist photos. Then evaluate the exported JSON (substitute its actual path):
+
+```sh
+.tools/bin/uv run --locked --project cubiq/backend --cache-dir .cache/uv python cubiq/scripts/evaluate-camera.py /absolute/path/cubiq-camera-evaluation.json
+```
+
+The evaluator retains early wrong suggestions, distinguishes abstentions, and reports measured processing time. Physical turn latency needs independently annotated `annotated_turn_complete_ms` in the same clock as captured frame timestamps; it is unavailable by default. Ground truth/provenance are operator supplied. Controlled tests cannot be passed off as physical evidence. See [5B acceptance status and limitations](docs/MILESTONE_5B.md).
