@@ -1,6 +1,6 @@
 // Engine-derived synthetic case; not a measured practice record.
 import { useEffect } from 'react'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
 import fixture from '../../test/training-case.json'
@@ -30,6 +30,35 @@ it('repeats exact cases, records real retries, and excludes algorithm playback',
   expect(await screen.findByText(/Objective achieved.*Attempt saved/)).toBeVisible()
   const saved = request.mock.calls.find(c => c[0] === '/api/practice')!
   expect(JSON.parse(saved[1].body).notation).toBe(item.algorithm)
+})
+
+it('shows the Explorer keyboard map and accepts physical keys while protecting text entry and opt-out', async () => {
+  const item = fixture.case
+  const plans = [moveFixture.plans[0], moveFixture.keyboardReturn]
+  let i = 0
+  const request = vi.fn().mockImplementation((path: string) => Promise.resolve(new Response(JSON.stringify(
+    path === '/api/training' ? { cases: [item] } : path.startsWith('/api/training/') ? item : plans[i++]
+  ))))
+  vi.stubGlobal('fetch', request)
+  const user = userEvent.setup(); render(<AlgorithmTrainer />)
+  await screen.findByTestId('trainer-state')
+  expect(screen.getByRole('heading', { name: 'Virtual cube key map' })).toBeVisible()
+  expect(screen.getByRole('button', { name: 'Key K: R\'' })).toBeVisible()
+  await user.click(screen.getByLabelText('Your practice notation'))
+  await user.keyboard('k')
+  expect(request.mock.calls.filter(c => c[0] === '/api/cube/plan')).toHaveLength(0)
+  await user.click(screen.getByLabelText('Enable keyboard shortcuts'))
+  fireEvent.keyDown(window, { key: 'k', code: 'KeyK' })
+  expect(request.mock.calls.filter(c => c[0] === '/api/cube/plan')).toHaveLength(0)
+  await user.click(screen.getByLabelText('Enable keyboard shortcuts'))
+  fireEvent.keyDown(window, { key: 'k', code: 'KeyK' })
+  await waitFor(() => expect(screen.getByTestId('trainer-state')).toHaveTextContent(plans[0].steps[0].snapshot.state_hash))
+  fireEvent.keyDown(window, { key: 'i', code: 'KeyI' })
+  await waitFor(() => expect(screen.getByTestId('trainer-state')).toHaveTextContent(item.start.state_hash))
+  const calls = request.mock.calls.filter(c => c[0] === '/api/cube/plan').map(c => JSON.parse(c[1].body))
+  expect(calls.map(c => c.sequence)).toEqual(["R'", 'R'])
+  expect(calls[1].state).toEqual(plans[0].steps[0].snapshot.state)
+  expect(screen.getByTestId('trainer-move-count')).toHaveTextContent('2HTM')
 })
 
 it('applies direct prime, double and rotation controls from accepted states, replays and repeats the exact case', async () => {

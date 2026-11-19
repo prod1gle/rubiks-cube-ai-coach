@@ -47,6 +47,7 @@ function Practice({ item, onNext, hasNext }: { item: TrainingCase; onNext: () =>
         {played && <p className="trainer-notice" role="status">Demonstration only. Repeat the case to start your own attempt.</p>}
       </section>
     </div>
+    <div className="trainer-keyboard"><KeyboardControls disabled={movesDisabled} onMove={controller.enqueue} onUndo={controller.back} onRedo={controller.forward} /></div>
     <section className="panel timeline-panel trainer-timeline" aria-labelledby="trainer-sequence-title">
       <div className="timeline-heading"><div><p className="eyebrow">{played ? 'WATCH AND LEARN' : 'YOUR RETRY'}</p><h2 id="trainer-sequence-title">{played ? 'Algorithm playback' : 'Your move sequence'}</h2></div><div className="move-metrics"><strong data-testid="trainer-move-count">{htm}<small>HTM</small></strong><span>{cursor} / {history.length} actions<small>{rotations} grip rotations</small></span></div></div>
       <div className="move-tokens" aria-label="Practice move sequence">{history.length ? history.map((step, i) => <span key={i} className={`${i < cursor ? 'applied' : 'future'} ${i === cursor - 1 ? 'current' : ''}`} aria-current={i === cursor - 1 ? 'step' : undefined}>{step.token}</span>) : <p>Try the case, or play the verified algorithm.</p>}{active && <span className="pending-token">{active.token}</span>}</div>
@@ -65,7 +66,6 @@ function Practice({ item, onNext, hasNext }: { item: TrainingCase; onNext: () =>
     </section>
     <section className="panel trainer-entry" aria-labelledby="trainer-entry-title"><p className="eyebrow">TRY YOUR OWN APPROACH</p><h2 id="trainer-entry-title">Practice and check.</h2><form onSubmit={e => { e.preventDefault(); if (!movesDisabled && notation.trim()) controller.enqueue(notation) }}><label htmlFor="trainer-notation">Your practice notation</label><input id="trainer-notation" value={notation} disabled={movesDisabled} placeholder="e.g. R U R′" spellCheck={false} maxLength={10000} onChange={e => setNotation(e.target.value)} /><div className="trainer-entry-actions"><button disabled={movesDisabled || !notation.trim()} className="secondary-button">Apply practice moves</button><button type="button" className="primary-button" disabled={busy || played || !cursor} onClick={() => void check()}>{saving ? 'Verifying…' : 'Verify and save attempt'}</button></div></form><p className="analysis-help">Your attempt is checked by the cube engine before saving. Execution speed is not measured.</p>{feedback && <p className="trainer-feedback" role="status">{feedback}</p>}</section>
     {view.error && <p className="trainer-feedback" role="alert">{view.error}</p>}
-    <details className="trainer-keyboard"><summary>Keyboard shortcuts · same layout as Cube Explorer</summary><KeyboardControls disabled={movesDisabled} onMove={controller.enqueue} onUndo={controller.back} onRedo={controller.forward} /></details>
     <details className="panel trainer-source"><summary>Case scope and source</summary><p className="analysis-help">{item.scope} Catalog {item.version}. Source: {item.source}</p></details>
   </>
 }
