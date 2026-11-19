@@ -11,8 +11,9 @@ afterEach(() => sessionStorage.clear())
 const response = (v: unknown) => new Response(JSON.stringify(v))
 async function start() {
   const request = vi.fn().mockResolvedValueOnce(response(fixtures.r)).mockResolvedValueOnce(response(fixtures.inverseR))
-  vi.stubGlobal('fetch', request)
+  vi.stubGlobal('fetch', (url: string, options: RequestInit) => url.includes('physical-solves') ? Promise.resolve(response({ items: [], total: 0, sample_count: 0, personal_best_ms: null, mean_ms: null, scope: 'Physical practice only.' })) : request(url, options))
   const user = userEvent.setup(); render(<MemoryRouter><LiveSolve /></MemoryRouter>)
+  await user.click(screen.getByRole('button', { name: /Manual virtual solve/ }))
   await waitFor(() => expect(screen.getByRole('button', { name: 'Start inspection' })).toBeEnabled())
   return { user, request }
 }
@@ -35,7 +36,7 @@ it('captures a single inverse button input, confirms solvedness and offers real 
 it('supports Space release, face keys and Shift-prime without animation timestamps', async () => {
   const { user } = await start()
   await user.click(screen.getByLabelText('Optional 15-second inspection'))
-  await user.click(screen.getByRole('heading', { name: 'Live Solve', level: 1 }))
+  await user.click(screen.getByRole('heading', { name: 'Solve Studio', level: 1 }))
   await user.keyboard(' ')
   expect(screen.getByText('running')).toBeVisible()
   await user.keyboard('{Shift>}r{/Shift}')

@@ -5,15 +5,24 @@ import { CameraTracking } from '../vision/CameraTracking'
 import { TimerController } from './TimerController'
 import { saveSolve } from '../../api/library'
 import { storeTimedRecording } from './recording'
+import { PhysicalSolve } from './PhysicalSolve'
+import { SolveVideo } from '../video/SolveVideo'
+import './solveStudio.css'
 
 export function LiveSolve() {
-  const [mode, setMode] = useState<'manual' | 'camera'>('manual')
+  const [mode, setMode] = useState<'physical' | 'manual' | 'camera'>('physical')
+  const [active, setActive] = useState(false)
+  return <div className="solve-studio"><div className="page-heading studio-heading"><p className="eyebrow">A LITTLE FOCUS. A BETTER SOLVE.</p><h1 id="page-title">Solve Studio</h1><p className="explorer-subtitle">Your cube, your pace. Time a solve, capture it, and build your next breakthrough.</p></div><div className="studio-mode-tabs" role="group" aria-label="Solve input mode"><button disabled={active} aria-pressed={mode === 'physical'} onClick={() => setMode('physical')}>Physical cube<span>Stopwatch + optional video</span></button><button disabled={active} aria-pressed={mode === 'manual'} onClick={() => setMode('manual')}>Manual virtual solve<span>Exact turns + engine analysis</span></button><button disabled={active} aria-pressed={mode === 'camera'} onClick={() => setMode('camera')}>Experimental camera assistance<span>Review and confirm visible actions</span></button></div>{mode === 'physical' ? <PhysicalSolve onActive={setActive} /> : mode === 'manual' ? <VirtualSolve onActive={setActive} /> : <CameraTracking />}</div>
+}
+
+function VirtualSolve({ onActive }: { onActive: (value: boolean) => void }) {
   const [controller] = useState(() => new TimerController())
   const view = useSyncExternalStore(controller.subscribe, controller.getSnapshot)
   const [inspection, setInspection] = useState(true), [suffix, setSuffix] = useState(''), [facelets, setFacelets] = useState(''), [storageError, setStorageError] = useState('')
   const [saved, setSaved] = useState(''), [saveError, setSaveError] = useState(''), [retrySave, setRetrySave] = useState(0)
   const { phase, snapshot, loading, pending, record } = view
   const active = ['running', 'paused', 'stopping', 'inspection'].includes(phase)
+  useEffect(() => { onActive(active); return () => onActive(false) }, [active, onActive])
   useEffect(() => {
     if (!record || !['complete', 'stopped', 'interrupted'].includes(phase)) return
     let live = true
@@ -28,7 +37,6 @@ export function LiveSolve() {
     return () => { window.clearInterval(interval); document.removeEventListener('visibilitychange', visibility); window.removeEventListener('pagehide', leaving); controller.disconnect() }
   }, [controller])
   useEffect(() => {
-    if (mode !== 'manual') return
     const editing = (target: EventTarget | null) => target instanceof Element && !!target.closest('input,textarea,select,[contenteditable="true"]')
     const down = (event: KeyboardEvent) => {
       if (event.repeat || event.ctrlKey || event.metaKey || event.altKey || editing(event.target)) return
@@ -48,12 +56,9 @@ export function LiveSolve() {
     }
     window.addEventListener('keydown', down); window.addEventListener('keyup', up)
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
-  }, [controller, phase, inspection, suffix, mode])
+  }, [controller, phase, inspection, suffix])
   const time = phase === 'inspection' ? Math.max(0, 15000 - view.inspection_ms) : view.elapsed_ms
   return <>
-    <div className="page-heading"><p className="eyebrow">BE PRESENT. EVERY TURN COUNTS.</p><h1 id="page-title">Live Solve</h1><p className="explorer-subtitle">A focused timer for manual virtual practice.</p></div>
-    <div className="hint-actions" role="group" aria-label="Solve input mode"><button disabled={active} aria-pressed={mode === 'manual'} onClick={() => setMode('manual')}>Manual virtual solve</button><button disabled={active} aria-pressed={mode === 'camera'} onClick={() => setMode('camera')}>Experimental camera assistance</button></div>
-    {mode === 'camera' ? <CameraTracking /> : <>
     <section className="panel solve-timer" aria-label="Manual solve timer"><div className="timer-topline"><span className="outline-badge">MANUAL VIRTUAL INPUT</span><span className="timer-phase" role="status">{phase === 'complete' ? 'Solved · engine confirmed' : phase === 'paused' ? 'Paused practice · elapsed time continues' : phase === 'stopping' ? 'Confirming pending moves…' : phase}</span></div>
       <div className={`timer-digits ${phase === 'inspection' ? 'inspecting' : ''}`} aria-label={phase === 'inspection' ? 'Inspection remaining' : 'Elapsed solve time'}>{(time / 1000).toFixed(2)}<small>s</small></div>
       {phase === 'inspection' && <p className="analysis-help">{view.inspection_ms >= 15000 ? 'Inspection reached 15 seconds. Start when ready; any overrun is recorded.' : 'Inspect the cube. Release Space or select Start solve when ready.'} This practice countdown does not apply competition penalties.</p>}
@@ -69,7 +74,7 @@ export function LiveSolve() {
     <div className="explorer-stage timer-workspace"><section className="panel scene-shell" aria-label="Timed manual cube">{snapshot ? <CubeViewport snapshot={snapshot} duration={0} reducedMotion onFinish={() => {}} /> : <p role="status" className="engine-loading">{loading ? 'Connecting to the canonical cube engine…' : 'No validated state available.'}</p>}<p className="analysis-help timer-scene-note">Immediate accepted-state view. Animation and network acknowledgement times do not define input timestamps.</p></section>
       <section className="panel move-panel"><h2>Manual moves</h2><div className="turn-variants" role="group" aria-label="Timed turn variant">{[['', 'Quarter'], ["'", 'Inverse'], ['2', 'Double']].map(([v, name]) => <button key={name} aria-pressed={suffix === v} onClick={() => setSuffix(v)}>{name}</button>)}</div><div className="face-move-grid">{['U', 'R', 'F', 'D', 'L', 'B'].map(move => <button key={move} aria-label={`Timed move ${move}${suffix}`} disabled={phase !== 'running'} onClick={() => controller.move(move + suffix)}>{move}{suffix}</button>)}</div><div className="grip-controls">{['x', 'y', 'z'].map(move => <button key={move} aria-label={`Timed rotation ${move}${suffix}`} disabled={phase !== 'running'} onClick={() => controller.move(move + suffix)}>{move}{suffix}</button>)}</div><p className="analysis-help">Enter one turn per action. Algorithms cannot be pasted into a timed run. Use an inverse move to correct an error; accepted history is never rewritten.</p><button className="secondary-button" disabled={active || loading} onClick={() => void controller.scramble()}>Prepare random legal scramble</button></section></div>
     {!active && <details className="panel analysis-record"><summary>Prepare a specific cube state</summary><form onSubmit={e => { e.preventDefault(); void controller.importFacelets(facelets) }}><label>Initial facelets<textarea value={facelets} onChange={e => setFacelets(e.target.value)} maxLength={10000} spellCheck={false} rows={2} /></label><button className="secondary-button" disabled={loading || !facelets.trim()}>Validate preparation</button></form><p className="analysis-help">Only the validated initial state is used. Preparation moves and scrambles are outside solve timing. Random scrambles are legal move walks, not competition random-state scrambles.</p></details>}
+    <SolveVideo running={phase === 'running' || phase === 'paused'} busy={active} startedMono={record?.started_mono_ms} />
     {record && <details className="panel analysis-record"><summary>Exact manual recording · session-local JSON</summary><p className="analysis-help">Latest run only. Finalized runs are also saved to local SQLite; retry a failed save before leaving. An unfinished draft is marked interrupted on analysis.</p><textarea readOnly aria-label="Timed recording JSON" value={JSON.stringify(record, null, 2)} rows={8} /></details>}
-  </>}
   </>
 }

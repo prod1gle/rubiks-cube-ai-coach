@@ -3,7 +3,7 @@ import { Box, ChartNoAxesCombined, History, LayoutDashboard, Layers, Timer } fro
 export const navigation = [
   { path: '/', title: 'Dashboard', icon: LayoutDashboard },
   { path: '/cube-explorer', title: 'Cube Explorer', icon: Box },
-  { path: '/live-solve', title: 'Live Solve', icon: Timer },
+  { path: '/live-solve', title: 'Solve Studio', icon: Timer },
   { path: '/solve-analysis', title: 'Solve Analysis', icon: ChartNoAxesCombined },
   { path: '/algorithm-trainer', title: 'Algorithm Trainer', icon: Layers },
   { path: '/history', title: 'History', icon: History },

@@ -16,7 +16,7 @@ it('shows honest empty progress and unavailable timing', async () => {
 })
 it('lists stored solves, links exact analysis and deletes only after confirmation', async () => {
   const request = vi.fn().mockResolvedValueOnce(response({ total: 1, items: [{ id: 'saved-id', created_at: '2026-11-16T12:00:00Z', source: 'manual-virtual', status: 'complete', summary: { htm: 23, elapsed_ms: null } }] })).mockResolvedValueOnce(response({ deleted: 'saved-id' })).mockResolvedValueOnce(response({ total: 0, items: [] }))
-  vi.stubGlobal('fetch', (path: string, options: unknown) => path === '/api/tracking' ? Promise.resolve(response({ items: [] })) : request(path, options))
+  vi.stubGlobal('fetch', (path: string, options: unknown) => path === '/api/tracking' ? Promise.resolve(response({ items: [] })) : path === '/api/physical-solves' ? Promise.resolve(response({ items: [], total: 0, personal_best_ms: null, mean_ms: null, sample_count: 0, scope: 'Physical stopwatch practice.' })) : request(path, options))
   const user = userEvent.setup(); render(<MemoryRouter><History /></MemoryRouter>)
   expect(await screen.findByText(/23 HTM/)).toHaveTextContent('Timing unavailable')
   expect(screen.getByRole('link', { name: /2026/ })).toHaveAttribute('href', '/solve-analysis?solve=saved-id')

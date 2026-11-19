@@ -13,7 +13,7 @@ function renderPage(path = '/') {
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn().mockImplementation((path: string) => Promise.resolve(
-    new Response(JSON.stringify(path === '/api/cube' ? cubeFixtures.solved : path.startsWith('/api/solves') ? { total: 0, items: [] } : path === '/api/training' ? { cases: [] } : path === '/api/dashboard' ? { total_records: 0, completed_solves: 0, timed_sample_count: 0, practice_attempts: 0, personal_best_ms: null, average_tps: null, average_htm: null, trends: [], scope: 'Completed manual virtual solves.' } : healthy)),
+    new Response(JSON.stringify(path === '/api/cube' ? cubeFixtures.solved : path === '/api/physical-solves' ? { items: [], total: 0, personal_best_ms: null, mean_ms: null, sample_count: 0, scope: 'Physical stopwatch records.' } : path.startsWith('/api/solves') ? { total: 0, items: [] } : path === '/api/training' ? { cases: [] } : path === '/api/dashboard' ? { total_records: 0, completed_solves: 0, timed_sample_count: 0, practice_attempts: 0, personal_best_ms: null, average_tps: null, average_htm: null, trends: [], scope: 'Completed manual virtual solves.' } : healthy)),
   )))
 })
 
@@ -23,12 +23,12 @@ describe('workspace navigation', () => {
     renderPage()
     await screen.findByText('Local API reachable')
     const nav = screen.getByRole('navigation', { name: 'Main navigation' })
-    for (const title of ['Cube Explorer', 'Live Solve', 'Solve Analysis', 'Algorithm Trainer', 'History']) {
+    for (const title of ['Cube Explorer', 'Solve Studio', 'Solve Analysis', 'Algorithm Trainer', 'History']) {
       const link = within(nav).getByRole('link', { name: title })
       await user.click(link)
       expect(screen.getByRole('heading', { name: title, level: 1 })).toBeVisible()
       if (title === 'Cube Explorer') expect(await screen.findByText('Solved · in any grip')).toBeVisible()
-      else if (title === 'Live Solve') expect(screen.getByRole('region', { name: 'Manual solve timer' })).toBeVisible()
+      else if (title === 'Solve Studio') expect(screen.getByRole('region', { name: 'Physical cube stopwatch' })).toBeVisible()
       else if (title === 'Solve Analysis') expect(screen.getByRole('heading', { name: 'Choose a recorded segment' })).toBeVisible()
       else expect(screen.queryByRole('heading', { name: 'Not implemented yet' })).not.toBeInTheDocument()
       expect(link).toHaveAttribute('aria-current', 'page')
