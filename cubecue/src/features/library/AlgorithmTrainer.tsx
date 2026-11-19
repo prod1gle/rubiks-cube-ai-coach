@@ -1,19 +1,30 @@
 import { useEffect, useRef, useState } from 'react'
+import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Eye, EyeOff, Pause, Play, RefreshCw } from 'lucide-react'
 import { library, loadTraining } from '../../api/library'
 import type { TrainingCase, TrainingRow } from '../../api/library'
 import { useCube } from '../cube/useCube'
 import CubeViewport from '../cube/CubeViewport'
+import { MoveGrid } from '../cube/MoveGrid'
+import { KeyboardControls } from '../cube/KeyboardControls'
 
 function Practice({ item }: { item: TrainingCase }) {
   const view = useCube(item.start)
-  const [notation, setNotation] = useState(''), [revealed, setRevealed] = useState(false), [feedback, setFeedback] = useState(''), [saving, setSaving] = useState(false), [played, setPlayed] = useState(false)
+  const { controller, snapshot, active, history, cursor, paused, playing } = view
+  const [notation, setNotation] = useState(''), [revealed, setRevealed] = useState(false), [feedback, setFeedback] = useState(''), [saving, setSaving] = useState(false), [played, setPlayed] = useState(false), [duration, setDuration] = useState(0.28)
   const attempt = useRef(crypto.randomUUID()), savedWord = useRef<string | undefined>(undefined)
-  const busy = view.loading || view.planning || !!view.active || view.pending > 0 || saving
-  const reset = () => { void view.controller.restoreSnapshot(item.start); attempt.current = crypto.randomUUID(); savedWord.current = undefined; setFeedback(''); setNotation(''); setPlayed(false) }
+  const working = view.planning || !!active || view.pending > 0
+  const busy = view.loading || working || saving || (playing && !paused)
+  const movesDisabled = view.loading || saving || played
+  const applied = history.slice(0, cursor)
+  const htm = applied.reduce((sum, step) => sum + step.htm, 0)
+  const rotations = applied.filter(step => step.rotation).length
+  const reset = () => { void controller.restoreSnapshot(item.start); attempt.current = crypto.randomUUID(); savedWord.current = undefined; setFeedback(''); setNotation(''); setPlayed(false) }
+  const demonstrate = () => { setRevealed(true); setPlayed(true); setFeedback(''); void controller.restoreSnapshot(item.start).then(() => controller.enqueue(item.algorithm)) }
+  const togglePlayback = () => { if (paused) controller.resume(); else if (working || playing) controller.pause(); else controller.play() }
   const check = async () => {
     setSaving(true); setFeedback('')
     try {
-      const word = view.history.slice(0, view.cursor).map(s => s.token).join(' ')
+      const word = applied.map(s => s.token).join(' ')
       if (played) throw new Error('Playback is a demonstration, not a practice attempt. Repeat the case to record your retry.')
       if (savedWord.current !== undefined && savedWord.current !== word) attempt.current = crypto.randomUUID()
       const result = await library<{ success: boolean; metrics: { htm: number } }>('/practice', { id: attempt.current, case_id: item.id, notation: word })
@@ -21,13 +32,55 @@ function Practice({ item }: { item: TrainingCase }) {
       setFeedback(`${result.success ? 'Objective achieved' : 'Objective not reached'}. Attempt saved · ${result.metrics.htm} HTM. Execution speed was not measured.`)
     } catch (e) { setFeedback((e as Error).message) } finally { setSaving(false) }
   }
-  return <section className="panel library-panel"><p className="eyebrow">{item.stage} · ENGINE VERIFIED</p><h2>{item.id}</h2><p className="analysis-help">White down, green front. Repeat restores the identical state and grip. F2L requires cross and other starting slots preserved; OLL requires orientation and F2L; PLL permits final AUF.</p>{view.snapshot && <CubeViewport snapshot={view.snapshot} active={view.active} duration={0.28} reducedMotion={window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false} onFinish={view.controller.finish} />}
-    <div className="hint-actions"><button disabled={busy} onClick={reset}>Repeat same case</button><button disabled={busy} onClick={() => { setRevealed(true); setPlayed(true); void view.controller.restoreSnapshot(item.start).then(() => view.controller.enqueue(item.algorithm)) }}>Play verified algorithm</button><button disabled={busy || !view.cursor} onClick={view.controller.back}>Step back</button><button disabled={busy || view.cursor >= view.history.length} onClick={view.controller.forward}>Step forward</button><button onClick={() => setRevealed(v => !v)} aria-expanded={revealed}>{revealed ? 'Hide algorithm' : 'Reveal algorithm'}</button></div>{revealed && <p><code>{item.algorithm}</code></p>}<div className="practice-moves" role="group" aria-label="Trainer moves">{['U', 'R', 'F', 'D', 'L', 'B', 'x', 'y', 'z'].map(m => <button disabled={busy} key={m} onClick={() => view.controller.enqueue(m)}>{m}</button>)}</div>
-    <form onSubmit={e => { e.preventDefault(); view.controller.enqueue(notation) }}><label>Your practice notation<input value={notation} maxLength={10000} onChange={e => setNotation(e.target.value)} /></label><div className="hint-actions"><button disabled={busy || !notation.trim()} className="primary-button">Apply practice moves</button><button type="button" disabled={busy || played || !view.cursor} onClick={() => void check()}>Verify and save attempt</button></div></form><p>{view.history.slice(0, view.cursor).map(s => s.token).join(' ') || 'No attempt moves yet.'}</p>{feedback && <p role="status">{feedback}</p>}{view.error && <p role="alert">{view.error}</p>}<p className="analysis-help">{item.scope} Catalog {item.version}. Source: {item.source}</p></section>
+  return <>
+    <div className="explorer-stage trainer-workspace">
+      <section className="panel scene-shell" aria-label="Training cube">
+        <div className="scene-topline"><div className="trainer-case-name"><p className="eyebrow">{item.stage} · ENGINE VERIFIED</p><h2>{item.id}</h2></div><span className="trainer-mode">{played ? 'Demonstration' : 'Your practice'}</span></div>
+        {snapshot && <CubeViewport snapshot={snapshot} active={active} duration={duration} reducedMotion={window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false} onFinish={controller.finish} />}
+        <div className="scene-status"><span>Case grip: white down · green front</span><span>{active ? `Animating ${active.token}` : working ? 'Preparing moves…' : 'Cube synchronized'}</span></div>
+      </section>
+      <section className="panel move-panel trainer-controls" aria-labelledby="trainer-moves-title">
+        <p className="eyebrow">BUILD MUSCLE MEMORY</p><h2 id="trainer-moves-title">Make your move.</h2>
+        <MoveGrid disabled={movesDisabled} onMove={controller.enqueue} />
+        <div className="workspace-actions"><button className="primary-button" disabled={view.loading || saving} onClick={reset}><RefreshCw size={14} aria-hidden="true" />Repeat same case</button></div>
+        <p className="keyboard-note">Quarter turns, primes, then doubles.<br />I / K turn R / R′ · J / F turn U / U′.</p>
+        {played && <p className="trainer-notice" role="status">Demonstration only. Repeat the case to start your own attempt.</p>}
+      </section>
+    </div>
+    <section className="panel timeline-panel trainer-timeline" aria-labelledby="trainer-sequence-title">
+      <div className="timeline-heading"><div><p className="eyebrow">{played ? 'WATCH AND LEARN' : 'YOUR RETRY'}</p><h2 id="trainer-sequence-title">{played ? 'Algorithm playback' : 'Your move sequence'}</h2></div><div className="move-metrics"><strong data-testid="trainer-move-count">{htm}<small>HTM</small></strong><span>{cursor} / {history.length} actions<small>{rotations} grip rotations</small></span></div></div>
+      <div className="move-tokens" aria-label="Practice move sequence">{history.length ? history.map((step, i) => <span key={i} className={`${i < cursor ? 'applied' : 'future'} ${i === cursor - 1 ? 'current' : ''}`} aria-current={i === cursor - 1 ? 'step' : undefined}>{step.token}</span>) : <p>Try the case, or play the verified algorithm.</p>}{active && <span className="pending-token">{active.token}</span>}</div>
+      <div className="playback-row"><div className="playback-buttons">
+        <button aria-label="Go to start" disabled={busy || !cursor} onClick={() => controller.seek(0)}><ChevronFirst size={17} /></button>
+        <button aria-label="Step back" disabled={busy || !cursor} onClick={controller.back}><ChevronLeft size={18} /></button>
+        <button className="play-toggle" aria-label={paused ? 'Resume playback' : working || playing ? 'Pause playback' : 'Play sequence'} disabled={view.loading || saving || (!working && !history.length)} onClick={togglePlayback}>{!paused && (working || playing) ? <Pause size={17} /> : <Play size={17} />}</button>
+        <button aria-label="Step forward" disabled={busy || cursor >= history.length} onClick={controller.forward}><ChevronRight size={18} /></button>
+        <button aria-label="Go to end" disabled={busy || cursor >= history.length} onClick={() => controller.seek(history.length)}><ChevronLast size={17} /></button>
+      </div><label className="sr-only" htmlFor="trainer-position">Playback position</label><input id="trainer-position" type="range" min="0" max={history.length} value={cursor} disabled={busy || !history.length} onChange={e => controller.seek(Number(e.target.value))} /><span className="playback-position">{cursor} / {history.length}</span></div>
+    </section>
+    <section className="panel trainer-learning" aria-labelledby="trainer-learn-title">
+      <div><p className="eyebrow">RECOGNIZE. UNDERSTAND. REPEAT.</p><h2 id="trainer-learn-title">Learn this case.</h2><p className="analysis-help">{item.stage === 'F2L' ? 'Solve the pair while preserving the cross and other starting slots.' : item.stage === 'OLL' ? 'Orient the last layer while preserving F2L.' : 'Permute the last layer while preserving F2L. Final AUF is allowed.'}</p></div>
+      <div className="trainer-learning-actions"><button className="primary-button" disabled={busy} onClick={demonstrate}><Play size={15} aria-hidden="true" />Play verified algorithm</button><button className="secondary-button" onClick={() => setRevealed(v => !v)} aria-expanded={revealed} aria-controls="trainer-algorithm">{revealed ? <EyeOff size={15} aria-hidden="true" /> : <Eye size={15} aria-hidden="true" />}{revealed ? 'Hide algorithm' : 'Reveal algorithm'}</button><label className="speed-label">Animation speed<select value={duration} onChange={e => setDuration(Number(e.target.value))}><option value={0.16}>Quick · 0.16 s</option><option value={0.28}>Smooth · 0.28 s</option><option value={0.5}>Study · 0.5 s</option></select></label></div>
+      {revealed && <div id="trainer-algorithm" className="trainer-algorithm"><code>{item.algorithm}</code><span>{item.plan.sequence.htm} HTM · verified from the original case state</span></div>}
+    </section>
+    <section className="panel trainer-entry" aria-labelledby="trainer-entry-title"><p className="eyebrow">TRY YOUR OWN APPROACH</p><h2 id="trainer-entry-title">Practice and check.</h2><form onSubmit={e => { e.preventDefault(); if (!movesDisabled && notation.trim()) controller.enqueue(notation) }}><label htmlFor="trainer-notation">Your practice notation</label><input id="trainer-notation" value={notation} disabled={movesDisabled} placeholder="e.g. R U R′" spellCheck={false} maxLength={10000} onChange={e => setNotation(e.target.value)} /><div className="trainer-entry-actions"><button disabled={movesDisabled || !notation.trim()} className="secondary-button">Apply practice moves</button><button type="button" className="primary-button" disabled={busy || played || !cursor} onClick={() => void check()}>{saving ? 'Verifying…' : 'Verify and save attempt'}</button></div></form><p className="analysis-help">Your attempt is checked by the cube engine before saving. Execution speed is not measured.</p>{feedback && <p className="trainer-feedback" role="status">{feedback}</p>}</section>
+    {view.error && <p className="trainer-feedback" role="alert">{view.error}</p>}
+    <details className="trainer-keyboard"><summary>Keyboard shortcuts · same layout as Cube Explorer</summary><KeyboardControls disabled={movesDisabled} onMove={controller.enqueue} onUndo={controller.back} onRedo={controller.forward} /></details>
+    <details className="panel trainer-source"><summary>Case scope and source</summary><p className="analysis-help">{item.scope} Catalog {item.version}. Source: {item.source}</p></details>
+  </>
 }
+
 export function AlgorithmTrainer() {
-  const [rows, setRows] = useState<TrainingRow[]>([]), [stage, setStage] = useState('F2L'), [selected, setSelected] = useState(''), [item, setItem] = useState<TrainingCase>(), [error, setError] = useState(''), [revision, setRevision] = useState(0)
-  useEffect(() => { const task = new AbortController(); void library<{ cases: TrainingRow[] }>('/training', undefined, 'GET', task.signal).then(v => { if (!Array.isArray(v.cases)) throw new Error('Case catalog unavailable.'); setRows(v.cases); setSelected(v.cases.find(c => c.stage === 'F2L')?.id ?? '') }).catch(e => { if (!task.signal.aborted) setError(e.message) }); return () => task.abort() }, [revision])
-  useEffect(() => { if (!selected) return; const task = new AbortController(); void loadTraining(selected, task.signal).then(v => { setItem(v); setError('') }).catch(e => { if (!task.signal.aborted) setError(e.message) }); return () => task.abort() }, [selected, revision])
-  return <><div className="page-heading"><p className="eyebrow">RECOGNITION. REPETITION.</p><h1 id="page-title">Algorithm Trainer</h1><p className="explorer-subtitle">Real cases. Repeatable starting states. Engine-verified progress.</p></div><section className="panel library-panel"><label>Stage<select value={stage} onChange={e => { const v = e.target.value; setStage(v); setSelected(rows.find(r => r.stage === v)?.id ?? '') }}>{['F2L', 'OLL', 'PLL'].map(s => <option key={s}>{s}</option>)}</select></label><label>Recognized case<select value={selected} onChange={e => setSelected(e.target.value)}>{rows.filter(r => r.stage === stage).map(r => <option key={r.id}>{r.id}</option>)}</select></label><p className="analysis-help">57 OLL and 21 PLL classes. F2L offers 24 engine-derived insertion cases, with coordinate identifiers; this is a useful subset, not a claim to cover every conventional F2L case.</p></section>{error && <p role="alert">{error}<button onClick={() => setRevision(v => v + 1)}>Retry catalog</button></p>}{!item && !error && <p role="status">Loading verified case…</p>}{item && item.id === selected && <Practice key={item.id} item={item} />}</>
+  const [rows, setRows] = useState<TrainingRow[]>([]), [stage, setStage] = useState('F2L'), [selection, setSelection] = useState(''), [item, setItem] = useState<TrainingCase>(), [error, setError] = useState(''), [revision, setRevision] = useState(0), [loading, setLoading] = useState(true)
+  useEffect(() => { const task = new AbortController(); void library<{ cases: TrainingRow[] }>('/training', undefined, 'GET', task.signal).then(v => { if (!Array.isArray(v.cases) || !v.cases.length) throw new Error('Case catalog unavailable.'); if (!task.signal.aborted) setRows(v.cases) }).catch(e => { if (!task.signal.aborted) { setError(e.message); setLoading(false) } }); return () => task.abort() }, [revision])
+  const cases = rows.filter(r => r.stage === stage)
+  const selected = cases.find(r => r.id === selection)?.id ?? cases[0]?.id ?? ''
+  const choose = (id: string) => { setSelection(id); setItem(undefined); setLoading(true); setError('') }
+  useEffect(() => { if (!selected) return; const task = new AbortController(); void loadTraining(selected, task.signal).then(v => { if (!task.signal.aborted) { setItem(v); setLoading(false) } }).catch(e => { if (!task.signal.aborted) { setError(e.message); setLoading(false) } }); return () => task.abort() }, [selected, revision])
+  return <><div className="page-heading"><p className="eyebrow">RECOGNITION. REPETITION.</p><h1 id="page-title">Algorithm Trainer</h1><p className="explorer-subtitle">Learn the case. Find your rhythm. Repeat from the same state.</p></div>
+    <section className="panel trainer-catalog" aria-label="Choose a training case"><div className="trainer-catalog-fields"><label>Stage<select value={stage} onChange={e => { setStage(e.target.value); choose('') }}>{['F2L', 'OLL', 'PLL'].map(s => <option key={s}>{s}</option>)}</select></label><label>Recognized case<select disabled={!cases.length} value={selected} onChange={e => { choose(e.target.value) }}>{cases.map(r => <option key={r.id}>{r.id}</option>)}</select></label><span className="trainer-case-count">{cases.length} {stage} cases</span></div><p className="analysis-help">F2L: 24 insertion cases (a curated subset) · OLL: 57 classes · PLL: 21 classes. Every starting state and algorithm is engine verified.</p></section>
+    {error && <div className="trainer-feedback" role="alert">{error}<button className="secondary-button" onClick={() => { setError(''); setLoading(true); setRevision(v => v + 1) }}>Retry catalog</button></div>}
+    {loading && !error && <p className="trainer-feedback" role="status">Loading verified case…</p>}
+    {!loading && !error && item && item.id === selected && item.stage === stage && <Practice key={`${item.id}-${revision}`} item={item} />}
+  </>
 }

@@ -8,9 +8,8 @@ import { FaceletNet } from './FaceletNet'
 import { SolutionPanel } from './SolutionPanel'
 import { CoachPanel } from './CoachPanel'
 import { KeyboardControls } from './KeyboardControls'
+import { MoveGrid } from './MoveGrid'
 import { saveRecording } from '../analysis/recording'
-
-const faceLabels: Record<string, string> = { U: 'Up', R: 'Right', F: 'Front', D: 'Down', L: 'Left', B: 'Back' }
 
 export function CubeExplorer() {
   const { search } = useLocation()
@@ -61,9 +60,7 @@ export function CubeExplorer() {
         </section>
         <section className="panel move-panel" aria-labelledby="move-controls-title">
           <p className="eyebrow">TAKE IT FOR A SPIN</p><h2 id="move-controls-title">Make your move.</h2>
-          <div className="face-turn-scroll"><div className="face-move-grid explorer-move-grid" role="group" aria-label="Face turns">{['', "'", '2'].flatMap(variant => ['U', 'R', 'F', 'D', 'L', 'B'].map(face => <button key={face + variant} aria-label={`Apply ${face}${variant}`} disabled={loading || solving} onClick={() => controller.enqueue(face + variant)}><span>{face}{variant}</span><small>{faceLabels[face]}</small></button>))}</div></div>
-          <div className="grip-heading"><span>Rotate the grip</span><small>0 HTM</small></div>
-          <div className="grip-controls explorer-grip-grid" role="group" aria-label="Grip rotations">{['', "'", '2'].flatMap(variant => ['x', 'y', 'z'].map(axis => <button key={axis + variant} aria-label={`Rotate ${axis}${variant}`} disabled={loading || solving} onClick={() => controller.enqueue(axis + variant)}>{axis}{variant}</button>))}</div>
+          <MoveGrid disabled={loading || solving} onMove={controller.enqueue} />
           <div className="workspace-actions"><button className="primary-button" disabled={loading || solving} title="20 random legal face turns from the current state; not a WCA random-state scramble" onClick={controller.scramble}><Shuffle size={15} aria-hidden="true" />Scramble</button><button className="secondary-button" disabled={loading} title="Reset cube and clear history and pending inputs" onClick={() => void controller.reset()}><RefreshCw size={14} aria-hidden="true" />Reset cube</button></div>
           <p className="keyboard-note">Use the reference key map below.<br />I / K turn R / R′ · J / F turn U / U′.</p>
         </section>

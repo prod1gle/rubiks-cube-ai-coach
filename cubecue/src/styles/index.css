@@ -432,3 +432,43 @@ button, input { font: inherit; }
 .explorer-move-grid small { font-size: 6px; }
 .grip-controls.explorer-grip-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 5px; max-width: none; }
 .explorer-grip-grid button { width: auto; min-height: 32px; }
+
+/* Algorithm Trainer: the same direct controls and cube surface as Explorer. */
+.trainer-catalog { padding: 20px 24px; margin-bottom: 22px; }
+.trainer-catalog-fields { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; }
+.trainer-catalog-fields label { display: grid; gap: 8px; font-size: 11px; color: #a6b5c9; flex: 1; min-width: 120px; }
+.trainer-catalog-fields label:nth-child(2) { flex: 3; min-width: 0; }
+.trainer-catalog select, .trainer-entry input { width: 100%; min-width: 0; padding: 12px; background: #131920; color: #c2d0e3; border: 1px solid #303d50; border-radius: 7px; }
+.trainer-case-count { padding: 12px 0; font-size: 11px; color: #8d9fb5; }
+.trainer-catalog .analysis-help { margin-top: 14px; }
+.trainer-case-name { min-width: 0; }
+.trainer-case-name .eyebrow { font-size: 7px; }
+.trainer-case-name h2 { margin-top: 8px; font-size: 15px; overflow-wrap: anywhere; }
+.trainer-mode { flex-shrink: 0; font-size: 9px; color: #9ab1cc; border: 1px solid #2e3e52; border-radius: 20px; padding: 6px 9px; }
+.trainer-workspace .scene-status { flex-wrap: wrap; }
+.trainer-notice { font-size: 11px; line-height: 1.7; color: #efb777; border-top: 1px solid #303a45; padding-top: 14px; margin-top: 14px; }
+.trainer-timeline { margin-bottom: 20px; }
+.trainer-learning, .trainer-entry { padding: 24px; margin-bottom: 20px; }
+.trainer-learning h2, .trainer-entry h2 { font-size: 21px; margin: 8px 0 12px; }
+.trainer-learning-actions, .trainer-entry-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
+.trainer-learning-actions .speed-label { margin: 0 0 0 auto; flex-wrap: wrap; }
+.trainer-learning button, .trainer-entry button { padding: 11px 14px; font-size: 11px; gap: 8px; }
+.trainer-algorithm { padding: 18px; margin-top: 18px; border: 1px solid #324155; border-radius: 8px; background: #131b25; }
+.trainer-algorithm code { display: block; font-size: 19px; line-height: 1.8; overflow-wrap: anywhere; color: #c5d6ee; }
+.trainer-algorithm span { display: block; font-size: 10px; color: #94a7c0; margin-top: 8px; }
+.trainer-entry label { display: block; font-size: 11px; margin: 18px 0 9px; color: #a6b5c9; }
+.trainer-entry input { font-family: ui-monospace, monospace; }
+.trainer-feedback { padding: 16px; border: 1px solid #35475d; border-radius: 8px; color: #bed1e9; line-height: 1.7; font-size: 12px; margin: 16px 0; }
+.trainer-feedback button { margin-left: 12px; }
+.trainer-keyboard { margin: 24px 0; }
+.trainer-keyboard > summary, .trainer-source > summary { cursor: pointer; font-size: 12px; color: #a8b9ce; padding: 14px 0; }
+.trainer-keyboard .keyboard-panel { margin-top: 8px; }
+.trainer-source { padding: 8px 24px; }
+@media (max-width: 600px) {
+  .trainer-catalog, .trainer-learning, .trainer-entry { padding: 20px; }
+  .trainer-catalog-fields { gap: 12px; }
+  .trainer-catalog-fields label:nth-child(2) { flex-basis: 100%; order: 2; }
+  .trainer-learning-actions { align-items: stretch; }
+  .trainer-learning-actions .speed-label { flex-basis: 100%; margin: 6px 0 0; }
+  .trainer-entry-actions button { flex: 1; }
+}
