@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowUpRight, LockKeyhole } from 'lucide-react'
 import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { CubeMark } from '../components/CubeMark'
 import { useHealth } from '../api/useHealth'
+import './workspace.css'
 import { Dashboard } from './Dashboard'
 import { navigation } from './navigation'
 import { AlgorithmTrainer } from '../features/library/AlgorithmTrainer'
@@ -35,7 +36,7 @@ export function App() {
           {navigation.map(({ path, title, icon: Icon }) => <NavLink to={path} end={path === '/'} key={path} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Icon size={18} strokeWidth={1.7} aria-hidden="true" /><span>{title}</span>{path === '/' && <span className="nav-active-dot" />}</NavLink>)}
         </nav>
         <div className="sidebar-bottom">
-          <div className="sidebar-note"><span className="tiny-label">A WORKSPACE IN THE MAKING</span><p>Good practice starts<br />with a solid foundation.</p><span className="sidebar-release">5B · experimental camera assistance <ArrowUpRight size={13} aria-hidden="true" /></span></div>
+          <Link to="/scan" className="sidebar-note block"><span className="tiny-label">PHYSICAL CUBE</span><p>Scan your cube</p><span className="sidebar-release">Capture and verify six faces <ArrowUpRight size={13} aria-hidden="true" /></span></Link>
           <div className="local-label"><LockKeyhole size={12} aria-hidden="true" /><span>Local-first. Yours to explore.</span></div>
         </div>
       </aside>
@@ -55,7 +56,7 @@ export function App() {
             <Route path="*" element={<section className="not-found panel"><p className="eyebrow">PAGE NOT FOUND</p><h1 id="page-title">A turn off the beaten path.</h1><p>This workspace page doesn’t exist.</p><Link to="/" className="primary-button"><ArrowLeft size={16} aria-hidden="true" /> Return to Dashboard</Link></section>} />
           </Routes>
         </main>
-        <footer className="app-footer"><span>CUBECUE <span className="footer-divider">/</span> MORE INTENTIONAL PRACTICE.</span><span>VERIFIED SOLVER <span className="footer-dot" /> 3</span></footer>
+        <footer className="app-footer"><span>CUBECUE <span className="footer-divider">/</span> MORE INTENTIONAL PRACTICE.</span><span>3×3 PRACTICE</span></footer>
       </div>
     </div>
   )

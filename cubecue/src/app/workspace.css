@@ -1,0 +1,15 @@
+.sidebar { overflow-y: auto; }
+.sidebar .brand { margin-bottom: 30px; }
+.sidebar-bottom { padding-top: 28px; }
+.sidebar-note p { margin-bottom: 12px; }
+.practice-toolkit { margin: 24px 0; padding: 24px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 24px; }
+.practice-toolkit h2 { margin: 8px 0; font-size: 20px; }
+.practice-toolkit p:not(.eyebrow) { color: var(--muted); font-size: 12px; line-height: 1.7; }
+.toolkit-links { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.toolkit-links a { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px; min-height: 44px; border: 1px solid #2b394a; border-radius: 7px; color: #c3d7ef; font-size: 12px; }
+.toolkit-links a:hover { background: #1d2c40; border-color: #57799f; }
+@media (max-width: 700px) {
+  .sidebar .brand { margin-bottom: 18px; }
+  .practice-toolkit { grid-template-columns: 1fr; padding: 20px; gap: 16px; }
+  .toolkit-links { grid-template-columns: 1fr; }
+}

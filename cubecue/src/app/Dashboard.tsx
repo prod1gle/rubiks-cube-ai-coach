@@ -1,13 +1,14 @@
-import { ArrowRight, ArrowUpRight, Box, Check, ChartNoAxesCombined, Timer } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, BookOpen, Sparkles, Timer } from 'lucide-react'
+import { PhysicalHistory } from '../features/timer/PhysicalHistory'
 import { Progress } from '../features/library/Progress'
 import { Link } from 'react-router-dom'
 import { ConnectionCard } from '../components/ConnectionCard'
 import type { ConnectionState } from '../api/useHealth'
 
 const workflows = [
-  { title: 'Understand every turn', text: 'Explore the cube and the ideas behind a solution.', to: '/cube-explorer', label: 'Cube Explorer', icon: Box, className: 'blue' },
-  { title: 'Find your rhythm', text: 'A focused workspace for the solves ahead.', to: '/live-solve', label: 'Live Solve', icon: Timer, className: 'orange' },
-  { title: 'See what could change', text: 'Revisit each stage. Make your next solve more intentional.', to: '/solve-analysis', label: 'Solve Analysis', icon: ChartNoAxesCombined, className: 'sky' },
+  { title: 'Your first solved cube', text: 'Start with the pieces, learn the notation, and practice one layer at a time.', to: '/learn', label: 'Learn to Solve', icon: BookOpen, className: 'blue' },
+  { title: 'One place for every solve', text: 'Time your physical cube, record a video, or practice with a verified virtual cube.', to: '/live-solve', label: 'Solve Studio', icon: Timer, className: 'orange' },
+  { title: 'Practice with a purpose', text: 'Turn your actual solve data into a focused next step, with optional AI guidance.', to: '/coach', label: 'AI Coach', icon: Sparkles, className: 'sky' },
 ]
 
 export function Dashboard({ connection, retry }: { connection: ConnectionState; retry: () => void }) {
@@ -15,17 +16,16 @@ export function Dashboard({ connection, retry }: { connection: ConnectionState; 
     <>
       <div className="page-heading flex items-start justify-between gap-4">
         <div><p className="eyebrow">YOUR PERSONAL CUBE LAB</p><h1 id="page-title">Dashboard</h1></div>
-        <span className="outline-badge">Verified solver <span>3</span></span>
+
       </div>
 
-      <Progress />
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero-copy">
-          <div className="hero-kicker"><span /> A BETTER WAY TO PRACTICE</div>
-          <h2 id="hero-title">Every turn.<br /><span>A little better.</span></h2>
-          <p>A thoughtful space to understand your cube,<br className="desktop-break" /> build good habits, and find your next breakthrough.</p>
-          <Link className="primary-button" to="/cube-explorer">Explore the workspace <ArrowRight size={16} aria-hidden="true" /></Link>
-          <p className="hero-note">Your 3D cube, short solutions, and genuine CFOP plans are ready.</p>
+
+          <h2 id="hero-title">Practice your next<br /><span>3×3 solve.</span></h2>
+          <p>Learn your first solution, find your rhythm,<br className="desktop-break" /> and make every practice session count.</p>
+          <Link className="primary-button" to="/live-solve">Start a solve <ArrowRight size={16} aria-hidden="true" /></Link>
+          <p className="hero-note">New to cubing? <Link to="/learn" className="underline">Learn your first solve</Link>.</p>
         </div>
         <div className="hero-art" aria-hidden="true">
           <div className="art-orbit orbit-one" /><div className="art-orbit orbit-two" />
@@ -40,32 +40,27 @@ export function Dashboard({ connection, retry }: { connection: ConnectionState; 
       </section>
 
       <section className="workflow-section" aria-labelledby="workflows-title">
-        <div className="section-heading"><h2 id="workflows-title">Make room for better practice.</h2><span>EXPLORE YOUR WORKSPACE</span></div>
+        <div className="section-heading"><h2 id="workflows-title">Where are you in your cubing journey?</h2><span>EXPLORE YOUR WORKSPACE</span></div>
         <div className="workflow-grid">
           {workflows.map(({ title, text, to, label, icon: Icon, className }) => (
             <Link to={to} className="workflow-card" key={to} aria-label={`Open ${label}`}>
               <div className="flex items-start justify-between"><span className={`icon-tile ${className}`}><Icon size={22} strokeWidth={1.5} /></span><ArrowUpRight size={17} className="card-arrow" aria-hidden="true" /></div>
               <h3>{title}</h3><p>{text}</p>
-              <div className="workflow-bottom"><span>{label}</span><span className="planned-label">{to === '/cube-explorer' ? '3D available' : 'Available'}</span></div>
+              <div className="workflow-bottom"><span>{label}</span></div>
             </Link>
           ))}
         </div>
       </section>
 
-      <div className="dashboard-bottom">
+      <section className="practice-toolkit panel" aria-label="Speedcubing tools">
+        <div><p className="eyebrow">KEEP GOING</p><h2>Speedcubing tools</h2><p>Explore a state, rehearse an algorithm, or replay a recorded solve.</p></div>
+        <div className="toolkit-links"><Link to="/cube-explorer">Cube Explorer <ArrowUpRight size={15} /></Link><Link to="/algorithm-trainer">Algorithm Trainer <ArrowUpRight size={15} /></Link><Link to="/solve-analysis">Solve Analysis <ArrowUpRight size={15} /></Link><Link to="/scan">Guided Scan <ArrowUpRight size={15} /></Link></div>
+      </section>
+      <Progress />
+      <PhysicalHistory compact />
+      <div className="mt-6">
         <ConnectionCard connection={connection} retry={retry} />
-        <section className="panel readiness-card" aria-labelledby="readiness-title">
-          <div className="flex items-center justify-between"><span className="eyebrow">BUILT WITH INTENTION</span><span className="muted text-xs">MILESTONE 4</span></div>
-          <h2 id="readiness-title">First, a reliable foundation.</h2>
-          <ul className="readiness-list">
-            <li><span className="ready-icon"><Check size={13} /></span><span>Local application & navigation</span><span className="readiness-status">Available</span></li>
-            <li><span className="ready-icon"><Check size={13} /></span><span>Backend health checks</span><span className="readiness-status">Available</span></li>
-            <li><span className="ready-icon"><Check size={13} /></span><span>Cube engine & verified moves</span><span className="readiness-status">Available</span></li>
-            <li><span className="ready-icon"><Check size={13} /></span><span>Manual timer & stage analysis</span><span className="readiness-status">Available</span></li>
-            <li><span className="ready-icon"><Check size={13} /></span><span>Persistent history & progress trends</span><span className="readiness-status">Available</span></li>
-          </ul>
-          <div className="honesty-note"><span className="note-mark">↗</span><p>Progress will come from your actual solves.<br />Manual timing and analysis are available. History trends use your saved recordings.</p></div>
-        </section>
+
       </div>
     </>
   )

@@ -1,23 +1,19 @@
 # CubeCue — Rubik’s Cube AI Coach
 
-A local workspace for more intentional 3×3 practice. **Milestones 1A–1C, 2A–2D and user-requested milestones 3–4 are implemented:** canonical cube states, interactive 3D, verified full-cube/CFOP solving, Next Best Move, retrospective comparison/practice, and manual virtual timing with deterministic solve analysis. SQLite solve history, genuine progress trends and verified F2L/OLL/PLL training are available. Full-solve optimality proofs, Reliable arbitrary-speed physical tracking, AI and learned personalization remain future work. Guided scanning and conservative experimental camera assistance are available; physical acceptance measurements are pending.
+CubeCue is a local 3×3 speedcubing workspace. Start in [Solve Studio](http://127.0.0.1:5173/live-solve) to time a physical cube or record an engine-verified virtual solve.
 
-## Available now
+| Workspace | What you can do |
+| --- | --- |
+| [Learn to Solve](http://127.0.0.1:5173/learn) | Learn notation, solve each layer with a guided virtual cube, then check your own moves against each lesson’s objective. |
+| [Solve Studio](http://127.0.0.1:5173/live-solve) | Use a stopwatch with optional inspection, time a virtual solve, or use experimental camera assistance. Enable silent webcam recording before a physical or virtual run for local replay, slow motion, and download. |
+| [AI Coach](http://127.0.0.1:5173/coach) | Get a practice plan based on saved virtual solves and practice attempts. Engine guidance works immediately. Optional Ollama inference requires a configured model and an explicit request. See [AI Coach setup](docs/AI_COACH.md). |
+| [Cube Explorer](http://127.0.0.1:5173/cube-explorer) | Explore legal states with a 3D cube, keyboard controls, verified short solutions, full CFOP, and next-move hints. |
+| [Algorithm Trainer](http://127.0.0.1:5173/algorithm-trainer) | Rehearse F2L, OLL and PLL cases with verified alternatives and repeatable starting states. |
+| [Solve Analysis](http://127.0.0.1:5173/solve-analysis) | Replay exact virtual states, inspect CFOP checkpoints, compare alternative sequences, and retry a segment. |
+| [History](http://127.0.0.1:5173/history) | Review saved physical times, virtual solve recordings and camera-assisted sessions. |
+| [Guided Scan](http://127.0.0.1:5173/scan) | Capture six faces, correct uncertain colors and validate the cube before importing it. |
 
-- React + TypeScript + Vite frontend with Tailwind CSS, a responsive dark layout, keyboard focus styles, reduced-motion support, and skip navigation.
-- Six working routes: Dashboard, Cube Explorer, Live Solve, Solve Analysis, Algorithm Trainer, and History. Trainer and History use real engine-validated cases and local saved data.
-- Cube Explorer: Three.js / React Three Fiber rendering of all 26 cubies and 54 stickers, smooth face/grip animations, orbit/zoom, keyboard and button moves, manual algorithms, legal random scrambles, reset, undo/redo, and playback. The 2D state inspector and import/export remain available. The frontend never computes cube permutations.
-- Two independent solving approaches: engine-verified two-phase short solutions, and genuine Cross → four F2L pairs → OLL → PLL → AUF with stage counts and playback. Both label full-solve optimality unproven.
-- Live Solve: optional 15-second practice inspection, Space/face-key/button controls, explicit pauses, monotonic input capture and engine-confirmed completion. Manual virtual timing is separate from animation and physical turning.
-- Timed Solve Analysis: interactive exact-state timeline, input TPS chart, inferred Cross/pair/OLL/PLL/AUF checkpoints, skips/combined goals, timing integrity, pause breakdown and stage-to-retrospective coaching.
-- Solve Analysis: import applied Explorer history or a complete known move record, select a segment, compare verified alternatives with synchronized 3D replay, inspect exact differences, and retry the original case.
-- Next Best Move: exact-state CFOP progress, remaining-pair alternatives, three hint levels, target cubie highlights, single-move/full-sequence playback, and automatic recalculation after manual moves. Compare HTM or explicit ergonomic costs, with optional working-grip rotations.
-- One immutable Python cubie engine with all face-turn variants, x/y/z grip rotations, complete parsing, serialization, inversion, HTM, and reachability validation. See [the exact cube conventions](docs/CUBE_CONVENTIONS.md).
-- A real API connection check on the Dashboard, with checking, reachable, unavailable, and retry states. No sample solves or fabricated analytics.
-- FastAPI application factory, typed health response, explicit local CORS policy, pytest, Ruff, and a uv-managed virtual environment.
-- Locked frontend/backend dependencies and build, lint, and test commands.
-
-The Dashboard hero cube remains a decorative CSS illustration. The separate interactive Cube Explorer renders real engine-provided geometry and snapshots. Both solving approaches return engine-verified solutions with full-solve optimality explicitly unproven. Timing describes manual virtual input only; physical vision and AI features remain unavailable. Full M1 acceptance remains pending for sessions/events, persistence, and expanded public notation; 1B does not imply those are implemented.
+Physical stopwatch times are self-reported. Video stays in the browser until you download it or leave the page. Review clips manually. Move counts, TPS and CFOP stage times require verified move data. See [Solve Studio recording and timing](docs/SOLVE_STUDIO.md) and [beginner course objectives](docs/BEGINNER_ACADEMY.md).
 
 ## macOS prerequisites
 

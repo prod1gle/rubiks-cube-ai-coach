@@ -18,10 +18,10 @@ async function start(...results: Response[]) {
   await screen.findByText('Solved · in any grip')
   return { request, user }
 }
-async function land(user: ReturnType<typeof userEvent.setup>) {
-  const button = screen.getByRole('button', { name: 'Finish animation' })
+async function land() {
+  const button = screen.getByText('Finish animation', { selector: 'button' })
   await waitFor(() => expect(button).toBeEnabled())
-  await user.click(button)
+  fireEvent.click(button)
 }
 
 it('keeps the accepted snapshot until animation ends and commits duplicate callbacks only once', async () => {
@@ -30,7 +30,7 @@ it('keeps the accepted snapshot until animation ends and commits duplicate callb
   await waitFor(() => expect(screen.getByRole('button', { name: 'Finish animation' })).toBeEnabled())
   expect(screen.getByLabelText('Current facelets')).toHaveValue(snapshots.solved.facelets)
   expect(screen.getByTestId('move-count')).toHaveTextContent('0')
-  await land(user)
+  await land()
   expect(screen.getByLabelText('Current facelets')).toHaveValue(plans.r.steps[0].snapshot.facelets)
   expect(screen.getByTestId('move-count')).toHaveTextContent('1HTM')
   expect(request.mock.calls[1][0]).toBe('/api/cube/plan')
@@ -43,7 +43,7 @@ it('queues rapid button inputs and plans the second from the first accepted stat
   await user.click(screen.getByRole('button', { name: 'Apply R' }))
   await user.click(screen.getByRole('button', { name: 'Apply U' }))
   expect(request).toHaveBeenCalledTimes(2)
-  await land(user); await land(user)
+  await land(); await land()
   expect(JSON.parse(request.mock.calls[2][1].body).state).toEqual(plans.r.steps[0].snapshot.state)
   expect(screen.getByTestId('move-count')).toHaveTextContent('2HTM')
 })
@@ -51,7 +51,7 @@ it('queues rapid button inputs and plans the second from the first accepted stat
 it('supports double turns and backend-derived zero-HTM grip rotations', async () => {
   const { request, user } = await start(response(plans.doubleR))
   await user.click(screen.getByRole('button', { name: 'Apply R2' }))
-  await land(user)
+  await land()
   expect(JSON.parse(request.mock.calls[1][1].body).sequence).toBe('R2')
   expect(screen.getByTestId('move-count')).toHaveTextContent('1HTM')
 })
@@ -64,7 +64,7 @@ it('keyboard moves work, Shift inverts, and typing or held keys never turns the 
   fireEvent.keyDown(window, { key: 'r', repeat: true })
   expect(request).toHaveBeenCalledTimes(1)
   fireEvent.keyDown(window, { key: 'R', shiftKey: true })
-  await land(user)
+  await land()
   expect(JSON.parse(request.mock.calls[1][1].body).sequence).toBe("R'")
 })
 
@@ -72,15 +72,15 @@ it('undo, redo, step playback and scrubbing use saved engine states without new 
   const { request, user } = await start(response(plans.algorithm))
   await user.type(screen.getByLabelText('Move sequence'), "R U R' U'")
   await user.click(screen.getByRole('button', { name: 'Run algorithm' }))
-  for (let i = 0; i < 4; i++) await land(user)
+  for (let i = 0; i < 4; i++) await land()
   expect(screen.getByTestId('move-count')).toHaveTextContent('4HTM')
-  await user.click(screen.getByRole('button', { name: 'Undo move' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Undo move' })); await land()
   expect(screen.getByTestId('move-count')).toHaveTextContent('3HTM')
-  await user.click(screen.getByRole('button', { name: 'Redo move' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Redo move' })); await land()
   expect(screen.getByTestId('move-count')).toHaveTextContent('4HTM')
   fireEvent.change(screen.getByLabelText('Playback position'), { target: { value: '0' } })
   expect(screen.getByLabelText('Current facelets')).toHaveValue(snapshots.solved.facelets)
-  await user.click(screen.getByRole('button', { name: 'Step forward' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Step forward' })); await land()
   expect(screen.getByTestId('move-count')).toHaveTextContent('1HTM')
   expect(request).toHaveBeenCalledTimes(2)
 })
@@ -90,11 +90,11 @@ it('pause lands the active turn, holds pending turns, and resumes the batch', as
   await user.type(screen.getByLabelText('Move sequence'), "R U R' U'")
   await user.click(screen.getByRole('button', { name: 'Run algorithm' }))
   await waitFor(() => expect(screen.getByRole('button', { name: 'Finish animation' })).toBeEnabled())
-  await user.click(screen.getByRole('button', { name: 'Pause playback' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Pause playback' })); await land()
   expect(screen.getByTestId('move-count')).toHaveTextContent('1HTM')
   expect(screen.getByRole('button', { name: 'Finish animation' })).toBeDisabled()
   await user.click(screen.getByRole('button', { name: 'Resume playback' }))
-  for (let i = 0; i < 3; i++) await land(user)
+  for (let i = 0; i < 3; i++) await land()
   expect(screen.getByTestId('move-count')).toHaveTextContent('4HTM')
 })
 
@@ -112,7 +112,7 @@ it('reset cancels the active turn and any pending button requests', async () => 
 it('scramble requests a legal backend plan and displays its actual committed count', async () => {
   const { request, user } = await start(response(plans.scramble))
   await user.click(screen.getByRole('button', { name: 'Scramble' }))
-  for (let i = 0; i < 20; i++) await land(user)
+  for (let i = 0; i < 20; i++) await land()
   expect(request.mock.calls[1][0]).toBe('/api/cube/scramble')
   expect(screen.getByTestId('move-count')).toHaveTextContent('20HTM')
   expect(screen.getByLabelText('Current facelets')).toHaveValue(plans.scramble.steps[19].snapshot.facelets)
@@ -139,7 +139,7 @@ it('unavailable or malformed initial engine responses never fabricate a cube', a
 
 it('shows a verified solution without moving the cube, then plays forward and backward from the exact start', async () => {
   const { request, user } = await start(response(plans.r), response(solutions.r))
-  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land()
   await user.click(screen.getByRole('button', { name: 'Solve cube' }))
   expect(await screen.findByText('Engine verified')).toBeVisible()
   expect(screen.getByText('Short solution · optimality unproven')).toBeVisible()
@@ -148,12 +148,12 @@ it('shows a verified solution without moving the cube, then plays forward and ba
   expect(screen.getByLabelText('Current facelets')).toHaveValue(plans.r.steps[0].snapshot.facelets)
   expect(request.mock.calls[2][0]).toBe('/api/cube/solve')
   expect(JSON.parse(request.mock.calls[2][1].body).state).toEqual(plans.r.steps[0].snapshot.state)
-  await user.click(screen.getByRole('button', { name: 'Next solution move' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Next solution move' })); await land()
   expect(screen.getByText(`Solution step 1 of ${solutions.r.move_count}`)).toBeVisible()
-  await user.click(screen.getByRole('button', { name: 'Previous solution move' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Previous solution move' })); await land()
   expect(screen.getByLabelText('Current facelets')).toHaveValue(plans.r.steps[0].snapshot.facelets)
   await user.click(screen.getByRole('button', { name: 'Play solution' }))
-  for (let i = 0; i < solutions.r.plan.steps.length; i++) await land(user)
+  for (let i = 0; i < solutions.r.plan.steps.length; i++) await land()
   expect(screen.getByText(`Solution step ${solutions.r.move_count} of ${solutions.r.move_count} · Solved`)).toBeVisible()
   expect(screen.getByLabelText('Current facelets')).toHaveValue(snapshots.solved.facelets)
   await user.click(screen.getByRole('button', { name: 'Go to solution start' }))
@@ -163,20 +163,20 @@ it('shows a verified solution without moving the cube, then plays forward and ba
 
 it('uses the saved solution start after scrubbing earlier history', async () => {
   const { user } = await start(response(plans.r), response(solutions.r))
-  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land()
   await user.click(screen.getByRole('button', { name: 'Solve cube' }))
   await screen.findByText('Engine verified')
   await user.click(screen.getByRole('button', { name: 'Go to start' }))
   expect(screen.getByRole('button', { name: 'Next solution move' })).toBeDisabled()
   await user.click(screen.getByRole('button', { name: 'Play solution' }))
   expect(screen.getByLabelText('Current facelets')).toHaveValue(plans.r.steps[0].snapshot.facelets)
-  await land(user)
+  await land()
   expect(screen.getByText(`Solution step 1 of ${solutions.r.move_count}`)).toBeVisible()
 })
 
 it('retains the cube and displays an actionable solver timeout', async () => {
   const { user } = await start(response(plans.r), response({ detail: { code: 'solver_timeout', message: 'Search budget reached. No moves were applied.' } }, 504))
-  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land()
   await user.click(screen.getByRole('button', { name: 'Solve cube' }))
   expect(await screen.findByRole('alert')).toHaveTextContent('Search budget reached')
   expect(screen.getByLabelText('Current facelets')).toHaveValue(plans.r.steps[0].snapshot.facelets)
@@ -186,7 +186,7 @@ it('retains the cube and displays an actionable solver timeout', async () => {
 
 it.each([{ ...solutions.r, optimality: 'proven' }, { ...solutions.r, verified: false }])('rejects unsupported proof or verification metadata from the API', async result => {
   const { user } = await start(response(plans.r), response(result))
-  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land()
   await user.click(screen.getByRole('button', { name: 'Solve cube' }))
   expect(await screen.findByRole('alert')).toHaveTextContent('unexpected snapshot or transition plan')
   expect(screen.queryByText('Engine verified')).not.toBeInTheDocument()
@@ -194,7 +194,7 @@ it.each([{ ...solutions.r, optimality: 'proven' }, { ...solutions.r, verified: f
 
 it('offers cancellation while searching and restores controls without accepting a late result', async () => {
   const { request, user } = await start(response(plans.r))
-  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land()
   let resolve!: (value: Response) => void
   request.mockReturnValueOnce(new Promise<Response>(done => { resolve = done }))
   await user.click(screen.getByRole('button', { name: 'Solve cube' }))
@@ -232,15 +232,15 @@ it('chooses CFOP explicitly, shows real stage counts and plays a stage without a
   const stage = cfopSolutions.scrambled.stages!.find(s => s.move_count > 0)!
   const stageTitle = stage.kind === 'f2l' ? `F2L ${stage.slot}` : stage.kind === 'cross' ? 'Cross' : stage.kind.toUpperCase()
   await user.click(screen.getByRole('button', { name: `Play ${stageTitle} stage` }))
-  for (let i = 0; i < stage.move_count; i++) await land(user)
+  for (let i = 0; i < stage.move_count; i++) await land()
   expect(screen.getByRole('button', { name: 'Finish animation' })).toBeDisabled()
   expect(screen.getByLabelText('Current facelets')).toHaveValue(cfopSolutions.scrambled.plan.steps[stage.end_step - 1].snapshot.facelets)
   expect(screen.getByText(`Solution step ${stage.end_step} of ${cfopSolutions.scrambled.move_count}`)).toBeVisible()
   await user.click(screen.getByRole('button', { name: 'Play solution' }))
-  for (let i = stage.end_step; i < cfopSolutions.scrambled.move_count; i++) await land(user)
+  for (let i = stage.end_step; i < cfopSolutions.scrambled.move_count; i++) await land()
   expect(screen.getByLabelText('Current facelets')).toHaveValue(cfopSolutions.scrambled.plan.steps.at(-1)!.snapshot.facelets)
   expect(request).toHaveBeenCalledTimes(2)
-// This flow performs all 60 turn commits through user-event/React renders.
+// This flow performs all 60 turn commits through React renders.
 // Allow that UI work to finish under concurrent backend-test CPU load.
 }, 15000)
 
@@ -256,7 +256,7 @@ it('renders eight genuine skipped stages on an already solved CFOP cube', async 
 
 it('never relabels a previous short solution when switching the requested approach', async () => {
   const { user } = await start(response(plans.r), response(solutions.r))
-  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land()
   await user.click(screen.getByRole('button', { name: 'Solve cube' }))
   await screen.findByText('Engine verified')
   await user.click(screen.getByRole('button', { name: 'CFOP' }))
@@ -267,7 +267,7 @@ it('never relabels a previous short solution when switching the requested approa
 
 it('rejects a two-phase response to a CFOP request without fabricating stages', async () => {
   const { user } = await start(response(plans.r), response(solutions.r))
-  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land()
   await user.click(screen.getByRole('button', { name: 'CFOP' }))
   await user.click(screen.getByRole('button', { name: 'Solve cube' }))
   expect(await screen.findByRole('alert')).toHaveTextContent('inconsistent solution')
@@ -277,7 +277,7 @@ it('rejects a two-phase response to a CFOP request without fabricating stages', 
 
 it('shows CFOP timeout errors while retaining the real cube', async () => {
   const { user } = await start(response(plans.r), response({ detail: { code: 'cfop_timeout', message: 'CFOP reached its 30-second budget. No moves were applied.' } }, 504))
-  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land(user)
+  await user.click(screen.getByRole('button', { name: 'Apply R' })); await land()
   await user.click(screen.getByRole('button', { name: 'CFOP' }))
   await user.click(screen.getByRole('button', { name: 'Solve cube' }))
   expect(await screen.findByRole('alert')).toHaveTextContent('CFOP reached its 30-second budget')
@@ -286,13 +286,13 @@ it('shows CFOP timeout errors while retaining the real cube', async () => {
 
 it('reference keys queue slice then wide turns from exact accepted engine states once', async () => {
   const { default: extended } = await import('../../test/keyboard-plans.json')
-  const { request, user } = await start(response(extended.plans.M), response(extended.plans.wideAfterSlice))
+  const { request } = await start(response(extended.plans.M), response(extended.plans.wideAfterSlice))
   fireEvent.keyDown(window, { key: '5', code: 'Digit5' })
   fireEvent.keyDown(window, { key: 'u', code: 'KeyU' })
   expect(request).toHaveBeenCalledTimes(2)
-  await land(user)
+  await land()
   expect(screen.getByTestId('move-count')).toHaveTextContent('2HTM')
-  await land(user)
+  await land()
   expect(request).toHaveBeenCalledTimes(3)
   expect(JSON.parse(request.mock.calls[1][1].body).sequence).toBe('M')
   const second = JSON.parse(request.mock.calls[2][1].body)
@@ -315,7 +315,7 @@ it('exposes quarter, prime and double rows and applies each button without a sti
   expect(screen.queryByRole('group', { name: 'Turn variant' })).not.toBeInTheDocument()
   for (const token of ["R'",'R2','R']) {
     await user.click(grid.getByRole('button', { name: `Apply ${token}` }))
-    await land(user)
+    await land()
   }
   expect(request.mock.calls.slice(1).map(call => JSON.parse(call[1].body).sequence)).toEqual(["R'",'R2','R'])
   expect(JSON.parse(request.mock.calls[2][1].body).state).toEqual(fixture.plans[0].steps[0].snapshot.state)
