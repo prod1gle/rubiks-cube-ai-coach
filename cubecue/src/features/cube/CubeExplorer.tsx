@@ -20,7 +20,6 @@ export function CubeExplorer() {
   const { snapshot, active, loading, planning, pending, history, cursor, paused, playing, error, lastAlgorithm, solving, controller } = view
   const [notation, setNotation] = useState('')
   const [facelets, setFacelets] = useState('')
-  const [suffix, setSuffix] = useState('')
   const [duration, setDuration] = useState(0.28)
   const [transferError, setTransferError] = useState('')
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false)
@@ -62,16 +61,15 @@ export function CubeExplorer() {
         </section>
         <section className="panel move-panel" aria-labelledby="move-controls-title">
           <p className="eyebrow">TAKE IT FOR A SPIN</p><h2 id="move-controls-title">Make your move.</h2>
-          <div className="turn-variants" role="group" aria-label="Turn variant">{[['', 'Quarter'], ["'", 'Inverse'], ['2', 'Double']].map(([value, label]) => <button key={label} aria-pressed={suffix === value} onClick={() => setSuffix(value)}>{label}</button>)}</div>
-          <div className="face-move-grid">{['U', 'R', 'F', 'D', 'L', 'B'].map(face => <button key={face} aria-label={`Apply ${face}${suffix}`} disabled={loading || solving} onClick={() => controller.enqueue(face + suffix)}><span>{face}{suffix}</span><small>{faceLabels[face]}</small></button>)}</div>
+          <div className="face-turn-scroll"><div className="face-move-grid explorer-move-grid" role="group" aria-label="Face turns">{['', "'", '2'].flatMap(variant => ['U', 'R', 'F', 'D', 'L', 'B'].map(face => <button key={face + variant} aria-label={`Apply ${face}${variant}`} disabled={loading || solving} onClick={() => controller.enqueue(face + variant)}><span>{face}{variant}</span><small>{faceLabels[face]}</small></button>))}</div></div>
           <div className="grip-heading"><span>Rotate the grip</span><small>0 HTM</small></div>
-          <div className="grip-controls">{['x', 'y', 'z'].map(axis => <button key={axis} aria-label={`Rotate ${axis}${suffix}`} disabled={loading || solving} onClick={() => controller.enqueue(axis + suffix)}>{axis}{suffix}</button>)}</div>
+          <div className="grip-controls explorer-grip-grid" role="group" aria-label="Grip rotations">{['', "'", '2'].flatMap(variant => ['x', 'y', 'z'].map(axis => <button key={axis + variant} aria-label={`Rotate ${axis}${variant}`} disabled={loading || solving} onClick={() => controller.enqueue(axis + variant)}>{axis}{variant}</button>))}</div>
           <div className="workspace-actions"><button className="primary-button" disabled={loading || solving} title="20 random legal face turns from the current state; not a WCA random-state scramble" onClick={controller.scramble}><Shuffle size={15} aria-hidden="true" />Scramble</button><button className="secondary-button" disabled={loading} title="Reset cube and clear history and pending inputs" onClick={() => void controller.reset()}><RefreshCw size={14} aria-hidden="true" />Reset cube</button></div>
           <p className="keyboard-note">Use the reference key map below.<br />I / K turn R / R′ · J / F turn U / U′.</p>
         </section>
       </div>
 
-      <KeyboardControls disabled={loading || solving || !snapshot} suffix={suffix} onMove={controller.enqueue} onUndo={controller.back} onRedo={controller.forward} />
+      <KeyboardControls disabled={loading || solving || !snapshot} onMove={controller.enqueue} onUndo={controller.back} onRedo={controller.forward} />
       <CoachPanel view={view} />
       <SolutionPanel view={view} />
 

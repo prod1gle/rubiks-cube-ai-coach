@@ -50,7 +50,6 @@ it('queues rapid button inputs and plans the second from the first accepted stat
 
 it('supports double turns and backend-derived zero-HTM grip rotations', async () => {
   const { request, user } = await start(response(plans.doubleR))
-  await user.click(screen.getByRole('button', { name: 'Double' }))
   await user.click(screen.getByRole('button', { name: 'Apply R2' }))
   await land(user)
   expect(JSON.parse(request.mock.calls[1][1].body).sequence).toBe('R2')
@@ -301,4 +300,26 @@ it('reference keys queue slice then wide turns from exact accepted engine states
   expect(second.state).toEqual(extended.plans.M.steps[0].snapshot.state)
   expect(screen.getByTestId('move-count')).toHaveTextContent('3HTM')
   expect(screen.getByLabelText('Current facelets')).toHaveValue(extended.plans.wideAfterSlice.steps[0].snapshot.facelets)
+})
+
+it('exposes quarter, prime and double rows and applies each button without a sticky variant', async () => {
+  const { default: fixture } = await import('../../test/move-grid-plans.json')
+  const { within } = await import('@testing-library/react')
+  const { request, user } = await start(...fixture.plans.map(plan => response(plan)))
+  const grid = within(screen.getByRole('group', { name: 'Face turns' }))
+  expect(grid.getAllByRole('button').map(button => button.getAttribute('aria-label'))).toEqual([
+    'Apply U','Apply R','Apply F','Apply D','Apply L','Apply B',
+    "Apply U'","Apply R'","Apply F'","Apply D'","Apply L'","Apply B'",
+    'Apply U2','Apply R2','Apply F2','Apply D2','Apply L2','Apply B2',
+  ])
+  expect(screen.queryByRole('group', { name: 'Turn variant' })).not.toBeInTheDocument()
+  for (const token of ["R'",'R2','R']) {
+    await user.click(grid.getByRole('button', { name: `Apply ${token}` }))
+    await land(user)
+  }
+  expect(request.mock.calls.slice(1).map(call => JSON.parse(call[1].body).sequence)).toEqual(["R'",'R2','R'])
+  expect(JSON.parse(request.mock.calls[2][1].body).state).toEqual(fixture.plans[0].steps[0].snapshot.state)
+  expect(screen.getByLabelText('Current facelets')).toHaveValue(plans.doubleR.steps[0].snapshot.facelets)
+  expect(screen.getByTestId('move-count')).toHaveTextContent('3HTM')
+  expect(screen.getByRole('group', { name: 'Grip rotations' }).querySelectorAll('button')).toHaveLength(9)
 })

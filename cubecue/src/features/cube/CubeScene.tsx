@@ -115,7 +115,6 @@ function Puzzle({ snapshot, active, duration, onFinish, highlighted }: Pick<Prop
 export default function CubeScene(props: Props) {
   return <Canvas dpr={[1, 2]} camera={{ position: frontCameraPosition, fov: 35 }} gl={{ antialias: true, alpha: true }}
     aria-label="Interactive 3D Rubik's Cube. Drag to orbit; scroll or pinch to zoom.">
-    <color attach="background" args={['#000000']} />
     <Puzzle {...props} />
     <OrbitRig command={props.cameraCommand} onFailure={props.onFailure} />
   </Canvas>

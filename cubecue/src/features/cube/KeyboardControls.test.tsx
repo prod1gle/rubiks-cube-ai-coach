@@ -12,11 +12,11 @@ const pictured = [
 ]
 function setup(disabled = false) {
   const onMove = vi.fn(), onUndo = vi.fn(), onRedo = vi.fn()
-  const view = render(<KeyboardControls disabled={disabled} suffix="2" onMove={onMove} onUndo={onUndo} onRedo={onRedo} />)
+  const view = render(<KeyboardControls disabled={disabled} onMove={onMove} onUndo={onUndo} onRedo={onRedo} />)
   return { ...view, onMove, onUndo, onRedo }
 }
 describe('pictured reference mapping', () => {
-  it.each(pictured)('key %s dispatches exactly %s independent of button suffix', (key, word) => {
+  it.each(pictured)('key %s dispatches exactly %s', (key, word) => {
     const { onMove } = setup()
     fireEvent.keyDown(window, { key })
     expect(onMove).toHaveBeenCalledExactlyOnceWith(word)
@@ -82,6 +82,6 @@ describe('pictured reference mapping', () => {
     const { onMove } = setup(), user=userEvent.setup()
     await user.selectOptions(screen.getByLabelText('Keyboard layout'),'face-letters')
     fireEvent.keyDown(window,{key:'R',shiftKey:true}); fireEvent.keyDown(window,{key:'r'})
-    expect(onMove.mock.calls).toEqual([["R'"],['R2']])
+    expect(onMove.mock.calls).toEqual([["R'"],['R']])
   })
 })
