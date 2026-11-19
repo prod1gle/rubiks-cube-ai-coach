@@ -7,7 +7,7 @@ import CubeViewport from '../cube/CubeViewport'
 import { MoveGrid } from '../cube/MoveGrid'
 import { KeyboardControls } from '../cube/KeyboardControls'
 
-function Practice({ item }: { item: TrainingCase }) {
+function Practice({ item, onNext, hasNext }: { item: TrainingCase; onNext: () => void; hasNext: boolean }) {
   const view = useCube(item.start)
   const { controller, snapshot, active, history, cursor, paused, playing } = view
   const [notation, setNotation] = useState(''), [revealed, setRevealed] = useState(false), [feedback, setFeedback] = useState(''), [saving, setSaving] = useState(false), [played, setPlayed] = useState(false), [duration, setDuration] = useState(0.28)
@@ -42,7 +42,7 @@ function Practice({ item }: { item: TrainingCase }) {
       <section className="panel move-panel trainer-controls" aria-labelledby="trainer-moves-title">
         <p className="eyebrow">BUILD MUSCLE MEMORY</p><h2 id="trainer-moves-title">Make your move.</h2>
         <MoveGrid disabled={movesDisabled} onMove={controller.enqueue} />
-        <div className="workspace-actions"><button className="primary-button" disabled={view.loading || saving} onClick={reset}><RefreshCw size={14} aria-hidden="true" />Repeat same case</button></div>
+        <div className="workspace-actions"><button className="primary-button" disabled={view.loading || saving} onClick={reset}><RefreshCw size={14} aria-hidden="true" />Repeat same case</button><button className="secondary-button" disabled={view.loading || saving || !hasNext} onClick={onNext} title="Load the next case in this stage. After the last case, return to the first.">Next case<ChevronRight size={15} aria-hidden="true" /></button></div>
         <p className="keyboard-note">Quarter turns, primes, then doubles.<br />I / K turn R / R′ · J / F turn U / U′.</p>
         {played && <p className="trainer-notice" role="status">Demonstration only. Repeat the case to start your own attempt.</p>}
       </section>
@@ -75,12 +75,13 @@ export function AlgorithmTrainer() {
   useEffect(() => { const task = new AbortController(); void library<{ cases: TrainingRow[] }>('/training', undefined, 'GET', task.signal).then(v => { if (!Array.isArray(v.cases) || !v.cases.length) throw new Error('Case catalog unavailable.'); if (!task.signal.aborted) setRows(v.cases) }).catch(e => { if (!task.signal.aborted) { setError(e.message); setLoading(false) } }); return () => task.abort() }, [revision])
   const cases = rows.filter(r => r.stage === stage)
   const selected = cases.find(r => r.id === selection)?.id ?? cases[0]?.id ?? ''
+  const caseIndex = cases.findIndex(r => r.id === selected)
   const choose = (id: string) => { setSelection(id); setItem(undefined); setLoading(true); setError('') }
   useEffect(() => { if (!selected) return; const task = new AbortController(); void loadTraining(selected, task.signal).then(v => { if (!task.signal.aborted) { setItem(v); setLoading(false) } }).catch(e => { if (!task.signal.aborted) { setError(e.message); setLoading(false) } }); return () => task.abort() }, [selected, revision])
   return <><div className="page-heading"><p className="eyebrow">RECOGNITION. REPETITION.</p><h1 id="page-title">Algorithm Trainer</h1><p className="explorer-subtitle">Learn the case. Find your rhythm. Repeat from the same state.</p></div>
-    <section className="panel trainer-catalog" aria-label="Choose a training case"><div className="trainer-catalog-fields"><label>Stage<select value={stage} onChange={e => { setStage(e.target.value); choose('') }}>{['F2L', 'OLL', 'PLL'].map(s => <option key={s}>{s}</option>)}</select></label><label>Recognized case<select disabled={!cases.length} value={selected} onChange={e => { choose(e.target.value) }}>{cases.map(r => <option key={r.id}>{r.id}</option>)}</select></label><span className="trainer-case-count">{cases.length} {stage} cases</span></div><p className="analysis-help">F2L: 24 insertion cases (a curated subset) · OLL: 57 classes · PLL: 21 classes. Every starting state and algorithm is engine verified.</p></section>
+    <section className="panel trainer-catalog" aria-label="Choose a training case"><div className="trainer-catalog-fields"><label>Stage<select value={stage} onChange={e => { setStage(e.target.value); choose('') }}>{['F2L', 'OLL', 'PLL'].map(s => <option key={s}>{s}</option>)}</select></label><label>Recognized case<select disabled={!cases.length} value={selected} onChange={e => { choose(e.target.value) }}>{cases.map(r => <option key={r.id}>{r.id}</option>)}</select></label><span className="trainer-case-count">Case {caseIndex + 1} of {cases.length} · {stage}</span></div><p className="analysis-help">F2L: 24 insertion cases (a curated subset) · OLL: 57 classes · PLL: 21 classes. Every starting state and algorithm is engine verified.</p></section>
     {error && <div className="trainer-feedback" role="alert">{error}<button className="secondary-button" onClick={() => { setError(''); setLoading(true); setRevision(v => v + 1) }}>Retry catalog</button></div>}
     {loading && !error && <p className="trainer-feedback" role="status">Loading verified case…</p>}
-    {!loading && !error && item && item.id === selected && item.stage === stage && <Practice key={`${item.id}-${revision}`} item={item} />}
+    {!loading && !error && item && item.id === selected && item.stage === stage && <Practice key={`${item.id}-${revision}`} item={item} hasNext={cases.length > 1} onNext={() => choose(cases[(caseIndex + 1) % cases.length].id)} />}
   </>
 }
