@@ -23,7 +23,7 @@ describe('workspace navigation', () => {
     renderPage()
     await screen.findByText('Local API reachable')
     const nav = screen.getByRole('navigation', { name: 'Main navigation' })
-    for (const title of ['Cube Explorer', 'Solve Studio', 'Solve Analysis', 'Algorithm Trainer', 'History']) {
+    for (const title of ['Learn to Solve', 'Cube Explorer', 'Solve Studio', 'Solve Analysis', 'Algorithm Trainer', 'History']) {
       const link = within(nav).getByRole('link', { name: title })
       await user.click(link)
       expect(screen.getByRole('heading', { name: title, level: 1 })).toBeVisible()
@@ -72,7 +72,7 @@ describe('real API connection states', () => {
     const request = vi.fn()
       .mockRejectedValueOnce(new TypeError('Failed to fetch'))
       .mockResolvedValueOnce(new Response(JSON.stringify(healthy)))
-    vi.stubGlobal('fetch', (path: string, options: unknown) => path === '/api/dashboard' ? Promise.resolve(new Response(JSON.stringify({ trends: [] }))) : request(path, options))
+    vi.stubGlobal('fetch', (path: string, options: unknown) => path === '/api/dashboard' ? Promise.resolve(new Response(JSON.stringify({ trends: [] }))) : path === '/api/physical-solves' ? Promise.resolve(new Response(JSON.stringify({items: [], total: 0, mean_ms: null, personal_best_ms: null, sample_count: 0, scope: 'Physical practice'}))) : request(path, options))
     const user = userEvent.setup()
     renderPage()
     expect(await screen.findByText('Local API unavailable')).toBeVisible()

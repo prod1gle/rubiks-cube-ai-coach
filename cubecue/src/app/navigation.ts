@@ -1,9 +1,10 @@
-import { Box, ChartNoAxesCombined, History, LayoutDashboard, Layers, Timer } from 'lucide-react'
+import { BookOpen, Box, ChartNoAxesCombined, History, LayoutDashboard, Layers, Timer } from 'lucide-react'
 
 export const navigation = [
   { path: '/', title: 'Dashboard', icon: LayoutDashboard },
-  { path: '/cube-explorer', title: 'Cube Explorer', icon: Box },
+  { path: '/learn', title: 'Learn to Solve', icon: BookOpen },
   { path: '/live-solve', title: 'Solve Studio', icon: Timer },
+  { path: '/cube-explorer', title: 'Cube Explorer', icon: Box },
   { path: '/solve-analysis', title: 'Solve Analysis', icon: ChartNoAxesCombined },
   { path: '/algorithm-trainer', title: 'Algorithm Trainer', icon: Layers },
   { path: '/history', title: 'History', icon: History },

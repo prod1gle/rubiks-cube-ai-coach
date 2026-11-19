@@ -10,6 +10,7 @@ import { GuidedScan } from '../features/vision/GuidedScan'
 import { History } from '../features/library/History'
 import { LiveSolve } from '../features/timer/LiveSolve'
 import { SolveAnalysis } from '../features/analysis/SolveAnalysis'
+import { BeginnerAcademy } from '../features/learn/BeginnerAcademy'
 import { CubeExplorer } from '../features/cube/CubeExplorer'
 
 export function App() {
@@ -43,6 +44,7 @@ export function App() {
         <main id="main-content" className="page-content" tabIndex={-1}>
           <Routes>
             <Route path="/" element={<Dashboard connection={connection} retry={retry} />} />
+            <Route path="/learn" element={<BeginnerAcademy />} />
             <Route path="/scan" element={<GuidedScan />} />
             <Route path="/cube-explorer" element={<CubeExplorer />} />
             <Route path="/solve-analysis" element={<SolveAnalysis />} />

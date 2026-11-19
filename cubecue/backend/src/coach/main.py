@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from coach.api.beginner import router as beginner_router
 from coach.api.cube import router as cube_router
 from coach.api.persistence import router as persistence_router
 from coach.api.physical import router as physical_router
@@ -51,6 +52,7 @@ def create_app(database_path: str | Path | None = None) -> FastAPI:
         database_path
         or os.environ.get("CUBECUE_DB_PATH", Path(__file__).parents[2] / ".data/cubecue.sqlite3")
     )
+    app.include_router(beginner_router)
     app.include_router(cube_router)
     app.include_router(persistence_router)
     app.include_router(physical_router)
