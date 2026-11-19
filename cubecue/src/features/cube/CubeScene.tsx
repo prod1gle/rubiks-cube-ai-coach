@@ -8,6 +8,8 @@ import type { ActiveTurn } from './CubeController'
 
 export interface CameraCommand { id: number; type: 'in' | 'out' | 'reset' | 'left' | 'right' | 'up' | 'down' }
 const cameraKeys: Record<string, CameraCommand['type']> = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', '+': 'in', '=': 'in', '-': 'out' }
+// Look directly at +Z (green front), with +Y (white top) upright.
+const frontCameraPosition: [number, number, number] = [0, 0, 8.8]
 interface Props {
   snapshot: CubeSnapshot; active?: ActiveTurn; duration: number
   cameraCommand: CameraCommand; onFinish: (id: string) => void; onFailure: () => void
@@ -19,7 +21,15 @@ function OrbitRig({ command, onFailure }: { command: CameraCommand; onFailure: (
   const controls = useRef<OrbitControls | null>(null)
   const moveCamera = useCallback((type: CameraCommand['type']) => {
     if (type === 'reset') {
-      camera.position.set(5, 3.8, 6.2)
+      // Clear any remaining drag momentum before restoring the front view.
+      if (controls.current) {
+        controls.current.enableDamping = false
+        controls.current.update()
+        controls.current.enableDamping = true
+      }
+      camera.position.set(...frontCameraPosition)
+      camera.up.set(0, 1, 0)
+      camera.lookAt(0, 0, 0)
       controls.current?.target.set(0, 0, 0)
     } else if (type === 'in' || type === 'out') camera.position.setLength(Math.min(13, Math.max(5, camera.position.length() * (type === 'in' ? 0.85 : 1.15))))
     else {
@@ -114,7 +124,7 @@ function Puzzle({ snapshot, active, duration, onFinish, highlighted }: Pick<Prop
 }
 
 export default function CubeScene(props: Props) {
-  return <Canvas shadows={{ type: PCFShadowMap }} dpr={[1, 2]} camera={{ position: [5, 3.8, 6.2], fov: 40 }} gl={{ antialias: true, alpha: true }}
+  return <Canvas shadows={{ type: PCFShadowMap }} dpr={[1, 2]} camera={{ position: frontCameraPosition, fov: 40 }} gl={{ antialias: true, alpha: true }}
     aria-label="Interactive 3D Rubik's Cube. Drag to orbit; scroll or pinch to zoom.">
     <ambientLight intensity={0.75} />
     <hemisphereLight args={['#f0f6ff', '#263650', 1.8]} />
