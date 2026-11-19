@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Eye, EyeOff, Pause, Play, RefreshCw } from 'lucide-react'
 import { library, loadTraining } from '../../api/library'
 import type { TrainingCase, TrainingRow } from '../../api/library'
@@ -76,8 +77,10 @@ function Practice({ item, onNext, hasNext }: { item: TrainingCase; onNext: () =>
 }
 
 export function AlgorithmTrainer() {
+  const { search } = useLocation()
+  const requestedCase = new URLSearchParams(search).get('case')
   const [rows, setRows] = useState<TrainingRow[]>([]), [stage, setStage] = useState('F2L'), [selection, setSelection] = useState(''), [item, setItem] = useState<TrainingCase>(), [error, setError] = useState(''), [revision, setRevision] = useState(0), [loading, setLoading] = useState(true)
-  useEffect(() => { const task = new AbortController(); void library<{ cases: TrainingRow[] }>('/training', undefined, 'GET', task.signal).then(v => { if (!Array.isArray(v.cases) || !v.cases.length) throw new Error('Case catalog unavailable.'); if (!task.signal.aborted) setRows(v.cases) }).catch(e => { if (!task.signal.aborted) { setError(e.message); setLoading(false) } }); return () => task.abort() }, [revision])
+  useEffect(() => { const task = new AbortController(); void library<{ cases: TrainingRow[] }>('/training', undefined, 'GET', task.signal).then(v => { if (!Array.isArray(v.cases) || !v.cases.length) throw new Error('Case catalog unavailable.'); if (!task.signal.aborted) { setRows(v.cases); const requested = v.cases.find(row => row.id === requestedCase); if (requested) { setStage(requested.stage); setSelection(requested.id) } } }).catch(e => { if (!task.signal.aborted) { setError(e.message); setLoading(false) } }); return () => task.abort() }, [revision, requestedCase])
   const cases = rows.filter(r => r.stage === stage)
   const selected = cases.find(r => r.id === selection)?.id ?? cases[0]?.id ?? ''
   const caseIndex = cases.findIndex(r => r.id === selected)

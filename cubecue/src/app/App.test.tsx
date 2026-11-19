@@ -23,10 +23,10 @@ describe('workspace navigation', () => {
     renderPage()
     await screen.findByText('Local API reachable')
     const nav = screen.getByRole('navigation', { name: 'Main navigation' })
-    for (const title of ['Learn to Solve', 'Cube Explorer', 'Solve Studio', 'Solve Analysis', 'Algorithm Trainer', 'History']) {
+    for (const title of ['Learn to Solve', 'Cube Explorer', 'Solve Studio', 'AI Coach', 'Solve Analysis', 'Algorithm Trainer', 'History']) {
       const link = within(nav).getByRole('link', { name: title })
       await user.click(link)
-      expect(screen.getByRole('heading', { name: title, level: 1 })).toBeVisible()
+      expect(screen.getByRole('heading', { name: title === 'AI Coach' ? /coach/i : title, level: 1 })).toBeVisible()
       if (title === 'Cube Explorer') expect(await screen.findByText('Solved · in any grip')).toBeVisible()
       else if (title === 'Solve Studio') expect(screen.getByRole('region', { name: 'Physical cube stopwatch' })).toBeVisible()
       else if (title === 'Solve Analysis') expect(screen.getByRole('heading', { name: 'Choose a recorded segment' })).toBeVisible()
@@ -49,6 +49,11 @@ describe('workspace navigation', () => {
     expect(screen.getByRole('heading', { level: 1, name: title })).toBeVisible()
     expect(screen.queryByText('Not implemented yet')).not.toBeInTheDocument()
     await screen.findByText('Local API reachable', {}, { timeout: 3000 }).catch(() => undefined)
+  })
+
+  it('opens the virtual timer directly from a coaching recommendation', async () => {
+    renderPage('/live-solve?mode=virtual')
+    expect(await screen.findByRole('region', { name: 'Manual solve timer' })).toBeVisible()
   })
 
   it('opens Solve Analysis directly with an honest empty record', () => {

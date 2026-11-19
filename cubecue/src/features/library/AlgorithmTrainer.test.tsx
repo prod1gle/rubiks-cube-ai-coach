@@ -1,5 +1,6 @@
 // Engine-derived synthetic case; not a measured practice record.
 import { useEffect } from 'react'
+import { MemoryRouter } from 'react-router-dom'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
@@ -16,7 +17,7 @@ it('repeats exact cases, records real retries, and excludes algorithm playback',
   const item = fixture.case
   const request = vi.fn().mockImplementation((path: string) => Promise.resolve(new Response(JSON.stringify(path === '/api/training' ? { cases: [item] } : path.startsWith('/api/training/') ? item : path === '/api/cube/plan' ? item.plan : { id: 'attempt', success: true, metrics: { htm: 3 } }))))
   vi.stubGlobal('fetch', request)
-  const user = userEvent.setup(); render(<AlgorithmTrainer />)
+  const user = userEvent.setup(); render(<MemoryRouter><AlgorithmTrainer /></MemoryRouter>)
   await screen.findByTestId('trainer-state')
   await user.click(screen.getByRole('button', { name: 'Play verified algorithm' }))
   await waitFor(() => expect(screen.getByTestId('trainer-state')).toHaveTextContent(item.plan.steps.at(-1)!.snapshot.state_hash))
@@ -39,7 +40,7 @@ it('selects a sourced alternative and plays it from the identical original state
     path === '/api/training' ? { cases: [item] } : path.startsWith('/api/training/') ? item : alternateFixture.selected_plan
   ))))
   vi.stubGlobal('fetch', request)
-  const user = userEvent.setup(); render(<AlgorithmTrainer />)
+  const user = userEvent.setup(); render(<MemoryRouter><AlgorithmTrainer /></MemoryRouter>)
   await screen.findByTestId('trainer-state')
   expect(within(screen.getByLabelText('Algorithm choice')).getAllByRole('option')).toHaveLength(item.algorithms.length)
   await user.click(screen.getByRole('button', { name: 'Reveal algorithm' }))
@@ -63,7 +64,7 @@ it('rejects alternatives bound to another starting state', async () => {
   const item = structuredClone(alternateFixture.case)
   item.algorithms[0].input_hash = 'stale-state'
   vi.stubGlobal('fetch', vi.fn().mockImplementation((path: string) => Promise.resolve(new Response(JSON.stringify(path === '/api/training' ? { cases: [item] } : item)))))
-  render(<AlgorithmTrainer />)
+  render(<MemoryRouter><AlgorithmTrainer /></MemoryRouter>)
   expect(await screen.findByRole('alert')).toHaveTextContent('Alternate algorithms failed state verification')
   expect(screen.queryByTestId('trainer-state')).not.toBeInTheDocument()
 })
@@ -76,7 +77,7 @@ it('shows the Explorer keyboard map and accepts physical keys while protecting t
     path === '/api/training' ? { cases: [item] } : path.startsWith('/api/training/') ? item : plans[i++]
   ))))
   vi.stubGlobal('fetch', request)
-  const user = userEvent.setup(); render(<AlgorithmTrainer />)
+  const user = userEvent.setup(); render(<MemoryRouter><AlgorithmTrainer /></MemoryRouter>)
   await screen.findByTestId('trainer-state')
   expect(screen.getByRole('heading', { name: 'Virtual cube key map' })).toBeVisible()
   expect(screen.getByRole('button', { name: 'Key K: R\'' })).toBeVisible()
@@ -104,7 +105,7 @@ it('applies direct prime, double and rotation controls from accepted states, rep
     path === '/api/training' ? { cases: [item] } : path.startsWith('/api/training/') ? item : moveFixture.plans[planIndex++]
   ))))
   vi.stubGlobal('fetch', request)
-  const user = userEvent.setup(); render(<AlgorithmTrainer />)
+  const user = userEvent.setup(); render(<MemoryRouter><AlgorithmTrainer /></MemoryRouter>)
   await screen.findByTestId('trainer-state')
   const faces = within(screen.getByRole('group', { name: 'Face turns' }))
   expect(faces.getAllByRole('button').map(b => b.getAttribute('aria-label'))).toEqual([
@@ -142,7 +143,7 @@ it('advances within a stage, resets demonstration history, wraps, and respects s
     return Promise.resolve(new Response(JSON.stringify(data)))
   })
   vi.stubGlobal('fetch', request)
-  const user = userEvent.setup(); render(<AlgorithmTrainer />)
+  const user = userEvent.setup(); render(<MemoryRouter><AlgorithmTrainer /></MemoryRouter>)
   await screen.findByTestId('trainer-state')
   expect(screen.getByText('Case 1 of 2 · F2L')).toBeVisible()
   await user.click(screen.getByRole('button', { name: 'Play verified algorithm' }))
@@ -165,4 +166,20 @@ it('advances within a stage, resets demonstration history, wraps, and respects s
   expect(screen.getByTestId('trainer-state')).toHaveTextContent(oll.start.state_hash)
   expect(screen.getByRole('button', { name: 'Next case' })).toBeDisabled()
   expect(request.mock.calls.filter(c => c[0] === '/api/practice')).toHaveLength(0)
+})
+
+
+it.each([true, false])('opens a requested catalog case and ignores unknown case IDs (known: %s)', async known => {
+  const requested = navigationFixture.cases[2]
+  const request = vi.fn().mockImplementation((path: string) => Promise.resolve(new Response(JSON.stringify(
+    path === '/api/training' ? { cases: navigationFixture.cases }
+      : navigationFixture.cases.find(c => path === `/api/training/${encodeURIComponent(c.id)}`)
+  ))))
+  vi.stubGlobal('fetch', request)
+  render(<MemoryRouter initialEntries={[`/algorithm-trainer?case=${known ? requested.id : 'invented-case'}`]}><AlgorithmTrainer /></MemoryRouter>)
+  const expected = known ? requested : navigationFixture.cases[0]
+  await screen.findByRole('heading', { name: expected.id })
+  expect(screen.getByLabelText('Stage')).toHaveValue(expected.stage)
+  expect(await screen.findByTestId('trainer-state')).toHaveTextContent(expected.start.state_hash)
+  expect(request.mock.calls.some(c => c[0] === '/api/training/invented-case')).toBe(false)
 })

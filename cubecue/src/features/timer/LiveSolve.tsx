@@ -1,5 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import CubeViewport from '../cube/CubeViewport'
 import { CameraTracking } from '../vision/CameraTracking'
 import { TimerController } from './TimerController'
@@ -10,7 +10,8 @@ import { SolveVideo } from '../video/SolveVideo'
 import './solveStudio.css'
 
 export function LiveSolve() {
-  const [mode, setMode] = useState<'physical' | 'manual' | 'camera'>('physical')
+  const [params] = useSearchParams()
+  const [mode, setMode] = useState<'physical' | 'manual' | 'camera'>(() => params.get('mode') === 'virtual' ? 'manual' : 'physical')
   const [active, setActive] = useState(false)
   return <div className="solve-studio"><div className="page-heading studio-heading"><p className="eyebrow">A LITTLE FOCUS. A BETTER SOLVE.</p><h1 id="page-title">Solve Studio</h1><p className="explorer-subtitle">Your cube, your pace. Time a solve, capture it, and build your next breakthrough.</p></div><div className="studio-mode-tabs" role="group" aria-label="Solve input mode"><button disabled={active} aria-pressed={mode === 'physical'} onClick={() => setMode('physical')}>Physical cube<span>Stopwatch + optional video</span></button><button disabled={active} aria-pressed={mode === 'manual'} onClick={() => setMode('manual')}>Manual virtual solve<span>Exact turns + engine analysis</span></button><button disabled={active} aria-pressed={mode === 'camera'} onClick={() => setMode('camera')}>Experimental camera assistance<span>Review and confirm visible actions</span></button></div>{mode === 'physical' ? <PhysicalSolve onActive={setActive} /> : mode === 'manual' ? <VirtualSolve onActive={setActive} /> : <CameraTracking />}</div>
 }
