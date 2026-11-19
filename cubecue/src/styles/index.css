@@ -472,3 +472,11 @@ button, input { font: inherit; }
   .trainer-learning-actions .speed-label { flex-basis: 100%; margin: 6px 0 0; }
   .trainer-entry-actions button { flex: 1; }
 }
+
+.trainer-algorithm-picker { display: grid; gap: 9px; font-size: 11px; color: #a6b5c9; margin: 18px 0 10px; max-width: 430px; }
+.trainer-algorithm-picker select { padding: 12px; border: 1px solid #344359; border-radius: 7px; background: #131920; color: #c4d2e5; width: 100%; }
+.trainer-algorithm a, .cfop-stage-alternatives a { color: var(--action); text-decoration: underline; text-underline-offset: 3px; }
+.cfop-stage-alternatives { margin: 10px 0 0 28px; color: #97abc5; font-size: 10px; }
+.cfop-stage-alternatives summary { cursor: pointer; }
+.cfop-stage-alternatives ol { display: grid; gap: 12px; padding: 14px 0; list-style: none; }
+.cfop-stage-alternatives code { display: block; color: #c3d4ed; overflow-wrap: anywhere; margin: 5px 0; font-size: 12px; }

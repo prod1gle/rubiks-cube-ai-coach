@@ -4,6 +4,7 @@ from functools import lru_cache
 from hashlib import sha256
 from time import perf_counter
 
+from coach.cfop.alternatives import candidates as catalog_candidates
 from coach.cfop.pipeline import build_candidate, recognize, verify_candidate
 from coach.cfop.registry import WHITE_DOWN_FRAME, recognize_oll, recognize_pll
 from coach.cfop.search import SLOTS, TURNS, cross_code, cross_table, solve_cross
@@ -150,7 +151,16 @@ def recommend(
     protected = [s for s in SLOTS if before["pairs"][s]]
     candidates, warnings, seen = [], [], set()
 
-    def add(goal, slot, source, reference_word, frame, prefix="", macro_ids=()):
+    def add(
+        goal,
+        slot,
+        source,
+        reference_word,
+        frame,
+        prefix="",
+        macro_ids=(),
+        metadata=None,
+    ):
         body = reference_sequence(reference_word, WHITE_DOWN_FRAME, frame)
         word = format_sequence(prefix + " " + body)
         if not word or (goal, slot, word) in seen:
@@ -273,6 +283,7 @@ def recommend(
                 "optimality": "unproven",
                 "macro_ids": list(macro_ids),
                 "ending_progress": final,
+                **(metadata or {}),
             }
         )
 
@@ -320,6 +331,32 @@ def recommend(
             for frame, prefix in options:
                 add(goal, None, source, word, frame, prefix)
 
+    # Sourced alternatives join the same verified pool used by live hints and
+    # retrospective comparisons. Search candidates remain available as well.
+    if mode == "cfop" and before["cross"] and not state.is_solved:
+        goals = [("f2l", s) for s in SLOTS if not before["pairs"][s]]
+        if not goals and not before["oll"]:
+            goals = [("oll", None)]
+        elif not goals and not before["pll"]:
+            goals = [("pll", None)]
+        for goal, slot in goals:
+            for choice in catalog_candidates(reference, goal.upper(), slot):
+                metadata = {
+                    "algorithm_id": choice["id"],
+                    "source_url": choice["source_url"],
+                    "catalog_version": choice["catalog_version"],
+                }
+                for frame, prefix in grips(state, allow_rotations):
+                    add(
+                        goal,
+                        slot,
+                        choice["source"] + " · " + choice["source_case"],
+                        choice["reference_notation"],
+                        frame,
+                        prefix,
+                        metadata=metadata,
+                    )
+
     def key(candidate):
         m = candidate["metrics"]
         if mode == "short" or ranking == "htm":
@@ -355,7 +392,7 @@ def recommend(
         if stationary and stationary not in chosen:
             chosen.append(stationary)
         for candidate in options:
-            if len(chosen) >= (4 if options[0]["slot"] else 5):
+            if len(chosen) >= 4:
                 break
             if candidate not in chosen:
                 chosen.append(candidate)

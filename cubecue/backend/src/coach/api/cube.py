@@ -117,6 +117,16 @@ class SolutionReply(BaseModel):
     plan: dict[str, Any]
 
 
+class AlgorithmAlternativeReply(BaseModel):
+    id: str
+    notation: str
+    source: str
+    source_url: str
+    metrics: SequenceInfo
+    verified: Literal[True]
+    input_hash: str
+
+
 class CFOPStageReply(BaseModel):
     id: str
     kind: Literal["cross", "f2l", "oll", "pll", "auf"]
@@ -135,6 +145,8 @@ class CFOPStageReply(BaseModel):
     after_hash: str
     protected_pairs: list[str]
     progress_after: dict[str, Any]
+    algorithm_id: str | None = None
+    alternatives: list[AlgorithmAlternativeReply] = Field(default_factory=list, max_length=4)
 
 
 class CFOPReply(SolutionReply):

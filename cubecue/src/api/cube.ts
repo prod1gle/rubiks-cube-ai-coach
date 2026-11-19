@@ -48,6 +48,7 @@ export interface CFOPStage {
   setup: string; algorithm: string; macro_ids: string[]; move_count: number
   start_step: number; end_step: number; before_hash: string; after_hash: string
   protected_pairs: string[]; progress_after: Record<string, unknown>
+  alternatives?: { id: string; notation: string; source: string; source_url: string; metrics: { htm: number; rotations: number }; verified: true; input_hash: string }[]
 }
 
 export interface HintSettings { mode: 'short' | 'cfop'; ranking: 'htm' | 'ergonomic'; allow_rotations: boolean }
@@ -59,6 +60,7 @@ export interface HintCandidate {
   metrics: { htm: number; rotations: number; comfort_score: number; metric: string; face_turns: Record<string, number>; preserved_slots: string[]; lost_slots: string[]; cross_preserved: boolean }
   pieces: HintPiece[]; highlight_ids: string[]; hints: { subtle: string; guided: string }
   verified: true; optimality: 'unproven'; macro_ids: string[]; ending_progress: Record<string, unknown>
+  algorithm_id?: string; source_url?: string; catalog_version?: string
 }
 export interface CoachingReply {
   status: 'ready' | 'solved'; input_hash: string; mode: HintSettings['mode']; ranking: HintSettings['ranking']; allow_rotations: boolean
@@ -117,13 +119,23 @@ function isSolution(value: unknown): value is CubeSolution {
 function isCFOP(value: Record<string, unknown>): boolean {
   return record(value.reference) && typeof value.reference.frame === 'string' &&
     typeof value.reference.description === 'string' && Array.isArray(value.stages) && value.stages.length === 8 &&
-    value.stages.every(stage => record(stage) &&
-      ['id', 'case_id', 'notation', 'reference_notation', 'setup', 'algorithm', 'before_hash', 'after_hash'].every(key => typeof stage[key] === 'string') &&
-      ['cross', 'f2l', 'oll', 'pll', 'auf'].includes(String(stage.kind)) &&
-      ['performed', 'skipped'].includes(String(stage.status)) && (stage.slot === null || typeof stage.slot === 'string') &&
-      ['move_count', 'start_step', 'end_step'].every(key => Number.isInteger(stage[key]) && Number(stage[key]) >= 0) &&
-      Array.isArray(stage.macro_ids) && stage.macro_ids.every(id => typeof id === 'string') &&
-      Array.isArray(stage.protected_pairs) && stage.protected_pairs.every(id => typeof id === 'string') && record(stage.progress_after))
+    value.stages.every(stage => {
+      if (!record(stage)) return false
+      const validAlternatives = stage.alternatives === undefined || (
+        Array.isArray(stage.alternatives) && stage.alternatives.length <= 4 && stage.alternatives.every(a =>
+          record(a) && typeof a.id === 'string' && typeof a.notation === 'string' && typeof a.source === 'string' &&
+          typeof a.source_url === 'string' && a.source_url.startsWith('https://') && a.verified === true &&
+          a.input_hash === stage.before_hash && record(a.metrics) && Number.isInteger(a.metrics.htm) && Number(a.metrics.htm) >= 0 &&
+          Number.isInteger(a.metrics.rotations) && Number(a.metrics.rotations) >= 0)
+      )
+      return ['id', 'case_id', 'notation', 'reference_notation', 'setup', 'algorithm', 'before_hash', 'after_hash'].every(key => typeof stage[key] === 'string') &&
+        ['cross', 'f2l', 'oll', 'pll', 'auf'].includes(String(stage.kind)) &&
+        ['performed', 'skipped'].includes(String(stage.status)) && (stage.slot === null || typeof stage.slot === 'string') &&
+        ['move_count', 'start_step', 'end_step'].every(key => Number.isInteger(stage[key]) && Number(stage[key]) >= 0) &&
+        Array.isArray(stage.macro_ids) && stage.macro_ids.every(id => typeof id === 'string') &&
+        Array.isArray(stage.protected_pairs) && stage.protected_pairs.every(id => typeof id === 'string') &&
+        record(stage.progress_after) && validAlternatives
+    })
 }
 
 async function request<T>(path: string, signal: AbortSignal, check: (data: unknown) => data is T, body?: unknown, timeoutMs = 5000): Promise<T> {

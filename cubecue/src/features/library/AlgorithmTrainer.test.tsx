@@ -6,6 +6,7 @@ import { expect, it, vi } from 'vitest'
 import fixture from '../../test/training-case.json'
 import moveFixture from '../../test/trainer-move-plans.json'
 import navigationFixture from '../../test/training-navigation.json'
+import alternateFixture from '../../test/training-alternatives.json'
 import { AlgorithmTrainer } from './AlgorithmTrainer'
 vi.mock('../cube/CubeViewport', () => ({ default: function TestViewport({ snapshot, active, onFinish }: { snapshot: { state_hash: string }; active?: { id: string }; onFinish: (id: string) => void }) {
   useEffect(() => { if (active) queueMicrotask(() => { onFinish(active.id); onFinish(active.id) }) }, [active, onFinish])
@@ -30,6 +31,41 @@ it('repeats exact cases, records real retries, and excludes algorithm playback',
   expect(await screen.findByText(/Objective achieved.*Attempt saved/)).toBeVisible()
   const saved = request.mock.calls.find(c => c[0] === '/api/practice')!
   expect(JSON.parse(saved[1].body).notation).toBe(item.algorithm)
+})
+
+it('selects a sourced alternative and plays it from the identical original state', async () => {
+  const item = alternateFixture.case, chosen = item.algorithms[1]
+  const request = vi.fn().mockImplementation((path: string) => Promise.resolve(new Response(JSON.stringify(
+    path === '/api/training' ? { cases: [item] } : path.startsWith('/api/training/') ? item : alternateFixture.selected_plan
+  ))))
+  vi.stubGlobal('fetch', request)
+  const user = userEvent.setup(); render(<AlgorithmTrainer />)
+  await screen.findByTestId('trainer-state')
+  expect(within(screen.getByLabelText('Algorithm choice')).getAllByRole('option')).toHaveLength(item.algorithms.length)
+  await user.click(screen.getByRole('button', { name: 'Reveal algorithm' }))
+  expect(screen.getByText(item.algorithm, { selector: 'code' })).toBeVisible()
+  await user.selectOptions(screen.getByLabelText('Algorithm choice'), chosen.id)
+  expect(screen.getByTestId('trainer-state')).toHaveTextContent(item.start.state_hash)
+  expect(screen.getByTestId('trainer-move-count')).toHaveTextContent('0HTM')
+  expect(screen.getByText(chosen.notation, { selector: 'code' })).toBeVisible()
+  expect(screen.getByRole('link', { name: chosen.source })).toHaveAttribute('href', chosen.source_url)
+  await user.click(screen.getByRole('button', { name: 'Play verified algorithm' }))
+  await waitFor(() => expect(screen.getByTestId('trainer-state')).toHaveTextContent(alternateFixture.selected_plan.steps.at(-1)!.snapshot.state_hash))
+  const planned = request.mock.calls.find(c => c[0] === '/api/cube/plan')!
+  expect(JSON.parse(planned[1].body)).toEqual({ state: item.start.state, sequence: chosen.notation })
+  expect(screen.getByRole('button', { name: 'Verify and save attempt' })).toBeDisabled()
+  await user.click(screen.getByRole('button', { name: 'Repeat same case' }))
+  await waitFor(() => expect(screen.getByTestId('trainer-state')).toHaveTextContent(item.start.state_hash))
+  expect(screen.getByLabelText('Algorithm choice')).toHaveValue(chosen.id)
+})
+
+it('rejects alternatives bound to another starting state', async () => {
+  const item = structuredClone(alternateFixture.case)
+  item.algorithms[0].input_hash = 'stale-state'
+  vi.stubGlobal('fetch', vi.fn().mockImplementation((path: string) => Promise.resolve(new Response(JSON.stringify(path === '/api/training' ? { cases: [item] } : item)))))
+  render(<AlgorithmTrainer />)
+  expect(await screen.findByRole('alert')).toHaveTextContent('Alternate algorithms failed state verification')
+  expect(screen.queryByTestId('trainer-state')).not.toBeInTheDocument()
 })
 
 it('shows the Explorer keyboard map and accepts physical keys while protecting text entry and opt-out', async () => {

@@ -340,3 +340,11 @@ The default **Reference layout** matches the supplied Virtual Cube Key Map. The 
 3/4 select fewer/more left-side layers; 7/8 select more/fewer right-side layers. Space resets both widths to one. These selectors do not perform cube moves. The displayed map is the source for the currently selected widths. Reference bindings use physical QWERTY positions; Shift and the move grid do not alter their explicit notation. Shortcuts pause in editing fields and during engine loading/solving; held keys do not repeat turns.
 
 Public manual notation now supports all six wide turns and M/E/S, including prime and double variants, through the same canonical backend. HTM is 1 for outer/wide actions, 2 for slice actions, and 0 for whole-cube rotations. Each key action has one verified animation/history event; rapid input stays queued against exact accepted states. See [engine v2 conventions](docs/CUBE_CONVENTIONS.md).
+
+## Alternate CFOP algorithms
+
+Algorithm Trainer now offers 2–4 engine-verified choices for each of its 102 cases, with source links, U setups, explicit grip changes, HTM and rotation counts. Choose an algorithm in **Learn this case**; changing it restores the same original starting state. The visible keyboard map directly below the cube works like Cube Explorer.
+
+The pinned catalog includes notation from [SpeedCubeDB](https://www.speedcubedb.com/a/3x3/OLL/OLL_1) and [CubeSkills](https://www.cubeskills.com/uploads/pdf/tutorials/oll-algorithms.pdf), imported through an attributed MIT-licensed data collection. It also feeds CFOP stage alternatives, Next Best Move and retrospective comparisons. No global optimality or execution-speed claims are made. F2L training remains a 24-case insertion subset.
+
+See [sources, matching, ranking, persistence and acceptance checks](docs/ALGORITHM_ALTERNATIVES.md). Catalogs are bundled for offline use; SQLite records the matched algorithm ID and catalog version with verified practice results.

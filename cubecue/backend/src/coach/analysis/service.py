@@ -142,7 +142,7 @@ def staged_words(start, goal, ranking):
             state = state.apply(selected["notation"])
         word = " ".join(words)
         if valid and meets(state, goal) and len(parse_sequence(word)) <= 128:
-            paths.append((word, "Protected CFOP continuation", True))
+            paths.append((word, "Protected CFOP continuation · " + opening["source"], True))
     return paths
 
 

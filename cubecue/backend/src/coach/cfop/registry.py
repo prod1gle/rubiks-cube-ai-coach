@@ -7,7 +7,7 @@ from importlib.resources import files
 
 from coach.cube import CubeState, compile_catalog_algorithm, inverse_sequence
 
-VERSION = "cfop-1"
+VERSION = "cfop-2"
 AUFS = ("", "U", "U2", "U'")
 WHITE_DOWN_FRAME = CubeState().apply("z2").frame
 
@@ -95,10 +95,17 @@ def recognize_pll(state: CubeState):
 
 
 def manifest():
+    from coach.cfop.alternatives import VERSION as ALTERNATIVES_VERSION
+    from coach.cfop.alternatives import candidates
     from coach.cfop.search import SLOTS, macros
 
     return {
         "version": VERSION,
+        "algorithm_catalog_version": ALTERNATIVES_VERSION,
+        "alternate_policy": (
+            "At most four verified choices per exact case; sourced notation with U setups "
+            "and explicit regrips."
+        ),
         "reference_frame": WHITE_DOWN_FRAME,
         "reference": "White down, green front; notation translated to the current grip",
         "oll_cases": 57,
@@ -106,7 +113,22 @@ def manifest():
         "pll_cases": 21,
         "pll_permutations": 288,
         "cases": [
-            asdict(case) | {"verified": True, "setups": list(AUFS)} for case in registry()[0]
+            asdict(case)
+            | {
+                "verified": True,
+                "setups": list(AUFS),
+                "algorithms": candidates(
+                    CubeState().apply(inverse_sequence(case.algorithm)),
+                    case.stage,
+                    baseline={
+                        "notation": case.algorithm,
+                        "source": case.source,
+                        "source_url": case.source,
+                        "source_case": case.id,
+                    },
+                ),
+            }
+            for case in registry()[0]
         ],
         "f2l_macros": [
             {

@@ -11,6 +11,9 @@ function Practice({ item, onNext, hasNext }: { item: TrainingCase; onNext: () =>
   const view = useCube(item.start)
   const { controller, snapshot, active, history, cursor, paused, playing } = view
   const [notation, setNotation] = useState(''), [revealed, setRevealed] = useState(false), [feedback, setFeedback] = useState(''), [saving, setSaving] = useState(false), [played, setPlayed] = useState(false), [duration, setDuration] = useState(0.28)
+  const [algorithmId, setAlgorithmId] = useState(item.default_algorithm_id ?? 'original')
+  const algorithms = item.algorithms ?? [{ id: 'original', notation: item.algorithm, setup: '', source: item.source, source_url: undefined, metrics: { htm: item.plan.sequence.htm, rotations: item.plan.sequence.rotations } }]
+  const algorithm = algorithms.find(a => a.id === algorithmId) ?? algorithms[0]
   const attempt = useRef(crypto.randomUUID()), savedWord = useRef<string | undefined>(undefined)
   const working = view.planning || !!active || view.pending > 0
   const busy = view.loading || working || saving || (playing && !paused)
@@ -19,7 +22,7 @@ function Practice({ item, onNext, hasNext }: { item: TrainingCase; onNext: () =>
   const htm = applied.reduce((sum, step) => sum + step.htm, 0)
   const rotations = applied.filter(step => step.rotation).length
   const reset = () => { void controller.restoreSnapshot(item.start); attempt.current = crypto.randomUUID(); savedWord.current = undefined; setFeedback(''); setNotation(''); setPlayed(false) }
-  const demonstrate = () => { setRevealed(true); setPlayed(true); setFeedback(''); void controller.restoreSnapshot(item.start).then(() => controller.enqueue(item.algorithm)) }
+  const demonstrate = () => { setRevealed(true); setPlayed(true); setFeedback(''); void controller.restoreSnapshot(item.start).then(() => controller.enqueue(algorithm.notation)) }
   const togglePlayback = () => { if (paused) controller.resume(); else if (working || playing) controller.pause(); else controller.play() }
   const check = async () => {
     setSaving(true); setFeedback('')
@@ -61,12 +64,14 @@ function Practice({ item, onNext, hasNext }: { item: TrainingCase; onNext: () =>
     </section>
     <section className="panel trainer-learning" aria-labelledby="trainer-learn-title">
       <div><p className="eyebrow">RECOGNIZE. UNDERSTAND. REPEAT.</p><h2 id="trainer-learn-title">Learn this case.</h2><p className="analysis-help">{item.stage === 'F2L' ? 'Solve the pair while preserving the cross and other starting slots.' : item.stage === 'OLL' ? 'Orient the last layer while preserving F2L.' : 'Permute the last layer while preserving F2L. Final AUF is allowed.'}</p></div>
+      <label className="trainer-algorithm-picker">Algorithm choice<select aria-label="Algorithm choice" value={algorithm.id} disabled={busy} onChange={e => { reset(); setAlgorithmId(e.target.value) }}>{algorithms.map((a, i) => <option key={a.id} value={a.id}>Option {i + 1} · {a.metrics.htm} HTM · {a.metrics.rotations} rotations</option>)}</select></label>
+      <p className="analysis-help">{algorithms.length} verified {algorithms.length === 1 ? 'choice' : 'choices'} from the identical starting state. Setups are included; the next stage can differ. Changing choices resets your retry.</p>
       <div className="trainer-learning-actions"><button className="primary-button" disabled={busy} onClick={demonstrate}><Play size={15} aria-hidden="true" />Play verified algorithm</button><button className="secondary-button" onClick={() => setRevealed(v => !v)} aria-expanded={revealed} aria-controls="trainer-algorithm">{revealed ? <EyeOff size={15} aria-hidden="true" /> : <Eye size={15} aria-hidden="true" />}{revealed ? 'Hide algorithm' : 'Reveal algorithm'}</button><label className="speed-label">Animation speed<select value={duration} onChange={e => setDuration(Number(e.target.value))}><option value={0.16}>Quick · 0.16 s</option><option value={0.28}>Smooth · 0.28 s</option><option value={0.5}>Study · 0.5 s</option></select></label></div>
-      {revealed && <div id="trainer-algorithm" className="trainer-algorithm"><code>{item.algorithm}</code><span>{item.plan.sequence.htm} HTM · verified from the original case state</span></div>}
+      {revealed && <div id="trainer-algorithm" className="trainer-algorithm"><code>{algorithm.notation}</code><span>{algorithm.metrics.htm} HTM · {algorithm.metrics.rotations} rotations · setup: {algorithm.setup || 'none'}</span><span>Source: {algorithm.source_url ? <a href={algorithm.source_url} target="_blank" rel="noreferrer">{algorithm.source}</a> : algorithm.source}</span></div>}
     </section>
     <section className="panel trainer-entry" aria-labelledby="trainer-entry-title"><p className="eyebrow">TRY YOUR OWN APPROACH</p><h2 id="trainer-entry-title">Practice and check.</h2><form onSubmit={e => { e.preventDefault(); if (!movesDisabled && notation.trim()) controller.enqueue(notation) }}><label htmlFor="trainer-notation">Your practice notation</label><input id="trainer-notation" value={notation} disabled={movesDisabled} placeholder="e.g. R U R′" spellCheck={false} maxLength={10000} onChange={e => setNotation(e.target.value)} /><div className="trainer-entry-actions"><button disabled={movesDisabled || !notation.trim()} className="secondary-button">Apply practice moves</button><button type="button" className="primary-button" disabled={busy || played || !cursor} onClick={() => void check()}>{saving ? 'Verifying…' : 'Verify and save attempt'}</button></div></form><p className="analysis-help">Your attempt is checked by the cube engine before saving. Execution speed is not measured.</p>{feedback && <p className="trainer-feedback" role="status">{feedback}</p>}</section>
     {view.error && <p className="trainer-feedback" role="alert">{view.error}</p>}
-    <details className="panel trainer-source"><summary>Case scope and source</summary><p className="analysis-help">{item.scope} Catalog {item.version}. Source: {item.source}</p></details>
+    <details className="panel trainer-source"><summary>Case scope, sources and selection policy</summary><p className="analysis-help">{item.algorithm_policy}</p><p className="analysis-help">{item.scope} Catalog {item.version}. Source: {item.source}</p></details>
   </>
 }
 
