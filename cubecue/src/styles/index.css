@@ -155,7 +155,7 @@ button, input { font: inherit; }
 .scene-topline { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 18px 22px; border-bottom: 1px solid #26303e; }
 .scene-type { display: flex; align-items: center; gap: 8px; color: #a2aebe; font-size: 8px; letter-spacing: 1.2px; }.scene-type > span { color: #465a73; margin: 0 3px; }
 .scene-history { display: flex; gap: 15px; }.scene-history button { display: flex; align-items: center; gap: 6px; color: #b5c4d8; font-size: 10px; }.scene-history button:disabled { cursor: default; opacity: .3; }
-.cube-viewport { height: 423px; position: relative; background: radial-gradient(ellipse at 50% 48%, #25314080, #181e2755 55%, transparent 83%); }
+.cube-viewport { height: 423px; position: relative; background: #000000; }
 .cube-viewport > div:not(.viewport-toolbar):not(.viewport-label):not(.graphics-message) { height: 100%; }
 .cube-viewport canvas { touch-action: none; cursor: grab; }.cube-viewport canvas:active { cursor: grabbing; }
 .viewport-label { position: absolute; left: 22px; right: 22px; top: 19px; display: flex; align-items: center; gap: 6px; color: #8e9eb4; font-size: 7px; letter-spacing: 1.4px; z-index: 1; pointer-events: none; }.viewport-label > span:last-child { margin-left: auto; color: #78899e; font-size: 7px; letter-spacing: .2px; }

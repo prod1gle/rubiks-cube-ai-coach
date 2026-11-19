@@ -39,12 +39,12 @@ SOLVED_FACELETS = "".join(face * 9 for face in FACES)
 CORNER_NAMES = ("URF", "UFL", "ULB", "UBR", "DFR", "DLF", "DBL", "DRB")
 EDGE_NAMES = ("UR", "UF", "UL", "UB", "DR", "DF", "DL", "DB", "FR", "FL", "BL", "BR")
 PALETTE = {
-    "U": "#f0eee5",
-    "R": "#d86763",
-    "F": "#8fc47c",
-    "D": "#edce65",
-    "L": "#e59a56",
-    "B": "#739ece",
+    "U": "#ffffff",
+    "R": "#ec0403",
+    "F": "#5edd00",
+    "D": "#ffff02",
+    "L": "#f4aa02",
+    "B": "#0800ff",
 }
 
 Vector = tuple[int, int, int]

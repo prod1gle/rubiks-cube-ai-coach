@@ -1,15 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { BoxGeometry, EdgesGeometry, Group, LineBasicMaterial, MeshStandardMaterial, PCFShadowMap, Quaternion, Shape, ShapeGeometry, Spherical, Vector3 } from 'three'
-import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { BoxGeometry, EdgesGeometry, Group, LineBasicMaterial, DoubleSide, MeshBasicMaterial, PlaneGeometry, Quaternion, Spherical, Vector3 } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import type { CubieView, CubeSnapshot } from '../../api/cube'
 import type { ActiveTurn } from './CubeController'
 
 export interface CameraCommand { id: number; type: 'in' | 'out' | 'reset' | 'left' | 'right' | 'up' | 'down' }
 const cameraKeys: Record<string, CameraCommand['type']> = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', '+': 'in', '=': 'in', '-': 'out' }
-// Look directly at +Z (green front), with +Y (white top) upright.
-const frontCameraPosition: [number, number, number] = [0, 0, 8.8]
+// Center the green front and white top without a sideways yaw.
+const frontCameraPosition: [number, number, number] = [0, 7, 7]
 interface Props {
   snapshot: CubeSnapshot; active?: ActiveTurn; duration: number
   cameraCommand: CameraCommand; onFinish: (id: string) => void; onFailure: () => void
@@ -65,41 +64,31 @@ function OrbitRig({ command, onFailure }: { command: CameraCommand; onFailure: (
   return null
 }
 
-function stickerShape() {
-  const shape = new Shape(), h = 0.412, r = 0.065
-  shape.moveTo(-h + r, -h); shape.lineTo(h - r, -h)
-  shape.quadraticCurveTo(h, -h, h, -h + r); shape.lineTo(h, h - r)
-  shape.quadraticCurveTo(h, h, h - r, h); shape.lineTo(-h + r, h)
-  shape.quadraticCurveTo(-h, h, -h, h - r); shape.lineTo(-h, -h + r)
-  shape.quadraticCurveTo(-h, -h, -h + r, -h)
-  return shape
-}
-
-function Cubie({ cubie, materials, body, sticker, outline, outlineMaterial, highlighted }: { cubie: CubieView; materials: Record<string, MeshStandardMaterial>; body: RoundedBoxGeometry; sticker: ShapeGeometry; outline: EdgesGeometry; outlineMaterial: LineBasicMaterial; highlighted: boolean }) {
+function Cubie({ cubie, materials, sticker, border, borderMaterial, outline, outlineMaterial, highlighted }: { cubie: CubieView; materials: Record<string, MeshBasicMaterial>; sticker: PlaneGeometry; border: EdgesGeometry; borderMaterial: LineBasicMaterial; outline: EdgesGeometry; outlineMaterial: LineBasicMaterial; highlighted: boolean }) {
   return <group position={cubie.position} dispose={null}>
-    <mesh geometry={body} material={highlighted ? materials.highlight : materials.body} castShadow receiveShadow />
     {highlighted && <lineSegments geometry={outline} material={outlineMaterial} renderOrder={2} />}
-    {cubie.stickers.map(({ normal, color }, index) => <mesh key={index} geometry={sticker}
-      position={[normal[0] * 0.483, normal[1] * 0.483, normal[2] * 0.483]}
-      quaternion={new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), new Vector3(...normal))}
-      material={materials[color]} castShadow receiveShadow />)}
+    {cubie.stickers.map(({ normal, color }, index) => <group key={index}
+      position={[normal[0] * 0.5, normal[1] * 0.5, normal[2] * 0.5]}
+      quaternion={new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), new Vector3(...normal))}>
+      <mesh geometry={sticker} material={materials[color]} />
+      <lineSegments geometry={border} material={borderMaterial} />
+    </group>)}
   </group>
 }
 
 function Puzzle({ snapshot, active, duration, onFinish, highlighted }: Pick<Props, 'snapshot' | 'active' | 'duration' | 'onFinish' | 'highlighted'>) {
   const pivot = useRef<Group>(null)
   const clock = useRef({ id: '', elapsed: 0, duration: 0, done: false })
-  const body = useMemo(() => new RoundedBoxGeometry(0.955, 0.955, 0.955, 3, 0.065), [])
-  const sticker = useMemo(() => new ShapeGeometry(stickerShape(), 8), [])
+  const sticker = useMemo(() => new PlaneGeometry(0.9, 0.9), [])
+  const border = useMemo(() => new EdgesGeometry(sticker), [sticker])
+  const borderMaterial = useMemo(() => new LineBasicMaterial({ color: '#000000', toneMapped: false }), [])
   const outline = useMemo(() => { const box = new BoxGeometry(1.025, 1.025, 1.025); const edges = new EdgesGeometry(box); box.dispose(); return edges }, [])
   const outlineMaterial = useMemo(() => new LineBasicMaterial({ color: '#ffb77f', depthTest: false, transparent: true, opacity: 0.9 }), [])
   const targets = useMemo(() => new Set(highlighted ?? []), [highlighted])
-  const materials = useMemo(() => ({
-    body: new MeshStandardMaterial({ color: '#121a28', roughness: 0.3, metalness: 0.1 }),
-    highlight: new MeshStandardMaterial({ color: '#4c3526', emissive: '#e79a56', emissiveIntensity: 0.35, roughness: 0.3 }),
-    ...Object.fromEntries(Object.entries(snapshot.palette).map(([color, hex]) => [color, new MeshStandardMaterial({ color: hex, roughness: 0.38, metalness: 0.015 })])),
-  }), [snapshot.palette])
-  useEffect(() => () => { body.dispose(); sticker.dispose() }, [body, sticker])
+  // Flat, two-sided stickers reproduce the reference's open gaps: the far
+  // stickers visible through them are still the engine's actual facelets.
+  const materials = useMemo(() => Object.fromEntries(Object.entries(snapshot.palette).map(([color, hex]) => [color, new MeshBasicMaterial({ color: hex, side: DoubleSide, toneMapped: false })])), [snapshot.palette])
+  useEffect(() => () => { sticker.dispose(); border.dispose(); borderMaterial.dispose() }, [sticker, border, borderMaterial])
   useEffect(() => () => { outline.dispose(); outlineMaterial.dispose() }, [outline, outlineMaterial])
   useEffect(() => () => Object.values(materials).forEach(material => material.dispose()), [materials])
   const affected = useMemo(() => new Set(active?.animation.affected ?? []), [active])
@@ -114,7 +103,7 @@ function Puzzle({ snapshot, active, duration, onFinish, highlighted }: Pick<Prop
     pivot.current.quaternion.setFromAxisAngle(axis, active.animation.quarter_turns * Math.PI / 2 * eased)
     if (progress === 1) { clock.current.done = true; onFinish(active.id) }
   })
-  const cubie = (item: CubieView) => <Cubie key={item.id} cubie={item} materials={materials} body={body} sticker={sticker} outline={outline} outlineMaterial={outlineMaterial} highlighted={targets.has(item.id)} />
+  const cubie = (item: CubieView) => <Cubie key={item.id} cubie={item} materials={materials} sticker={sticker} border={border} borderMaterial={borderMaterial} outline={outline} outlineMaterial={outlineMaterial} highlighted={targets.has(item.id)} />
   return <group>
     {snapshot.cubies.filter(item => !affected.has(item.id)).map(cubie)}
     <group key={active?.id ?? snapshot.state_hash} ref={pivot} dispose={null}>
@@ -124,14 +113,10 @@ function Puzzle({ snapshot, active, duration, onFinish, highlighted }: Pick<Prop
 }
 
 export default function CubeScene(props: Props) {
-  return <Canvas shadows={{ type: PCFShadowMap }} dpr={[1, 2]} camera={{ position: frontCameraPosition, fov: 40 }} gl={{ antialias: true, alpha: true }}
+  return <Canvas dpr={[1, 2]} camera={{ position: frontCameraPosition, fov: 35 }} gl={{ antialias: true, alpha: true }}
     aria-label="Interactive 3D Rubik's Cube. Drag to orbit; scroll or pinch to zoom.">
-    <ambientLight intensity={0.75} />
-    <hemisphereLight args={['#f0f6ff', '#263650', 1.8]} />
-    <directionalLight position={[-4, 8, 5]} intensity={3.2} castShadow shadow-mapSize={[1024, 1024]} shadow-bias={-0.001} />
-    <directionalLight position={[5, 2, -4]} color="#bfd3e8" intensity={1.7} />
+    <color attach="background" args={['#000000']} />
     <Puzzle {...props} />
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.35, 0]} receiveShadow><circleGeometry args={[7, 64]} /><shadowMaterial opacity={0.22} /></mesh>
     <OrbitRig command={props.cameraCommand} onFailure={props.onFailure} />
   </Canvas>
 }
